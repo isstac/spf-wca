@@ -55,6 +55,7 @@ public class WorstCaseAnalyzer implements JPFShell {
       createDirIfNotExist(root, "serialized");
       File auxDir = createDirIfNotExist(root, "aux_files");
       config.setProperty("report.console.heuristics.resultsdir", auxDir.getAbsolutePath());
+      config.setProperty("report.console.heuristics.smtlib", "true");
       config.setProperty("symbolic.cfg.visualizer.showinstructions", "false");
       config.setProperty("symbolic.cfg.visualizer.showseq", "true");
       File vizDir = createDirIfNotExist(auxDir, "visualizations");
