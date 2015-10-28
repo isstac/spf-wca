@@ -31,7 +31,10 @@ public class WorstCaseAnalyzer implements JPFShell {
   private static final String VERBOSE_CONF = "symbolic.worstcase.verbose";
   private static final String OUTPUT_DIR_CONF = "symbolic.worstcase.outputpath";
   
-  private static final String PREDICTION_MODEL_DATA_POINTS_CONF = "symbolic.worstcase.datapoints";
+  private static final String PREDICTION_MODEL_DATA_POINTS_CONF = "symbolic.worstcase.datapointsnum";
+  
+  private static final String MAX_INPUT_REQ_CONF = "symbolic.worstcase.req.maxinputsize";
+  private static final String MAX_RES_REQ_CONF = "symbolic.worstcase.req.maxres";
   
   private final Logger logger;
   private final Config config;
@@ -76,8 +79,14 @@ public class WorstCaseAnalyzer implements JPFShell {
     XYSeriesCollection dataset = computeSeries(dataCollection, dataPointsNum);
     logger.info("Computing prediction models done");
     
-    WorstCaseChart chart = new WorstCaseChart(dataset);
+    WorstCaseChart chart;
+    if(config.hasValue(MAX_RES_REQ_CONF)) //We have a defined "budget" requirement
+      chart = new WorstCaseChart(dataset, config.getDouble(MAX_INPUT_REQ_CONF), config.getDouble(MAX_RES_REQ_CONF));
+    else
+      chart = new WorstCaseChart(dataset);
     logger.info("Creating chart done");
+    
+    //Let's show the panel
     chart.pack();
     RefineryUtilities.centerFrameOnScreen(chart);
     chart.setVisible(true);
