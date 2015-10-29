@@ -19,6 +19,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.title.LegendTitle;
 import org.jfree.data.general.DatasetUtilities;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
@@ -36,7 +37,7 @@ public class WorstCaseChart extends ApplicationFrame implements ChartMouseListen
   private Crosshair xCrosshair;
   private Crosshair yCrosshair;
   private ChartPanel chartPanel;
-  
+
   public WorstCaseChart(XYSeriesCollection dataCollection) {
     super("Worst case");
     JFreeChart chart = createChart(dataCollection);
@@ -60,9 +61,9 @@ public class WorstCaseChart extends ApplicationFrame implements ChartMouseListen
 
   private void createChartPanel(JFreeChart chart) {
     chartPanel = new ChartPanel(chart);
-    
+
     chartPanel.addChartMouseListener(this);
-    
+
     CrosshairOverlay crosshairOverlay = new CrosshairOverlay();
     xCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0f));
     xCrosshair.setLabelVisible(true);
@@ -71,7 +72,7 @@ public class WorstCaseChart extends ApplicationFrame implements ChartMouseListen
     crosshairOverlay.addDomainCrosshair(xCrosshair);
     crosshairOverlay.addRangeCrosshair(yCrosshair);
     chartPanel.addOverlay(crosshairOverlay);
-    
+
     chartPanel.setPreferredSize(new java.awt.Dimension(800, 600));
     setContentPane(chartPanel);
   }
@@ -84,36 +85,21 @@ public class WorstCaseChart extends ApplicationFrame implements ChartMouseListen
         "Depth",
         dataset,
         PlotOrientation.VERTICAL,
-        true,                     // include legend
-        true,                     // tooltips
-        false                     // urls
+        true,                     
+        true,                     
+        false
         );
 
     chart.setBackgroundPaint(Color.white);
 
-    //    final StandardLegend legend = (StandardLegend) chart.getLegend();
-    //      legend.setDisplaySeriesShapes(true);
-
-    // get a reference to the plot for further customisation...
     XYPlot plot = chart.getXYPlot();
     plot.setBackgroundPaint(Color.lightGray);
-    //plot.setAxisOffset(new Spacer(Spacer.ABSOLUTE, 5.0, 5.0, 5.0, 5.0));
     plot.setDomainGridlinePaint(Color.white);
     plot.setRangeGridlinePaint(Color.white);
 
     XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-    //renderer.setSeriesLinesVisible(0, false);
-    //renderer.setSeriesShapesVisible(1, false);
     plot.setRenderer(renderer);
-    
-    //Add "crosshair"
-    
-    /*plot.setDomainCrosshairVisible(true);
-    
-    plot.setDomainCrosshairLockedOnData(false);
-    plot.setRangeCrosshairVisible(true);
-    plot.setRangeCrosshairLockedOnData(false);*/
-    
+
     // change the auto tick unit selection to integer units only...
     final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
     rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
@@ -125,7 +111,7 @@ public class WorstCaseChart extends ApplicationFrame implements ChartMouseListen
   public void chartMouseClicked(ChartMouseEvent arg0) {
     //ignore
   }
-  
+
   @Override
   public void chartMouseMoved(ChartMouseEvent event) {
     Rectangle2D dataArea = this.chartPanel.getScreenDataArea();
@@ -133,12 +119,13 @@ public class WorstCaseChart extends ApplicationFrame implements ChartMouseListen
     XYPlot plot = (XYPlot) chart.getPlot();
     ValueAxis xAxis = plot.getDomainAxis();
     double x = xAxis.java2DToValue(event.getTrigger().getX(), dataArea, 
-            RectangleEdge.BOTTOM);
+        RectangleEdge.BOTTOM);
     ValueAxis yAxis = plot.getRangeAxis();
     double y = yAxis.java2DToValue(event.getTrigger().getY(), dataArea, 
         RectangleEdge.LEFT);
-    
-    //Alternatively, obtain y for one of the subplots:
+
+    //Alternatively, obtain y for one of the subplots, which would be very neat.
+    //We should find the "nearest" subplot to the cursor -- this is easy
     //double y = DatasetUtilities.findYValue(plot.getDataset(), 0, x);
     this.xCrosshair.setValue(x);
     this.yCrosshair.setValue(y);

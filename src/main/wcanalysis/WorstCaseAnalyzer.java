@@ -33,6 +33,7 @@ public class WorstCaseAnalyzer implements JPFShell {
   
   private static final String PREDICTION_MODEL_DATA_POINTS_CONF = "symbolic.worstcase.datapointsnum";
   
+  private static final String PREDICT_MODEL_SIZE_CONF = "symbolic.worstcase.predictionmodel.size";
   private static final String MAX_INPUT_REQ_CONF = "symbolic.worstcase.req.maxinputsize";
   private static final String MAX_RES_REQ_CONF = "symbolic.worstcase.req.maxres";
   
@@ -95,25 +96,38 @@ public class WorstCaseAnalyzer implements JPFShell {
   private XYSeriesCollection computeSeries(DataCollection rawData, int numberOfDataPoints) {
     XYSeriesCollection dataset = new XYSeriesCollection();
     
+    XYSeries rawSeries = new XYSeries("Raw");
+    for(int i = 0; i < rawData.x.length; i++) //ugly conversion and ugly non-iterable
+      rawSeries.add(rawData.x[i], rawData.y[i]);
+    
     //ugly -- make a loop instead...
     PolyTrendLine poly1 = new PolyTrendLine(1);
-    final XYSeries poly1series = new XYSeries("1st poly");
+    final XYSeries poly1series = new XYSeries("1st poly model");
     poly1.setValues(rawData.y, rawData.x);
     
     PolyTrendLine poly2 = new PolyTrendLine(2);
-    final XYSeries poly2series = new XYSeries("2nd poly");
+    final XYSeries poly2series = new XYSeries("2nd poly model");
     poly2.setValues(rawData.y, rawData.x);
     
     PolyTrendLine poly3 = new PolyTrendLine(3);
-    final XYSeries poly3series = new XYSeries("3rd poly");
+    final XYSeries poly3series = new XYSeries("3rd poly model");
     poly3.setValues(rawData.y, rawData.x);
     
-    for(int i = 0; i < rawData.size; i++) {
-      poly1series.add(rawData.x[i], poly1.predict(rawData.x[i]));
-      poly2series.add(rawData.x[i], poly2.predict(rawData.x[i]));
-      poly3series.add(rawData.x[i], poly3.predict(rawData.x[i]));
+    int predictionModelSize = config.getInt(PREDICT_MODEL_SIZE_CONF, (int)(rawData.size*1.5));
+    
+    double[] xPredict = new double[predictionModelSize];
+    System.arraycopy(rawData.x, 0, xPredict, 0, rawData.x.length);
+    for(int i = rawData.x.length; i < predictionModelSize; i++)
+      xPredict[i] = xPredict[i-1] + 1.0;
+    
+    for(int i = 0; i < predictionModelSize; i++) {
+      double x = xPredict[i];
+      poly1series.add(x, poly1.predict(x));
+      poly2series.add(x, poly2.predict(x));
+      poly3series.add(x, poly3.predict(x));
     }
-
+    
+    dataset.addSeries(rawSeries);
     dataset.addSeries(poly1series);
     dataset.addSeries(poly2series);
     dataset.addSeries(poly3series);
