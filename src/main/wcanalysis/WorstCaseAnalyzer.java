@@ -7,6 +7,7 @@ import heuristic.State;
 import isstac.structure.serialize.JavaSerializer;
 
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Logger;
@@ -102,16 +103,17 @@ public class WorstCaseAnalyzer implements JPFShell {
     
     //ugly -- make a loop instead...
     PolyTrendLine poly1 = new PolyTrendLine(1);
-    final XYSeries poly1series = new XYSeries("1st poly model");
     poly1.setValues(rawData.y, rawData.x);
+    DecimalFormat df = new DecimalFormat("#.00000");
+    final XYSeries poly1series = new XYSeries("1st poly model " + poly1.getFunction() + " (r^2="+df.format(poly1.getRSquared()) + ")");
     
     PolyTrendLine poly2 = new PolyTrendLine(2);
-    final XYSeries poly2series = new XYSeries("2nd poly model");
     poly2.setValues(rawData.y, rawData.x);
+    final XYSeries poly2series = new XYSeries("2nd poly model " + poly2.getFunction() + " (r^2="+df.format(poly2.getRSquared()) + ")");
     
     PolyTrendLine poly3 = new PolyTrendLine(3);
-    final XYSeries poly3series = new XYSeries("3rd poly model");
     poly3.setValues(rawData.y, rawData.x);
+    final XYSeries poly3series = new XYSeries("3rd poly model " + poly3.getFunction() + " (r^2="+df.format(poly3.getRSquared()) + ")");
     
     int predictionModelSize = config.getInt(PREDICT_MODEL_SIZE_CONF, (int)(rawData.size*1.5));
     
