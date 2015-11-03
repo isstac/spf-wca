@@ -13,4 +13,10 @@ public class ExpTrendLine extends OLSTrendLine {
   protected boolean logY() {
     return true;
   }
+
+  @Override
+  protected String getFunction() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
