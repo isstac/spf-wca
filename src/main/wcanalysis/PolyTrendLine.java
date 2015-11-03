@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 
 /**
  * @author Kasper Luckow
+ * TODO: check that the output of getFunction is correct
  */
 public class PolyTrendLine extends OLSTrendLine {
   private final int degree;
