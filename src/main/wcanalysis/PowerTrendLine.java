@@ -16,7 +16,7 @@ public class PowerTrendLine extends OLSTrendLine {
   protected boolean logY() {return true;}
 
   @Override
-  protected String getFunction() {
+  public String getFunction() {
     StringBuilder functionSb = new StringBuilder();
     DecimalFormat df = new DecimalFormat("#.00");
     

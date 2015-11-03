@@ -7,4 +7,7 @@ package wcanalysis;
 public interface TrendLine {
   public void setValues(double[] y, double[] x);
   public double predict(double inputSize);
+  public String getFunction();
+  public double getRSquared();
+  public double getAdjustedRSquared();
 }

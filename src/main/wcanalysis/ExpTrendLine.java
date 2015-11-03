@@ -18,7 +18,7 @@ public class ExpTrendLine extends OLSTrendLine {
   }
 
   @Override
-  protected String getFunction() {
+  public String getFunction() {
     StringBuilder functionSb = new StringBuilder();
     DecimalFormat df = new DecimalFormat("#.00");
     

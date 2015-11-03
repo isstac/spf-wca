@@ -25,7 +25,7 @@ public class PolyTrendLine extends OLSTrendLine {
   protected boolean logY() {return false;}
   
   @Override
-  protected String getFunction() {
+  public String getFunction() {
     StringBuilder functionSb = new StringBuilder();
     DecimalFormat df = new DecimalFormat("#.00");
     for(int i=0; i<=degree; i++) {
