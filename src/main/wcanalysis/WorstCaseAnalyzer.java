@@ -4,6 +4,7 @@ import heuristic.HeuristicListener;
 import heuristic.HeuristicResultsPublisher;
 import heuristic.PathChoiceCounterListener;
 import heuristic.State;
+import heuristic.util.Util;
 import isstac.structure.serialize.JavaSerializer;
 
 import java.io.File;
@@ -53,20 +54,20 @@ public class WorstCaseAnalyzer implements JPFShell {
 
   @Override
   public void start(String[] args) {
-    File root = createDirIfNotExist(config.getString(OUTPUT_DIR_CONF, ""));
+    File root = Util.createDirIfNotExist(config.getString(OUTPUT_DIR_CONF, ""));
 
-    File serializedDir = createDirIfNotExist(root, "serialized");
+    File serializedDir = Util.createDirIfNotExist(root, "serialized");
     config.setProperty("symbolic.cfg.serializer", JavaSerializer.class.getName());
     config.setProperty("symbolic.cfg.serializer.outputpath", serializedDir.getAbsolutePath());
 
     if(verbose) {
-      createDirIfNotExist(root, "serialized");
-      File auxDir = createDirIfNotExist(root, "aux");
+      Util.createDirIfNotExist(root, "serialized");
+      File auxDir = Util.createDirIfNotExist(root, "aux");
       config.setProperty("report.console.heuristics.resultsdir", auxDir.getAbsolutePath());
       config.setProperty("report.console.heuristics.smtlib", "true");
       config.setProperty("symbolic.cfg.visualizer.showinstructions", "false");
       config.setProperty("symbolic.cfg.visualizer.showseq", "true");
-      File vizDir = createDirIfNotExist(auxDir, "visualizations");
+      File vizDir = Util.createDirIfNotExist(auxDir, "visualizations");
       config.setProperty("symbolic.cfg.visualizer.outputpath", vizDir.getAbsolutePath());
     }
 
@@ -181,19 +182,5 @@ public class WorstCaseAnalyzer implements JPFShell {
       dataCollection.addDatapoint(inputSize, wcState.getDepth());
     }
     return dataCollection;
-  }
-
-  private static File createDirIfNotExist(String root) {
-    File sub = new File(root);
-    if(!sub.exists())
-      sub.mkdirs();
-    return sub;
-  }
-
-  private static File createDirIfNotExist(File root, String subDir) {
-    File sub = new File(root, subDir);
-    if(!sub.exists())
-      sub.mkdirs();
-    return sub;
   }
 }
