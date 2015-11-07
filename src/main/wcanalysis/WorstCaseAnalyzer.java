@@ -2,7 +2,10 @@ package wcanalysis;
 
 import heuristic.HeuristicListener;
 import heuristic.HeuristicResultsPublisher;
+import heuristic.ResultsPublisher;
 import heuristic.PathChoiceCounterListener;
+import heuristic.PathListener;
+import heuristic.PolicyResultsPublisher;
 import heuristic.State;
 import heuristic.util.Util;
 import isstac.structure.serialize.JavaSerializer;
@@ -57,19 +60,31 @@ public class WorstCaseAnalyzer implements JPFShell {
     File root = Util.createDirIfNotExist(config.getString(OUTPUT_DIR_CONF, ""));
 
     File serializedDir = Util.createDirIfNotExist(root, "serialized");
-    config.setProperty("symbolic.cfg.serializer", JavaSerializer.class.getName());
-    config.setProperty("symbolic.cfg.serializer.outputpath", serializedDir.getAbsolutePath());
-
+    config.setProperty(PathListener.SERIALIZER_CONF, JavaSerializer.class.getName());
+    config.setProperty(PathChoiceCounterListener.SER_OUTPUT_PATH_CONF, serializedDir.getAbsolutePath());
+    config.setProperty(HeuristicListener.SER_INPUT_PATH, serializedDir.getAbsolutePath());
+    
     if(verbose) {
       Util.createDirIfNotExist(root, "serialized");
       File auxDir = Util.createDirIfNotExist(root, "aux");
-      config.setProperty("report.console.heuristics.resultsdir", auxDir.getAbsolutePath());
-      config.setProperty("report.console.heuristics.smtlib", "true");
-      config.setProperty("symbolic.cfg.visualizer.showinstructions", "false");
-      config.setProperty("symbolic.cfg.visualizer.showseq", "true");
-      File vizDir = Util.createDirIfNotExist(auxDir, "visualizations");
-      config.setProperty("symbolic.cfg.visualizer.outputpath", vizDir.getAbsolutePath());
+      File policyDir = Util.createDirIfNotExist(auxDir, "policy");
+      File heuristicDir = Util.createDirIfNotExist(auxDir, "heuristic");
+
+      config.setProperty(ResultsPublisher.SMTLIB_CONF, "true");
+      config.setProperty(ResultsPublisher.OMEGA_CONF, "true");
+      config.setProperty(PolicyResultsPublisher.RESULTS_DIR_CONF, policyDir.getAbsolutePath());
+      config.setProperty(HeuristicResultsPublisher.RESULTS_DIR_CONF, heuristicDir.getAbsolutePath());
+      
+      config.setProperty(PathListener.SHOW_INSTRS_CONF, "false");
+      config.setProperty(PathListener.SHOW_BB_SEQ_CONF, "true");
+      
+      File visDirHeurstic = Util.createDirIfNotExist(heuristicDir, "visualizations");
+      config.setProperty(HeuristicListener.VIS_OUTPUT_PATH_CONF, visDirHeurstic.getAbsolutePath());
+      
+      File visDirPolicy = Util.createDirIfNotExist(policyDir, "visualizations");
+      config.setProperty(PathChoiceCounterListener.VIS_OUTPUT_PATH_CONF, visDirPolicy.getAbsolutePath());
     }
+    
 
     //Step 1: get the policy to guide the search. We will get this at the inputsize
     //corresponding to symbolic.worstcase.policy.inputsize
@@ -168,9 +183,10 @@ public class WorstCaseAnalyzer implements JPFShell {
     int maxInput = jpfConf.getInt(MAX_INPUT_CONF);
     jpfConf.setProperty("report.console.class", HeuristicResultsPublisher.class.getName());
 
-    DataCollection dataCollection = new DataCollection(maxInput);
+    DataCollection dataCollection = new DataCollection(maxInput + 1);
 
-    for(int inputSize = 0; inputSize < maxInput; inputSize++) {//TODO: should maxInput be included?
+    for(int inputSize = 0; inputSize <= maxInput; inputSize++) {//TODO: should maxInput be included?
+      System.out.println("Exploring with heuristic input size " + inputSize);
       jpfConf.setProperty("target.args", ""+inputSize);
       JPF jpf = new JPF(jpfConf);
       HeuristicListener heuristic = new HeuristicListener(jpfConf, jpf);
