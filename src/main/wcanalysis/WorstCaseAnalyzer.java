@@ -66,7 +66,7 @@ public class WorstCaseAnalyzer implements JPFShell {
     
     if(verbose) {
       Util.createDirIfNotExist(root, "serialized");
-      File auxDir = Util.createDirIfNotExist(root, "aux");
+      File auxDir = Util.createDirIfNotExist(root, "verbose");
       File policyDir = Util.createDirIfNotExist(auxDir, "policy");
       File heuristicDir = Util.createDirIfNotExist(auxDir, "heuristic");
 
