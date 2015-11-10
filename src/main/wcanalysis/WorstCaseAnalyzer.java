@@ -194,7 +194,7 @@ public class WorstCaseAnalyzer implements JPFShell {
 
       //explore guided by policy
       jpf.run();
-      State<?> wcState = heuristic.getWcState();
+      State wcState = heuristic.getWcState();
       dataCollection.addDatapoint(inputSize, wcState.getDepth());
     }
     return dataCollection;
