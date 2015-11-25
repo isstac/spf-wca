@@ -16,7 +16,6 @@ public abstract class OLSTrendLine implements TrendLine {
   private double RSquared;
   private double adjustedRSquared;
 
-  protected abstract String getFunction();
   protected abstract double[] xVector(double x); // create vector of values from x
   protected abstract boolean logY(); // set true to predict log of y (note: y must be positive)
 
@@ -53,9 +52,12 @@ public abstract class OLSTrendLine implements TrendLine {
     return yhat;
   }
 
+  @Override
   public double getRSquared() {
     return RSquared;
   }
+  
+  @Override
   public double getAdjustedRSquared() {
     return adjustedRSquared;
   }
