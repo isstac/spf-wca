@@ -1,11 +1,11 @@
-package wcanalysis;
+package wcanalysis.charting;
 
 /**
  * @author Kasper Luckow
  */
 public class DataCollection {
-  double[] x;
-  double[] y;
+  public final double[] x;
+  public final double[] y;
   
   public int size;
   

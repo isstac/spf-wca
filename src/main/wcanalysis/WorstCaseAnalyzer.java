@@ -1,14 +1,21 @@
 package wcanalysis;
 
-import heuristic.HeuristicListener;
-import heuristic.HeuristicResultsPublisher;
-import heuristic.ResultsPublisher;
-import heuristic.PathChoiceCounterListener;
-import heuristic.PathListener;
-import heuristic.PolicyResultsPublisher;
-import heuristic.State;
-import heuristic.util.Util;
 import isstac.structure.serialize.JavaSerializer;
+import wcanalysis.charting.DataCollection;
+import wcanalysis.charting.WorstCaseChart;
+import wcanalysis.fitting.ExpTrendLine;
+import wcanalysis.fitting.LogTrendLine;
+import wcanalysis.fitting.PolyTrendLine;
+import wcanalysis.fitting.PowerTrendLine;
+import wcanalysis.fitting.TrendLine;
+import wcanalysis.heuristic.HeuristicListener;
+import wcanalysis.heuristic.HeuristicResultsPublisher;
+import wcanalysis.heuristic.PolicyGeneratorListener;
+import wcanalysis.heuristic.PathListener;
+import wcanalysis.heuristic.PolicyResultsPublisher;
+import wcanalysis.heuristic.ResultsPublisher;
+import wcanalysis.heuristic.State;
+import wcanalysis.heuristic.util.Util;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -72,7 +79,7 @@ public class WorstCaseAnalyzer implements JPFShell {
   @Override
   public void start(String[] args) {
     config.setProperty(PathListener.SERIALIZER_CONF, JavaSerializer.class.getName());
-    config.setProperty(PathChoiceCounterListener.SER_OUTPUT_PATH_CONF, serializedDir.getAbsolutePath());
+    config.setProperty(PolicyGeneratorListener.SER_OUTPUT_PATH_CONF, serializedDir.getAbsolutePath());
     config.setProperty(HeuristicListener.SER_INPUT_PATH, serializedDir.getAbsolutePath());
     
     if(verbose) {
@@ -88,7 +95,7 @@ public class WorstCaseAnalyzer implements JPFShell {
       config.setProperty(HeuristicListener.VIS_OUTPUT_PATH_CONF, visDirHeurstic.getAbsolutePath());
       
       File visDirPolicy = Util.createDirIfNotExist(policyDir, "visualizations");
-      config.setProperty(PathChoiceCounterListener.VIS_OUTPUT_PATH_CONF, visDirPolicy.getAbsolutePath());
+      config.setProperty(PolicyGeneratorListener.VIS_OUTPUT_PATH_CONF, visDirPolicy.getAbsolutePath());
     }
     
 
@@ -185,7 +192,7 @@ public class WorstCaseAnalyzer implements JPFShell {
     }
     jpfConf.setProperty("target.args", ""+policyInputSize);
     JPF jpf = new JPF(jpfConf);
-    jpf.addListener(new PathChoiceCounterListener(jpfConf, jpf)); //weird instantiation...
+    jpf.addListener(new PolicyGeneratorListener(jpfConf, jpf)); //weird instantiation...
     
     if(verbose) {
       //We store (structural) coverage metrics for the exhaustive exploration when the policy was extracted
