@@ -59,7 +59,7 @@ public class WorstCaseAnalyzer implements JPFShell {
   public WorstCaseAnalyzer(Config config) {
     this.logger = JPF.getLogger(WorstCaseAnalyzer.class.getName());
     this.config = config;
-    this.verbose = config.getBoolean(VERBOSE_CONF);
+    this.verbose = config.getBoolean(VERBOSE_CONF, true);
     this.rootDir = Util.createDirIfNotExist(config.getString(OUTPUT_DIR_CONF, ""));
     this.serializedDir = Util.createDirIfNotExist(rootDir, "serialized");
     if(verbose) {
