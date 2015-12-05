@@ -400,7 +400,11 @@ public abstract class PathListener extends PropertyListenerAdapter {
     if(pc != null) {
       pcNew = pc.make_copy();
     }
-    Path currentPath = this.currDec.generatePath();
+    Path currentPath;
+    if(this.currDec != null)
+      currentPath = this.currDec.generatePath();
+    else
+      currentPath = new Path(); //empty path
     //TODO: not sure if this is good -- maybe we should ONLY add EndStateData to the actual
     //wcState object if the currentState and path is "better/worse".
     this.currentState.setStateData(new EndStateData(pcNew, currentPath, this.decisionHistorySize));
