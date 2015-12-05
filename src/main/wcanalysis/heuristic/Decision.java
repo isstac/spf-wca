@@ -75,6 +75,16 @@ public class Decision implements Serializable {
     return history;
   }
   
+  public Path generatePath() {
+    Path path = new Path();
+    Decision cur = this;
+    while(cur != null) {
+      path.prependDecision(cur.copy());
+      cur = cur.getPrev();
+    }
+    return path;
+  }
+  
   @Override
   public int hashCode(){
     //this could be dangerous since we are not taking 

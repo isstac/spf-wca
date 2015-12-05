@@ -400,7 +400,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
     if(pc != null) {
       pcNew = pc.make_copy();
     }
-    Path currentPath = generatePath(this.currDec);
+    Path currentPath = this.currDec.generatePath();
     //TODO: not sure if this is good -- maybe we should ONLY add EndStateData to the actual
     //wcState object if the currentState and path is "better/worse".
     this.currentState.setStateData(new EndStateData(pcNew, currentPath, this.decisionHistorySize));
@@ -415,16 +415,6 @@ public abstract class PathListener extends PropertyListenerAdapter {
 
   public State getCurrentState() {
     return currentState;
-  }
-
-  private Path generatePath(Decision end) {
-    Path path = new Path();
-    Decision cur = end;
-    while(cur != null) {
-      path.prependDecision(cur.copy());
-      cur = cur.getPrev();
-    }
-    return path;
   }
   
   protected String getBaseFileName(CFG cfg) {
