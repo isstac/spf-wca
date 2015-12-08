@@ -98,6 +98,12 @@ public class WorstCaseAnalyzer implements JPFShell {
       config.setProperty(PolicyGeneratorListener.VIS_OUTPUT_PATH_CONF, visDirPolicy.getAbsolutePath());
     }
     
+    
+    //This one is important: In order for the heuristic search to always give correct results
+    //when relying on a decision history, we MUST not use the pc choice optimization of jpf-symbc
+    //since it will yield histories with "holes" corresponding to the decisions at which the
+    //optimization kicked in (when only one branch is feasible/sat)
+    config.setProperty("symbolic.optimizepc", "false");
 
     //Step 1: get the policy to guide the search. We will get this at the inputsize
     //corresponding to symbolic.worstcase.policy.inputsize
