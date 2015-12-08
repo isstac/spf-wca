@@ -103,7 +103,7 @@ public class WorstCaseAnalyzer implements JPFShell {
     //when relying on a decision history, we MUST not use the pc choice optimization of jpf-symbc
     //since it will yield histories with "holes" corresponding to the decisions at which the
     //optimization kicked in (when only one branch is feasible/sat)
-    config.setProperty("symbolic.optimizepc", "false");
+    config.setProperty("symbolic.optimizechoices", "false");
 
     //Step 1: get the policy to guide the search. We will get this at the inputsize
     //corresponding to symbolic.worstcase.policy.inputsize
