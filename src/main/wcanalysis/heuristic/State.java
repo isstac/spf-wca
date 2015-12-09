@@ -76,20 +76,22 @@ public class State implements Comparable<State> {
         BranchInstruction currInstruction = dec.getInstruction();
         branchInstructions.add(currInstruction);
         Set<DecisionHistory> histories = null;
-        if(dec.getChoice() == 1) { //true decision
-          histories = branchInstr2TrueDecisions.get(currInstruction);
-          if(histories == null) {
-            histories = new HashSet<>();
-            branchInstr2TrueDecisions.put(currInstruction, histories);
-          }
-        } else if(dec.getChoice() == 0) { //false decision
+        
+        if(dec.getChoice() == 0) { //false decision
           histories = branchInstr2FalseDecisions.get(currInstruction);
           if(histories == null) {
             histories = new HashSet<>();
             branchInstr2FalseDecisions.put(currInstruction, histories);
           }
-        } else
-          throw new IllegalStateException();
+        } else {  //true decision, was if(dec.getChoice() == 1) before
+            histories = branchInstr2TrueDecisions.get(currInstruction);
+            if(histories == null) {
+              histories = new HashSet<>();
+              branchInstr2TrueDecisions.put(currInstruction, histories);
+            }
+        }
+        // else
+         //throw new IllegalStateException();
         histories.add(history);
       }
       
