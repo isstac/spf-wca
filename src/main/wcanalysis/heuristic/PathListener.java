@@ -40,6 +40,7 @@ import gov.nasa.jpf.jvm.bytecode.FCMPL;
 import gov.nasa.jpf.jvm.bytecode.IfInstruction;
 import gov.nasa.jpf.search.Search;
 import gov.nasa.jpf.symbc.bytecode.FCMPG;
+import gov.nasa.jpf.symbc.bytecode.LCMP;
 import gov.nasa.jpf.symbc.bytecode.IF_ICMPEQ;
 import gov.nasa.jpf.symbc.bytecode.IF_ICMPGE;
 import gov.nasa.jpf.symbc.bytecode.IF_ICMPGT;
@@ -254,7 +255,10 @@ public abstract class PathListener extends PropertyListenerAdapter {
         ifInstr instanceof FCMPL) { //symbolic information is attached to the same operands as IF_* and IF*
        sym1 = sf.getOperandAttr(0);
        sym2 = sf.getOperandAttr(1);
-     }
+    } else if(ifInstr instanceof LCMP) {
+        sym1 = sf.getOperandAttr(1);
+        sym2 = sf.getOperandAttr(3);
+     } 
     return (sym1 != null || sym2 != null);
   }
   
@@ -490,20 +494,21 @@ public abstract class PathListener extends PropertyListenerAdapter {
       //having the two separate true and false sets, but
       //probably also less flexible.
       DecisionCollection decColl = null;
-      if(choice == 1) {//true branch
-        decColl = condBlock.getAttribute(TrueDecisionCollection.class);
-        if(decColl == null) {
-          decColl = new TrueDecisionCollection();
-          condBlock.setAttribute(decColl);
-        }
-      } else if(choice == 0) {//false branch
+      if(choice == 0) {//false branch
         decColl = condBlock.getAttribute(FalseDecisionCollection.class);
         if(decColl == null) {
           decColl = new FalseDecisionCollection();
           condBlock.setAttribute(decColl);
         }
-      } else
-        throw new UnsupportedOperationException("Currently only support for binary choices, i.e, floating point comparisons are not supported yet");
+      } else { //true branch, was if(choice == 1) before
+          decColl = condBlock.getAttribute(TrueDecisionCollection.class);
+          if(decColl == null) {
+            decColl = new TrueDecisionCollection();
+            condBlock.setAttribute(decColl);
+          }
+      }
+//      else
+//        throw new UnsupportedOperationException("Currently only support for binary choices, i.e, floating point comparisons are not supported yet");
       
       decColl.addHistory(currentHistory.copy());
     }
