@@ -58,7 +58,7 @@ public class HeuristicListener extends PathListener {
     };
     //16 is the basic block id
     block2Invariant.put(16L, mergeSortInvariant);
-    countsInvariants.put("benchmarks.java15.util.Arrays.mergeSort([Ljava/lang/Object;[Ljava/lang/Object;III)V", block2Invariant);
+   // countsInvariants.put("benchmarks.java15.util.Arrays.mergeSort([Ljava/lang/Object;[Ljava/lang/Object;III)V", block2Invariant);
   }
   
   private String getSerializedInputDir(Config jpfConfig) {

@@ -97,8 +97,9 @@ public class DecisionHistory extends ArrayDeque<Decision> implements DotAttribut
   
   public DecisionHistory copy() {
     DecisionHistory newHistory = new DecisionHistory(this.maxSize);
-    for(Decision dec : this)
-      newHistory.addLast(dec.copy());
+    for(Decision dec : this) {
+      newHistory.add(dec);
+    }
     return newHistory;
   }
   

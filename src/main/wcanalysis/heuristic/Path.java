@@ -12,8 +12,10 @@ class Path implements Iterable<Decision> {
   public Path() { }
   
   public Path(Path other) {
-    for(Decision dec : other) {
-      this.appendDecision(dec.copy());
+    Decision cur = (other.getSize() > 0) ? other.getLast().copy() : null;
+    while(cur != null) {
+      this.prependDecision(cur);
+      cur = cur.getPrev();
     }
   }
   
@@ -23,6 +25,10 @@ class Path implements Iterable<Decision> {
   
   public void prependDecision(Decision dec) {
     path.addFirst(dec);
+  }
+  
+  public Decision getLast() {
+    return this.path.getLast();
   }
   
   public int getSize() {

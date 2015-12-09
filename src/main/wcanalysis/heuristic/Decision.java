@@ -49,16 +49,16 @@ public class Decision implements Serializable {
 
   public Decision copy() {
     //copy to reference is copied here. This is dangerous
-    Decision cp = new Decision(instr, prev, this.state.copy(), frame);
+    Decision cp = new Decision(instr, (prev != null) ? prev.copy() : null, this.state.copy(), frame);
     cp.setChoice(choice);
     return cp;
   }
   
   public DecisionHistory generateDecisionHistory(int historySize) {
     DecisionHistory history = new DecisionHistory(historySize);
-    Decision prevDec = this.getPrev();
+    Decision prevDec = this.getPrev().copy();
     for(int n = 0; prevDec != null && n < historySize; n++) {
-      history.addFirst(prevDec.copy()); //TODO: check if we need to copy here
+      history.addFirst(prevDec);
       prevDec = prevDec.getPrev();
     }
     return history;
@@ -67,9 +67,9 @@ public class Decision implements Serializable {
   public DecisionHistory generateCtxPreservingDecisionHistory(int historySize) {
     DecisionHistory history = new DecisionHistory(historySize);
     
-    Decision prevDec = this.getPrev();
+    Decision prevDec = (this.getPrev() != null) ? this.getPrev().copy() : null;
     for(int n = 0; prevDec != null && prevDec.frame.equals(this.frame) && n < historySize; n++) {
-      history.addFirst(prevDec.copy()); //TODO: check if we need to copy here
+      history.addFirst(prevDec);
       prevDec = prevDec.getPrev();
     }
     return history;
@@ -77,9 +77,9 @@ public class Decision implements Serializable {
   
   public Path generatePath() {
     Path path = new Path();
-    Decision cur = this;
+    Decision cur = this.copy();
     while(cur != null) {
-      path.prependDecision(cur.copy());
+      path.prependDecision(cur);
       cur = cur.getPrev();
     }
     return path;
