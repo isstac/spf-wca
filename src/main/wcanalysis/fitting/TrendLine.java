@@ -1,4 +1,4 @@
-package wcanalysis;
+package wcanalysis.fitting;
 
 /**
  * @author Kasper Luckow

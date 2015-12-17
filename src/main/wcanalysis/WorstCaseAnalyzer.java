@@ -1,14 +1,21 @@
 package wcanalysis;
 
-import heuristic.HeuristicListener;
-import heuristic.HeuristicResultsPublisher;
-import heuristic.ResultsPublisher;
-import heuristic.PathChoiceCounterListener;
-import heuristic.PathListener;
-import heuristic.PolicyResultsPublisher;
-import heuristic.State;
-import heuristic.util.Util;
 import isstac.structure.serialize.JavaSerializer;
+import wcanalysis.charting.DataCollection;
+import wcanalysis.charting.WorstCaseChart;
+import wcanalysis.fitting.ExpTrendLine;
+import wcanalysis.fitting.LogTrendLine;
+import wcanalysis.fitting.PolyTrendLine;
+import wcanalysis.fitting.PowerTrendLine;
+import wcanalysis.fitting.TrendLine;
+import wcanalysis.heuristic.HeuristicListener;
+import wcanalysis.heuristic.HeuristicResultsPublisher;
+import wcanalysis.heuristic.PolicyGeneratorListener;
+import wcanalysis.heuristic.PathListener;
+import wcanalysis.heuristic.PolicyResultsPublisher;
+import wcanalysis.heuristic.ResultsPublisher;
+import wcanalysis.heuristic.State;
+import wcanalysis.heuristic.util.Util;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -26,6 +33,7 @@ import org.jfree.ui.RefineryUtilities;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.JPFShell;
+import gov.nasa.jpf.listener.CoverageAnalyzer;
 import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
 import gov.nasa.jpf.util.JPFLogger;
 
@@ -49,27 +57,32 @@ public class WorstCaseAnalyzer implements JPFShell {
   private final Config config;
   private final boolean verbose;
 
+  private final File rootDir;
+  private final File serializedDir;
+  private File auxDir;
+  private File policyDir;
+  private File heuristicDir;
+  
   public WorstCaseAnalyzer(Config config) {
     this.logger = JPF.getLogger(WorstCaseAnalyzer.class.getName());
     this.config = config;
-    this.verbose = config.getBoolean(VERBOSE_CONF);
+    this.verbose = config.getBoolean(VERBOSE_CONF, true);
+    this.rootDir = Util.createDirIfNotExist(config.getString(OUTPUT_DIR_CONF, ""));
+    this.serializedDir = Util.createDirIfNotExist(rootDir, "serialized");
+    if(verbose) {
+      this.auxDir = Util.createDirIfNotExist(rootDir, "verbose");
+      this.policyDir = Util.createDirIfNotExist(auxDir, "policy");
+      this.heuristicDir = Util.createDirIfNotExist(auxDir, "heuristic");
+    }
   }
 
   @Override
   public void start(String[] args) {
-    File root = Util.createDirIfNotExist(config.getString(OUTPUT_DIR_CONF, ""));
-
-    File serializedDir = Util.createDirIfNotExist(root, "serialized");
     config.setProperty(PathListener.SERIALIZER_CONF, JavaSerializer.class.getName());
-    config.setProperty(PathChoiceCounterListener.SER_OUTPUT_PATH_CONF, serializedDir.getAbsolutePath());
+    config.setProperty(PolicyGeneratorListener.SER_OUTPUT_PATH_CONF, serializedDir.getAbsolutePath());
     config.setProperty(HeuristicListener.SER_INPUT_PATH, serializedDir.getAbsolutePath());
     
     if(verbose) {
-      Util.createDirIfNotExist(root, "serialized");
-      File auxDir = Util.createDirIfNotExist(root, "verbose");
-      File policyDir = Util.createDirIfNotExist(auxDir, "policy");
-      File heuristicDir = Util.createDirIfNotExist(auxDir, "heuristic");
-
       config.setProperty(ResultsPublisher.SMTLIB_CONF, "true");
       config.setProperty(ResultsPublisher.OMEGA_CONF, "true");
       config.setProperty(PolicyResultsPublisher.RESULTS_DIR_CONF, policyDir.getAbsolutePath());
@@ -82,9 +95,15 @@ public class WorstCaseAnalyzer implements JPFShell {
       config.setProperty(HeuristicListener.VIS_OUTPUT_PATH_CONF, visDirHeurstic.getAbsolutePath());
       
       File visDirPolicy = Util.createDirIfNotExist(policyDir, "visualizations");
-      config.setProperty(PathChoiceCounterListener.VIS_OUTPUT_PATH_CONF, visDirPolicy.getAbsolutePath());
+      config.setProperty(PolicyGeneratorListener.VIS_OUTPUT_PATH_CONF, visDirPolicy.getAbsolutePath());
     }
     
+    
+    //This one is important: In order for the heuristic search to always give correct results
+    //when relying on a decision history, we MUST not use the pc choice optimization of jpf-symbc
+    //since it will yield histories with "holes" corresponding to the decisions at which the
+    //optimization kicked in (when only one branch is feasible/sat)
+    config.setProperty("symbolic.optimizechoices", "false");
 
     //Step 1: get the policy to guide the search. We will get this at the inputsize
     //corresponding to symbolic.worstcase.policy.inputsize
@@ -171,10 +190,29 @@ public class WorstCaseAnalyzer implements JPFShell {
   }
 
   private void getPolicy(Config jpfConf) {
-    jpfConf.setProperty("target.args", ""+jpfConf.getInt(HEURISTIC_SIZE_CONF));
+    int policyInputSize = jpfConf.getInt(HEURISTIC_SIZE_CONF);
+    if(verbose) {
+      //apparently have to set this guy before instantiating the jpf object
+      File coverageFile = new File(this.policyDir, "policy_coverage_input_size_" + policyInputSize + ".txt");
+      jpfConf.setProperty("report.console.file", coverageFile.getAbsolutePath());
+    }
+    jpfConf.setProperty("target.args", ""+policyInputSize);
     JPF jpf = new JPF(jpfConf);
-    jpf.addListener(new PathChoiceCounterListener(jpfConf, jpf)); //weird instantiation...
-
+    jpf.addListener(new PolicyGeneratorListener(jpfConf, jpf)); //weird instantiation...
+    
+    if(verbose) {
+      //We store (structural) coverage metrics for the exhaustive exploration when the policy was extracted
+      //We can use it for providing some confidence in how "good" the policy is --
+      //it does not account for infeasible paths however, so branch coverage might be a bit distorted      
+      jpfConf.setProperty("coverage.show_methods", "true");
+      jpfConf.setProperty("coverage.show_bodies", "false");
+      jpfConf.setProperty("coverage.exclude_handlers", "false");
+      jpfConf.setProperty("coverage.show_branches", "true");
+      jpfConf.setProperty("coverage.loaded_only", "true");
+      jpfConf.setProperty("coverage.show_requirements", "false");
+      
+      jpf.addListener(new CoverageAnalyzer(jpfConf, jpf));
+    }
     //get policy
     jpf.run();
   }
@@ -182,7 +220,7 @@ public class WorstCaseAnalyzer implements JPFShell {
   private DataCollection performAnalysis(Config jpfConf) {
     int maxInput = jpfConf.getInt(MAX_INPUT_CONF);
     jpfConf.setProperty("report.console.class", HeuristicResultsPublisher.class.getName());
-
+    
     DataCollection dataCollection = new DataCollection(maxInput + 1);
 
     for(int inputSize = 0; inputSize <= maxInput; inputSize++) {//TODO: should maxInput be included?

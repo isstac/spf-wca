@@ -1,4 +1,4 @@
-package wcanalysis;
+package wcanalysis.fitting;
 
 import java.text.DecimalFormat;
 

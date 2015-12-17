@@ -1,4 +1,4 @@
-package wcanalysis;
+package wcanalysis.fitting;
 
 import java.text.DecimalFormat;
 
@@ -6,16 +6,14 @@ import java.text.DecimalFormat;
  * @author Kasper Luckow
  * TODO: check that the output of getFunction is correct
  */
-public class ExpTrendLine extends OLSTrendLine {
+public class PowerTrendLine extends OLSTrendLine {
   @Override
   protected double[] xVector(double x) {
-    return new double[]{1,x};
+    return new double[]{1,Math.log(x)};
   }
 
   @Override
-  protected boolean logY() {
-    return true;
-  }
+  protected boolean logY() {return true;}
 
   @Override
   public String getFunction() {
@@ -24,7 +22,8 @@ public class ExpTrendLine extends OLSTrendLine {
     
     double b = super.coef.getColumn(0)[1];
     functionSb.append(df.format(super.coef.getColumn(0)[0]))
-              .append(" + ").append(df.format(b) + "^x");
+              .append(" + ").append("x^" + df.format(b));
     return functionSb.toString();
   }
+
 }
