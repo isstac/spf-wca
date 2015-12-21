@@ -77,6 +77,8 @@ public class State implements Comparable<State> {
         branchInstructions.add(currInstruction);
         Set<DecisionHistory> histories = null;
         
+//        System.out.println("DECISION: " + dec);
+//        System.out.println("CHOICE: " + dec.getChoice());
         if(dec.getChoice() == 0) { //false decision
           histories = branchInstr2FalseDecisions.get(currInstruction);
           if(histories == null) {

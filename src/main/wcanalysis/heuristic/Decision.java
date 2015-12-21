@@ -114,6 +114,7 @@ public class Decision implements Serializable {
 
   @Override
   public String toString() {
-    return "(s:" + instr.getLineNumber() + "," + ((choice == 1) ? 'T' : 'F') + ")";
+    return "(s:" + instr.getLineNumber() + ",choice:" + choice + ")";
+//    return "(s:" + instr.getLineNumber() + "," + ((choice == 1) ? 'T' : 'F') + ")";
   }
 }

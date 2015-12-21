@@ -364,13 +364,90 @@ public abstract class PathListener extends PropertyListenerAdapter {
   @Override
   public void executeInstruction(VM vm, ThreadInfo currentThread, Instruction instructionToExecute) {
     if(isInMeasuredMethodCallStack(vm, currentThread)) {
+//    	ChoiceGenerator cg = vm.getChoiceGenerator();
+//    	
+////    	if(cg!=null && cg instanceof PCChoiceGenerator) {
+////    		PCChoiceGenerator pccg = (PCChoiceGenerator) cg;
+//    		
+//
+//  	  boolean isSymb = cg.getInsn().equals(instructionToExecute);
+//  	  if (!isSymb && isSymbolicIf(instructionToExecute, currentThread)) {
+//  		  System.out.println("Interesting case: " + instructionToExecute);
+//  	  }
+  	
       if(isSymbolicIf(instructionToExecute, currentThread)) {
+//  	  if(isSymb && !currentThread.isFirstStepInsn()) {
+//    	  System.out.println("Symbolic IF found: " + instructionToExecute);
+//    	  System.out.println("Symbolic CG: " + cg.getInsn());
+//    	  System.out.println("Scheduling point: " + cg.isSchedulingPoint());
+//    	  System.out.println("Done: " + cg.isDone());
+//    	  assert isSymb : "isSymbolic passes but CG test does not";
+    	  
+    	  //basically random try:
+//    	  if (currentThread.getExecutedInstructions()>1 ) {
         if(!currentThread.isFirstStepInsn()) {
+//        	  System.out.println("!isFirstStepInsn: " + instructionToExecute);
+//        	  if(!isSymb)
+//        		  System.out.println("isSymbolic passes but CG test does not");
           this.currentState.incDepth(1);
+//          System.out.println("depth: " + this.currentState.getDepth());
         }
+      } else {
+//    	  System.out.println("Non-symbolic IF found: " + instructionToExecute);
+//    	  System.out.println("Non-symbolic CG: " + vm.getChoiceGenerator().getInsn());
       }
     }
+//    }
   }
+//  
+//  @Override
+//  public void choiceGeneratorRegistered (VM vm, ChoiceGenerator<?> nextCG, ThreadInfo currentThread, Instruction executedInstruction) {
+//	  System.out.println("CG Registered: " + nextCG.getInsn());
+//  }
+//  @Override
+//  public void choiceGeneratorSet (VM vm, ChoiceGenerator<?> newCG) {
+//	  System.out.println("CG Set: " + newCG.getInsn());
+//  }
+//  @Override
+//  public void choiceGeneratorProcessed (VM vm, ChoiceGenerator<?> processedCG) {
+//	  System.out.println("CG Processed: " + processedCG.getInsn());
+//	  if(isInMeasuredMethodCallStack(vm, vm.getCurrentThread())) {
+//	    	
+////	    	if(cg!=null && cg instanceof PCChoiceGenerator) {
+////	    		PCChoiceGenerator pccg = (PCChoiceGenerator) cg;
+//	    		
+//		  boolean isSymb = (processedCG instanceof PCChoiceGenerator);
+//		  
+////	  	  boolean isSymb = processedCG.getInsn().equals(instructionToExecute);
+////	  	  if (!isSymb && isSymbolicIf(instructionToExecute, vm.getCurrentThread())) {
+////	  		  System.out.println("Interesting case: " + instructionToExecute);
+////	  	  }
+//	  	
+////	      if(isSymbolicIf(instructionToExecute, currentThread)) {
+//	  	  if(isSymb && !vm.getCurrentThread().isFirstStepInsn()) {
+////	    	  System.out.println("Symbolic IF found: " + instructionToExecute);
+//	    	  System.out.println("Symbolic CG: " + processedCG.getInsn());
+////	    	  System.out.println("Scheduling point: " + cg.isSchedulingPoint());
+////	    	  System.out.println("Done: " + cg.isDone());
+////	    	  assert isSymb : "isSymbolic passes but CG test does not";
+//	    	  
+//	    	  //basically random try:
+////	    	  if (currentThread.getExecutedInstructions()>1 ) {
+////	        if(!currentThread.isFirstStepInsn()) {
+////	        	  System.out.println("!isFirstStepInsn: " + instructionToExecute);
+////	        	  if(!isSymb)
+////	        		  System.out.println("isSymbolic passes but CG test does not");
+//	          this.currentState.incDepth(1);
+//	          System.out.println("depth: " + this.currentState.getDepth());
+////	        }
+//	      } else {
+////	    	  System.out.println("Non-symbolic IF found: " + instructionToExecute);
+////	    	  System.out.println("Non-symbolic CG: " + vm.getChoiceGenerator().getInsn());
+//	      }
+//	    }
+//  }
+  
+  
   
   @Override
   public void instructionExecuted(VM vm, ThreadInfo currentThread, Instruction nextInstruction, Instruction executedInstruction) {
@@ -381,6 +458,8 @@ public abstract class PathListener extends PropertyListenerAdapter {
 
   @Override
   public void exceptionThrown(VM vm, ThreadInfo currentThread, ElementInfo thrownException) {
+
+	  System.out.println("Exception: " + thrownException);
     checkExecutionPath(vm);
   }
 
