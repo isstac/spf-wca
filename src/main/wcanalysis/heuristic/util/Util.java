@@ -2,6 +2,8 @@ package wcanalysis.heuristic.util;
 
 import java.io.File;
 
+import gov.nasa.jpf.vm.MethodInfo;
+
 public class Util {
 
   public static File createDirIfNotExist(File root, String subDir) {
@@ -22,5 +24,11 @@ public class Util {
     if(!dir.exists())
       dir.mkdirs();
     return dir;
+  }
+  
+  public static String normalizeJPFMethodName(MethodInfo methInfo) {
+    int methBeginIdx = methInfo.getBaseName().lastIndexOf('.') + 1;
+    String fullName = methInfo.getFullName();
+    return fullName.substring(methBeginIdx, fullName.length());
   }
 }

@@ -59,7 +59,6 @@ import gov.nasa.jpf.vm.VM;
 
 /**
  * @author Kasper Luckow
- * TODO: extend with support for floating point comparison instructions. This is easy
  */
 public abstract class PathListener extends PropertyListenerAdapter {
 
@@ -130,6 +129,10 @@ public abstract class PathListener extends PropertyListenerAdapter {
   public final static String SHOW_INSTRS_CONF = "symbolic.wc.visualizer.showinstructions";
   public final static String SHOW_BB_SEQ_CONF = "symbolic.wc.visualizer.showseq";
   
+  
+  //Notion of worst case
+  public final static String WORST_CASE_STATE_BLDR_CONF = "symbolic.wc.statebuilder";
+  
   /*
    * State
    */
@@ -150,10 +153,11 @@ public abstract class PathListener extends PropertyListenerAdapter {
   protected final int decisionHistorySize;
   
   //State
-  protected Decision currDec;
-  protected Map<Integer, Decision> decMap = new HashMap<>();
+  private StateBuilder stateBuilder;
+  protected Map<Integer, StateBuilder> stateBuilderMap = new HashMap<>();
+  protected Path wcPath;
   private State wcState;
-  protected State currentState;
+  //protected State currentState;
 
   public PathListener(Config jpfConf, JPF jpf) {
     this.jpfConf = jpfConf;
@@ -187,7 +191,11 @@ public abstract class PathListener extends PropertyListenerAdapter {
     this.showBbSeq = jpfConf.getBoolean(SHOW_BB_SEQ_CONF, false);
     
     //Initialize state
-    this.currentState = new State();
+    if(jpfConf.hasValue(WORST_CASE_STATE_BLDR_CONF)) {
+      this.stateBuilder = jpfConf.getInstance(WORST_CASE_STATE_BLDR_CONF, TimeStateBuilder.class);
+    } else
+      this.stateBuilder = new TimeStateBuilder();
+    
     this.wcState = null;
   }
   
@@ -277,34 +285,32 @@ public abstract class PathListener extends PropertyListenerAdapter {
   public int getDecisionHistorySize() {
     return decisionHistorySize;
   }
-  
-  protected String normalizeJPFMethodName(MethodInfo methInfo) {
-    int methBeginIdx = methInfo.getBaseName().lastIndexOf('.') + 1;
-    String fullName = methInfo.getFullName();
-    return fullName.substring(methBeginIdx, fullName.length());
-  }
 
+  private Map<Integer, StackFrame> stateContext = new HashMap<>(); 
+  
   @Override
   public void choiceGeneratorAdvanced (VM vm, ChoiceGenerator<?> currentCG) {
     ChoiceGenerator<?> cg = vm.getSystemState().getChoiceGenerator();
     if(cg instanceof PCChoiceGenerator) {
-      int choice = ((PCChoiceGenerator)currentCG).getNextChoice();
-      Decision dec = this.decMap.get(cg.getStateId());
-      if(dec == null) {
+      this.stateBuilder.handleChoiceGeneratorAdvanced(vm, currentCG);
+      StateBuilder sb = this.stateBuilderMap.get(cg.getStateId());
+      if(sb == null) {
         //Convert JPF instruction to our own serializable
         //Instruction representation
-        Instruction jpfInstr = currentCG.getInsn();
-        String clsName = jpfInstr.getMethodInfo().getClassName();
-        String methodName = normalizeJPFMethodName(jpfInstr.getMethodInfo());
+       // Instruction jpfInstr = currentCG.getInsn();
+       // String clsName = jpfInstr.getMethodInfo().getClassName();
+        //String methodName = normalizeJPFMethodName(jpfInstr.getMethodInfo());
         
-        BranchInstruction instr = new BranchInstruction(jpfInstr.getMnemonic(), 
-            clsName, methodName, jpfInstr.getInstructionIndex(), jpfInstr.getLineNumber());
-        dec = new Decision(instr, this.currDec, this.currentState.copy(), vm.getCurrentThread().getCallerStackFrame());
-        this.decMap.put(cg.getStateId(), dec);
+        stateContext.put(cg.getStateId(), vm.getCurrentThread().getCallerStackFrame());
+        
+        //BranchInstruction instr = new BranchInstruction(jpfInstr.getMnemonic(), 
+         //   clsName, methodName, jpfInstr.getInstructionIndex(), jpfInstr.getLineNumber());
+        //dec = new Decision(instr, this.currDec, this.currentState.copy(), vm.getCurrentThread().getCallerStackFrame());
+        
+        this.stateBuilderMap.put(cg.getStateId(), this.stateBuilder.copy());
+      } else {
+        this.stateBuilder = sb;
       }
-      dec.setChoice(choice);
-      this.currDec = dec;
-      this.currentState = currDec.getState();
     }
   }
   
@@ -364,18 +370,20 @@ public abstract class PathListener extends PropertyListenerAdapter {
   @Override
   public void executeInstruction(VM vm, ThreadInfo currentThread, Instruction instructionToExecute) {
     if(isInMeasuredMethodCallStack(vm, currentThread)) {
-      if(isSymbolicIf(instructionToExecute, currentThread)) {
+    //  if(isSymbolicIf(instructionToExecute, currentThread)) {
         if(!currentThread.isFirstStepInsn()) {
-          this.currentState.incDepth(1);
+          //this.currentState.incDepth(1);
+          this.stateBuilder.handleExecuteInstruction(vm, currentThread, instructionToExecute);
         }
       }
-    }
+    //}
   }
   
   @Override
   public void instructionExecuted(VM vm, ThreadInfo currentThread, Instruction nextInstruction, Instruction executedInstruction) {
     if(isInMeasuredMethodCallStack(vm, currentThread) && !currentThread.isFirstStepInsn()) {
-      this.currentState.incInstrExecuted(1);
+      //this.currentState.incInstrExecuted(1);
+      this.stateBuilder.handleInstructionExecuted(vm, currentThread, nextInstruction, executedInstruction);
     }
   }
 
@@ -404,6 +412,8 @@ public abstract class PathListener extends PropertyListenerAdapter {
     if(pc != null) {
       pcNew = pc.make_copy();
     }
+    this.stateBuilder.setResultingpPC(pcNew);
+    
     Path currentPath;
     if(this.currDec != null)
       currentPath = this.currDec.generatePath();

@@ -50,7 +50,7 @@ class Path implements Iterable<Decision> {
       pathBuilder.append("[[" +  
             "l:" + cur.getInstruction().getLineNumber() + "(o:" +
             cur.getInstruction().getInstructionIndex() + "), " + 
-            ((cur.getChoice() == 1) ? 'T' : 'F') + "]" + cur.frame + "]");
+            ((cur.getChoice() == 1) ? 'T' : (cur.getChoice() == 0) ? 'F' : cur.getChoice()) + "]" + cur.frame + "]");
       if(iter.hasNext())
         pathBuilder.append(", ");
     }

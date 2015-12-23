@@ -12,45 +12,34 @@ import gov.nasa.jpf.vm.StackFrame;
  */
 public class Decision implements Serializable {
   private static final long serialVersionUID = -7153050127298410855L;
-  private final Decision prev;
-  private final transient State state;
   private final BranchInstruction instr;
-  private int choice = -1;
+  private final int choice;
   
   //We don't want to serialize this guy
-  public transient final StackFrame frame;
+  private transient final StackFrame context;
 
-  public Decision(BranchInstruction instr, Decision prev, State state, StackFrame frame) {
-    this.prev = prev;
-    this.state = state;
+
+  public Decision(BranchInstruction instr, int choice, StackFrame context) {
+    this.choice = choice;
     this.instr = instr;
-    this.frame = frame;
+    this.context = context;
   }
 
   public BranchInstruction getInstruction() {
     return this.instr;
   }
 
-  public void setChoice(int choice) {
-    this.choice = choice;
-  }
-
   public int getChoice() {
     return this.choice;
-  }  
-
-  public Decision getPrev() {
-    return this.prev;
   }
-
-  public State getState() {
-    return this.state;
+  
+  public StackFrame getContext() {
+    return this.context;
   }
 
   public Decision copy() {
     //copy to reference is copied here. This is dangerous
-    Decision cp = new Decision(instr, (prev != null) ? prev.copy() : null, this.state.copy(), frame);
-    cp.setChoice(choice);
+    Decision cp = new Decision(instr.copy(), this.choice, context);
     return cp;
   }
   
@@ -114,6 +103,6 @@ public class Decision implements Serializable {
 
   @Override
   public String toString() {
-    return "(s:" + instr.getLineNumber() + "," + ((choice == 1) ? 'T' : 'F') + ")";
+    return "(s:" + instr.getLineNumber() + "," + ((choice == 1) ? 'T' : (choice == 0) ? 'F' : choice) + ")";
   }
 }
