@@ -7,10 +7,9 @@ import isstac.structure.cfg.util.CFGToDOT;
 import isstac.structure.cfg.util.DotAttribute;
 import isstac.structure.serialize.GraphSerializer;
 import isstac.structure.serialize.JavaSerializer;
+import wcanalysis.heuristic.ContextManager.CGContext;
 import wcanalysis.heuristic.DecisionCollection.FalseDecisionCollection;
 import wcanalysis.heuristic.DecisionCollection.TrueDecisionCollection;
-import wcanalysis.heuristic.State.EndStateData;
-import wcanalysis.heuristic.State.StateData;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -154,9 +153,8 @@ public abstract class PathListener extends PropertyListenerAdapter {
   
   //State
   private StateBuilder stateBuilder;
-  protected Map<Integer, StateBuilder> stateBuilderMap = new HashMap<>();
-  protected Path wcPath;
-  private State wcState;
+  protected WorstCasePath wcPath;
+  private ContextManager ctxManager;
   //protected State currentState;
 
   public PathListener(Config jpfConf, JPF jpf) {
@@ -195,8 +193,8 @@ public abstract class PathListener extends PropertyListenerAdapter {
       this.stateBuilder = jpfConf.getInstance(WORST_CASE_STATE_BLDR_CONF, TimeStateBuilder.class);
     } else
       this.stateBuilder = new TimeStateBuilder();
-    
-    this.wcState = null;
+    this.ctxManager = new ContextManager();
+    this.wcPath = null;
   }
   
   private Set<String> getMeasuredMethods(Config jpfConf) {
@@ -278,36 +276,30 @@ public abstract class PathListener extends PropertyListenerAdapter {
     return cfgExtractor;
   }
   
-  public State getWcState() {
-    return this.wcState;
-  }
-  
   public int getDecisionHistorySize() {
     return decisionHistorySize;
   }
-
-  private Map<Integer, StackFrame> stateContext = new HashMap<>(); 
   
   @Override
   public void choiceGeneratorAdvanced (VM vm, ChoiceGenerator<?> currentCG) {
+    //TODO: check if there is a difference between the following cg and currentCg passed to this method
     ChoiceGenerator<?> cg = vm.getSystemState().getChoiceGenerator();
     if(cg instanceof PCChoiceGenerator) {
       this.stateBuilder.handleChoiceGeneratorAdvanced(vm, currentCG);
-      StateBuilder sb = this.stateBuilderMap.get(cg.getStateId());
-      if(sb == null) {
+      CGContext ctx = this.ctxManager.getContext(cg);
+      if(ctx == null) {
         //Convert JPF instruction to our own serializable
         //Instruction representation
        // Instruction jpfInstr = currentCG.getInsn();
        // String clsName = jpfInstr.getMethodInfo().getClassName();
         //String methodName = normalizeJPFMethodName(jpfInstr.getMethodInfo());
         
-        stateContext.put(cg.getStateId(), vm.getCurrentThread().getCallerStackFrame());
-        
         //BranchInstruction instr = new BranchInstruction(jpfInstr.getMnemonic(), 
          //   clsName, methodName, jpfInstr.getInstructionIndex(), jpfInstr.getLineNumber());
         //dec = new Decision(instr, this.currDec, this.currentState.copy(), vm.getCurrentThread().getCallerStackFrame());
         
-        this.stateBuilderMap.put(cg.getStateId(), this.stateBuilder.copy());
+        //TODO: Should it be CG or currentCG here?
+        this.ctxManager.addContext(cg, vm.getCurrentThread().getCallerStackFrame(), this.stateBuilder.copy());
       } else {
         this.stateBuilder = sb;
       }
@@ -316,15 +308,12 @@ public abstract class PathListener extends PropertyListenerAdapter {
   
   @Override
   public void searchFinished(Search search) {
-    searchFinished(this.wcState);
+    searchFinished(this.wcPath);
   }
   
-  public void searchFinished(State resultState) {
-    StateData wcStateData = resultState.getStateData();
-    if(wcStateData == null || !(wcStateData instanceof EndStateData))
+  public void searchFinished(WorstCasePath wcPath) {
+    if(wcPath == null)
       return;
-    Path wcPath = ((EndStateData)wcStateData).getPath();
-    
     if(visualize(jpfConf)) {
       //If we visualize, then we'd like to show
       //both block sequence and decision histories
@@ -408,31 +397,19 @@ public abstract class PathListener extends PropertyListenerAdapter {
 
   private void checkExecutionPath(VM vm) {
     PathCondition pc = PathCondition.getPC(vm);
+    
     PathCondition pcNew = null;
     if(pc != null) {
       pcNew = pc.make_copy();
     }
-    this.stateBuilder.setResultingpPC(pcNew);
     
-    Path currentPath;
-    if(this.currDec != null)
-      currentPath = this.currDec.generatePath();
-    else
-      currentPath = new Path(); //empty path
-    //TODO: not sure if this is good -- maybe we should ONLY add EndStateData to the actual
-    //wcState object if the currentState and path is "better/worse".
-    this.currentState.setStateData(new EndStateData(pcNew, currentPath, this.decisionHistorySize));
-    if(isBetterState(this.currentState)) {
-      this.wcState = this.currentState.copy();
-    }    
-  }
-  
-  private boolean isBetterState(State currentState) {
-    return currentState.compareTo(this.wcState) > 0;
-  }
-
-  public State getCurrentState() {
-    return currentState;
+    State currentState = this.stateBuilder.build(pcNew);
+    WorstCasePath currentWcPath = WorstCasePath.generateWorstCasePath(currentState, vm.getNextChoiceGenerator(), this.ctxManager);
+    
+    if(currentWcPath.compareTo(this.wcPath) > 0) {
+      this.wcPath = currentWcPath;
+    }
+    
   }
   
   protected String getBaseFileName(CFG cfg) {

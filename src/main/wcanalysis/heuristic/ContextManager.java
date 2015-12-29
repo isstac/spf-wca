@@ -11,15 +11,26 @@ import gov.nasa.jpf.vm.StackFrame;
  *
  */
 public class ContextManager {
-  private Map<Integer, StackFrame> contextMap = new HashMap<>();
   
-  public void addContext(ChoiceGenerator<?> cg, StackFrame caller) {
-    if(contextMap.containsKey(cg.getStateId()))
-      throw new IllegalStateException("Attempt to override context map");
-    contextMap.put(cg.getStateId(), caller);
+  static class CGContext {
+    final StackFrame stackFrame;
+    final StateBuilder stateBuilder;
+    public CGContext(StackFrame sf, StateBuilder stateBuilder) {
+      this.stackFrame = sf;
+      this.stateBuilder = stateBuilder;
+      
+    }
   }
   
-  public StackFrame getContext(ChoiceGenerator<?> cg) {
+  private Map<Integer, CGContext> contextMap = new HashMap<>();
+  
+  public void addContext(ChoiceGenerator<?> cg, StackFrame caller, StateBuilder stateBuilder) {
+    if(contextMap.containsKey(cg.getStateId()))
+      throw new IllegalStateException("Attempt to override context map");
+    this.contextMap.put(cg.getStateId(), new CGContext(caller, stateBuilder));
+  }
+  
+  public CGContext getContext(ChoiceGenerator<?> cg) {
     return this.contextMap.get(cg.getStateId());
   }
 }

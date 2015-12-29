@@ -10,21 +10,12 @@ import gov.nasa.jpf.vm.VM;
  * @author Kasper Luckow
  *
  */
-public abstract class StateBuilder {
-
-  private PathCondition pc;
+public interface StateBuilder {
+  public StateBuilder copy();
   
-  public StateBuilder(StateBuilder other) {
-    
-  }
+  public void handleChoiceGeneratorAdvanced(VM vm, ChoiceGenerator<?> currentCG);
+  public void handleExecuteInstruction(VM vm, ThreadInfo currentThread, Instruction instructionToExecute);
+  public void handleInstructionExecuted(VM vm, ThreadInfo currentThread, Instruction nextInstruction, Instruction executedInstruction);
   
-  public void setResultingpPC(PathCondition pc) {
-    
-  }
-  
-  public abstract void handleChoiceGeneratorAdvanced(VM vm, ChoiceGenerator<?> currentCG);
-  public abstract void handleExecuteInstruction(VM vm, ThreadInfo currentThread, Instruction instructionToExecute);
-  public abstract void handleInstructionExecuted(VM vm, ThreadInfo currentThread, Instruction nextInstruction, Instruction executedInstruction);
-
-  public abstract State build();
+  public State build(PathCondition resultingPC);
 }

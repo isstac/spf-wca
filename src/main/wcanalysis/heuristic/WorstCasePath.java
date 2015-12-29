@@ -8,6 +8,7 @@ import java.util.Set;
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
 import gov.nasa.jpf.vm.ChoiceGenerator;
 import gov.nasa.jpf.vm.StackFrame;
+import wcanalysis.heuristic.ContextManager.CGContext;
 
 /**
  * @author Kasper Luckow
@@ -22,18 +23,22 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
     PCChoiceGenerator[] pcs = endCG.getAllOfType(PCChoiceGenerator.class);
     for(int i = 0; i < pcs.length; i++) {
       PCChoiceGenerator currPc = pcs[i];
-      StackFrame callerCtx = ctxManager.getContext(currPc);
-      Decision dec = new Decision(new BranchInstruction(currPc.getInsn()), currPc.getNextChoice(), callerCtx);
+      CGContext cgCtx = ctxManager.getContext(currPc);
+      Decision dec = new Decision(new BranchInstruction(currPc.getInsn()), currPc.getNextChoice(), cgCtx.stackFrame);
       wcPath.appendDecision(dec);
     }
     return wcPath;
   }
   
-  private final State endState;
+  private final State finalState;
   private int pathMeasure = -1;
   
-  private WorstCasePath(State endState) {
-    this.endState = endState;
+  private WorstCasePath(State finalState) {
+    this.finalState = finalState;
+  }
+  
+  public State getWCState() {
+    return this.finalState;
   }
   
   public int getPathmeasure() {
@@ -60,7 +65,7 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
     Map<BranchInstruction, Set<DecisionHistory>> branchInstr2TrueDecisions = new HashMap<>();
     Map<BranchInstruction, Set<DecisionHistory>> branchInstr2FalseDecisions = new HashMap<>();
     Set<BranchInstruction> branchInstructions = new HashSet<>();
-    for(Decision dec : this.path) {
+    for(Decision dec : this) {
       DecisionHistory history = dec.generateCtxPreservingDecisionHistory(this.decisionHistorySize);
       BranchInstruction currInstruction = dec.getInstruction();
       branchInstructions.add(currInstruction);
@@ -109,7 +114,13 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
 
   @Override
   public int compareTo(WorstCasePath o) {
-    // TODO Auto-generated method stub
-    return 0;
+    if(o == null) //TODO: makes sense?
+      return 1;
+    int comp = this.finalState.compareTo(o.getWCState());
+    if(comp != 0) //final states are different, e.g.  have different depth
+      return comp;
+    
+    //otherwise we will select the path that has the highest path measure
+    return this.computePathMeasure() - o.computePathMeasure();
   }
 }
