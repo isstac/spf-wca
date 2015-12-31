@@ -32,4 +32,14 @@ public class TimeState extends State {
     return this.depth - ((TimeState)o).depth;
   }
 
+  @Override
+  public String getCSVHeader() {
+    return "wcDepth,wcInstrExec";
+  }
+
+  @Override
+  public String getCSV() {
+    return this.depth + "," + this.instrExecuted;
+  }
+
 }

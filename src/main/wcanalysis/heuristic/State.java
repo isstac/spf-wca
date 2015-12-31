@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * @author Kasper Luckow
  */
-public abstract class State implements Comparable<State> {
+public abstract class State implements CSVable, Comparable<State> {
   private final PathCondition pc;
   
   public State(PathCondition pc) {

@@ -238,36 +238,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
   }
   
   //frustrating to have to write something like this... 
-  private boolean isSymbolicIf(Instruction ifInstr, ThreadInfo threadInfo) {
-    StackFrame sf = threadInfo.getModifiableTopFrame();
-    Object sym1 = null, sym2 = null;
-    if(ifInstr instanceof IfInstruction) {
-      sym1 = sf.getOperandAttr(0);
-      //short circuiting
-      if(sym1 != null) return true;
-      
-      if(ifInstr instanceof IF_ICMPEQ ||
-          ifInstr instanceof IF_ICMPGE || 
-          ifInstr instanceof IF_ICMPGT ||
-          ifInstr instanceof IF_ICMPLE ||
-          ifInstr instanceof IF_ICMPLT ||
-          ifInstr instanceof IF_ICMPNE) {
-        sym1 = sf.getOperandAttr(1);
-      }
-    } else if(ifInstr instanceof DoubleCompareInstruction) {
-      sym1 = sf.getOperandAttr(1);
-      sym2 = sf.getOperandAttr(3);
-    } else if(ifInstr instanceof FCMPG ||
-        ifInstr instanceof FCMPL) { //symbolic information is attached to the same operands as IF_* and IF*
-       sym1 = sf.getOperandAttr(0);
-       sym2 = sf.getOperandAttr(1);
-    } else if(ifInstr instanceof LCMP) {
-        sym1 = sf.getOperandAttr(1);
-        sym2 = sf.getOperandAttr(3);
-     } 
-    return (sym1 != null || sym2 != null);
-  }
-  
+
   public GraphSerializer getSerializer() {
     return serializer;
   }
@@ -301,7 +272,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
         //TODO: Should it be CG or currentCG here?
         this.ctxManager.addContext(cg, vm.getCurrentThread().getCallerStackFrame(), this.stateBuilder.copy());
       } else {
-        this.stateBuilder = sb;
+        this.stateBuilder = ctx.stateBuilder;
       }
     }
   }
@@ -359,19 +330,15 @@ public abstract class PathListener extends PropertyListenerAdapter {
   @Override
   public void executeInstruction(VM vm, ThreadInfo currentThread, Instruction instructionToExecute) {
     if(isInMeasuredMethodCallStack(vm, currentThread)) {
-    //  if(isSymbolicIf(instructionToExecute, currentThread)) {
-        if(!currentThread.isFirstStepInsn()) {
-          //this.currentState.incDepth(1);
-          this.stateBuilder.handleExecuteInstruction(vm, currentThread, instructionToExecute);
-        }
+      if(!currentThread.isFirstStepInsn()) {
+        this.stateBuilder.handleExecuteInstruction(vm, currentThread, instructionToExecute);
       }
-    //}
+    }
   }
   
   @Override
   public void instructionExecuted(VM vm, ThreadInfo currentThread, Instruction nextInstruction, Instruction executedInstruction) {
     if(isInMeasuredMethodCallStack(vm, currentThread) && !currentThread.isFirstStepInsn()) {
-      //this.currentState.incInstrExecuted(1);
       this.stateBuilder.handleInstructionExecuted(vm, currentThread, nextInstruction, executedInstruction);
     }
   }
@@ -404,12 +371,15 @@ public abstract class PathListener extends PropertyListenerAdapter {
     }
     
     State currentState = this.stateBuilder.build(pcNew);
-    WorstCasePath currentWcPath = WorstCasePath.generateWorstCasePath(currentState, vm.getNextChoiceGenerator(), this.ctxManager);
+    WorstCasePath currentWcPath = WorstCasePath.generateWorstCasePath(currentState, vm.getSystemState().getChoiceGenerator(), this.ctxManager);
     
     if(currentWcPath.compareTo(this.wcPath) > 0) {
       this.wcPath = currentWcPath;
     }
-    
+  }
+
+  public WorstCasePath getWcPath() {
+    return wcPath;
   }
   
   protected String getBaseFileName(CFG cfg) {
@@ -502,7 +472,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
   }
 
   protected void projectPath(Path path, Collection<BlockProjector> projectors) {
-    if(path.getSize() < 1)
+    if(path.size() < 1)
       return;
     CFG cfg = null;
     Decision prevDecision = null;

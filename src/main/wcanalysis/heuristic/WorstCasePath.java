@@ -25,7 +25,7 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
       PCChoiceGenerator currPc = pcs[i];
       CGContext cgCtx = ctxManager.getContext(currPc);
       Decision dec = new Decision(new BranchInstruction(currPc.getInsn()), currPc.getNextChoice(), cgCtx.stackFrame);
-      wcPath.appendDecision(dec);
+      wcPath.add(dec);
     }
     return wcPath;
   }
