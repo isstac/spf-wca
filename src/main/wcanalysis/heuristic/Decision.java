@@ -6,6 +6,8 @@ import java.util.LinkedHashMap;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import com.sun.tools.javac.main.JavacOption.XOption;
+
 import gov.nasa.jpf.vm.StackFrame;
 
 /**
@@ -44,58 +46,23 @@ public class Decision implements Serializable {
     return cp;
   }
   
-  public DecisionHistory generateDecisionHistory(int historySize) {
-    DecisionHistory history = new DecisionHistory(historySize);
-    Decision prevDec = this.getPrev().copy();
-    for(int n = 0; prevDec != null && n < historySize; n++) {
-      history.addFirst(prevDec);
-      prevDec = prevDec.getPrev();
-    }
-    return history;
-  }
-  
-  public DecisionHistory generateCtxPreservingDecisionHistory(int historySize) {
-    DecisionHistory history = new DecisionHistory(historySize);
-    
-    Decision prevDec = (this.getPrev() != null) ? this.getPrev().copy() : null;
-    for(int n = 0; prevDec != null && prevDec.frame.equals(this.frame) && n < historySize; n++) {
-      history.addFirst(prevDec);
-      prevDec = prevDec.getPrev();
-    }
-    return history;
-  }
-  
-  public Path generatePath() {
-    Path path = new Path();
-    Decision cur = this.copy();
-    while(cur != null) {
-      path.prependDecision(cur);
-      cur = cur.getPrev();
-    }
-    return path;
-  }
-  
   @Override
   public int hashCode(){
-    //this could be dangerous since we are not taking 
-    //into account the prev reference nor the state object
-    //We are really only looking at the decision in isolation
     return new HashCodeBuilder()
         .append(instr)
         .append(choice)
+        .append(context)
         .toHashCode();
   }
 
   @Override
   public boolean equals(Object obj){
-    //this could be dangerous since we are not taking 
-    //into account the prev reference nor the state object
-    //We are really only looking at the decision in isolation
     if(obj instanceof Decision){
       final Decision other = (Decision)obj;
       return new EqualsBuilder()
           .append(instr, other.instr)
           .append(choice, other.choice)
+          .append(context, other.context)
           .isEquals();
     } else{
       return false;

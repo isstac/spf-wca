@@ -8,17 +8,18 @@ import gov.nasa.jpf.vm.StackFrame;
 
 /**
  * @author Kasper Luckow
- *
+ * TODO: maybe we can just use threadinfo on the ChoiceGenerator
+ * instead of explicitly storing a reference to the stackframe
  */
 public class ContextManager {
   
   static class CGContext {
     final StackFrame stackFrame;
     final StateBuilder stateBuilder;
+    
     public CGContext(StackFrame sf, StateBuilder stateBuilder) {
       this.stackFrame = sf;
       this.stateBuilder = stateBuilder;
-      
     }
   }
   

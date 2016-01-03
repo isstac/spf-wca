@@ -16,25 +16,13 @@ import wcanalysis.heuristic.ContextManager.CGContext;
  */
 public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
 
-  
-  public static WorstCasePath generateWorstCasePath(State endState, ChoiceGenerator<?> endCG, ContextManager ctxManager) {
-    WorstCasePath wcPath = new WorstCasePath(endState);
-    
-    PCChoiceGenerator[] pcs = endCG.getAllOfType(PCChoiceGenerator.class);
-    for(int i = 0; i < pcs.length; i++) {
-      PCChoiceGenerator currPc = pcs[i];
-      CGContext cgCtx = ctxManager.getContext(currPc);
-      Decision dec = new Decision(new BranchInstruction(currPc.getInsn()), currPc.getNextChoice(), cgCtx.stackFrame);
-      wcPath.add(dec);
-    }
-    return wcPath;
-  }
-  
+  private static final long serialVersionUID = -6739423849594132561L;
   private final State finalState;
   private int pathMeasure = -1;
   
-  private WorstCasePath(State finalState) {
-    this.finalState = finalState;
+  public WorstCasePath(State endState, ChoiceGenerator<?> endCG, ContextManager ctxManager) {
+    super(endCG, ctxManager);
+    this.finalState = endState;
   }
   
   public State getWCState() {

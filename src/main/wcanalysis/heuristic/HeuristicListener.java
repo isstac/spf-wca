@@ -6,6 +6,8 @@ import isstac.structure.cfg.CFGGenerator;
 import isstac.structure.cfg.CachingCFGGenerator;
 import wcanalysis.heuristic.DecisionCollection.FalseDecisionCollection;
 import wcanalysis.heuristic.DecisionCollection.TrueDecisionCollection;
+import wcanalysis.heuristic.Policy.Resolution;
+import wcanalysis.heuristic.Policy.ResolutionType;
 import wcanalysis.heuristic.util.Util;
 
 import java.io.File;
@@ -27,8 +29,6 @@ import gov.nasa.jpf.vm.VM;
  */
 public class HeuristicListener extends PathListener {
   
-  //private Logger logger = JPF.getLogger(HeuristicListener.class.getName());
-  
   public final static String VIS_OUTPUT_PATH_CONF = "symbolic.wc.heuristic.visualizer.outputpath";
   public final static String SER_OUTPUT_PATH = "symbolic.wc.heuristic.serializer.outputpath";
   
@@ -42,6 +42,7 @@ public class HeuristicListener extends PathListener {
   private long newChoices = 0;
   
   private Map<String, Map<Long, CountsInvariant>> countsInvariants = new HashMap<>();
+  private Policy policy;
   
   public HeuristicListener(Config jpfConf, JPF jpf) {
     super(jpfConf, jpf);
@@ -74,102 +75,38 @@ public class HeuristicListener extends PathListener {
     super.choiceGeneratorAdvanced(vm, currentCG);
     ChoiceGenerator<?> cg = vm.getSystemState().getChoiceGenerator();
     if(cg instanceof PCChoiceGenerator) {
+      Resolution res = policy.resolve(cg, ctxManager);
       
-      Instruction ifInstr = ((PCChoiceGenerator) cg).getInsn();
-      CFG cfg = getCfgExtractor().getCFG(ifInstr);      
+      boolean ignoreState = ((PCChoiceGenerator)cg).getNextChoice() != res.choice;
       
-      Block bl = cfg.getBlockWithIndex(ifInstr.getInstructionIndex());      
-      
-      boolean takeFalseBranch = bl.hasAttribute(FalseDecisionCollection.class);
-      boolean takeTrueBranch = bl.hasAttribute(TrueDecisionCollection.class);
-      int currChoice = ((PCChoiceGenerator) cg).getNextChoice();
-      
-      //Check if decision can be resolved "perfectly" i.e. only counts on one decision:
-      if(ignoreState(takeTrueBranch, takeFalseBranch, currChoice)) {
-        vm.getSystemState().setIgnored(true);
-        this.resolvedPerfectChoices++;
-        return;
-      } else if(matchState(takeTrueBranch, takeFalseBranch, currChoice)) {
-        State state = getCurrentState();
-        HeuristicDecisionCounts counts = state.getBlockCounts(bl);
-        counts.incrementForChoice(currChoice);
-        return;
-      }
-      
-      //counts on both branches
-      if(takeTrueBranch && takeFalseBranch) { 
-        //We have to call getPrev here on the previous decision, because in reality we haven't
-        //made the prevDec decision yet -- specifically we may backtrack according to the decision
-        //sets based on history. Agreed, this is pretty ugly, but seems we have to set prevDec in
-        //choicegeneratoradvanced for everything to work correctly with JPFs exploration
-        DecisionHistory currDecisionHistory = null;
-        if(currDec != null)
-          currDecisionHistory = currDec.generateCtxPreservingDecisionHistory(decisionHistorySize);
-        else //bogus
-          currDecisionHistory = new DecisionHistory(0); 
-        
-        FalseDecisionCollection falseDecColl = bl.getAttribute(FalseDecisionCollection.class);
-        boolean matchFalseHistories = falseDecColl.contains(currDecisionHistory);
-        
-        TrueDecisionCollection trueDecColl = bl.getAttribute(TrueDecisionCollection.class);
-        boolean matchTrueHistories = trueDecColl.contains(currDecisionHistory);
-        
-        //Check if decision can be resolved if the current decision history only matches recorded
-        //decisions for one branch
-        if(ignoreState(matchTrueHistories, matchFalseHistories, currChoice)) {
-          vm.getSystemState().setIgnored(true);
-          this.resolvedHistoryChoices++;
-          return;
-        } else if(matchState(matchTrueHistories, matchFalseHistories, currChoice)) {
-          State state = getCurrentState();
-          HeuristicDecisionCounts counts = state.getBlockCounts(bl);
-          counts.incrementForChoice(currChoice);
-          return;
-        }
-        
-        //Check if decision can be resolved by checking
-        //the count invariant for that decision
-        State state = getCurrentState();
-        HeuristicDecisionCounts counts = state.getBlockCounts(bl);
-        Map<Long, CountsInvariant> blId2countsInv = countsInvariants.get(cfg.getFqMethodName());
-        if(blId2countsInv != null) {
-          CountsInvariant countsInvariant = blId2countsInv.get(bl.getId());
-          if(countsInvariant != null) {
-            int tmpFalseCount = counts.falseCount;
-            int tmpTrueCount = counts.trueCount;
-            if(((PCChoiceGenerator) cg).getNextChoice() == 1) //the decision will be true branch
-              tmpTrueCount++;
-            else
-              tmpFalseCount++;
-            
-            if(!countsInvariant.apply(tmpTrueCount, tmpFalseCount)) {
-              //Invariant does not hold, so we prune
-              this.resolvedInvariantChoices++;
-              vm.getSystemState().setIgnored(true);
-              return;
-            }
-          }
-        }
-        
-        counts.incrementForChoice(currChoice);
+      switch(res.type) {
+      case UNRESOLVED:
         this.unresolvedChoices++;
-      } else if((!bl.hasAttribute(FalseDecisionCollection.class) && !bl.hasAttribute(TrueDecisionCollection.class)) ||
-          (!takeTrueBranch && !takeFalseBranch)) { //branches we did not explore when obtaining counts
+        break;
+      case NEW_CHOICE:
         this.newChoices++;
+        break;
+      case PERFECT:
+        if(ignoreState)
+          this.resolvedPerfectChoices++;
+        break;
+      case HISTORY:
+        if(ignoreState)
+          this.resolvedHistoryChoices++;
+        break;
+      case INVARIANT:
+        if(ignoreState)
+          this.resolvedInvariantChoices++;
+        break;
+       default:
+         throw new IllegalStateException("Unhandled resolution type");
       }
+      
+      if(ignoreState)
+        vm.getSystemState().setIgnored(true);      
     }
   }
   
-  private boolean ignoreState(boolean takeTrueBranch, boolean takeFalseBranch, int currentChoice) {
-    return (takeFalseBranch && !takeTrueBranch && (currentChoice == 1) || //1 is true branch
-        (takeTrueBranch && !takeFalseBranch && currentChoice == 0)); //0 is false branch
-  }
-  
-  private boolean matchState(boolean takeTrueBranch, boolean takeFalseBranch, int currentChoice) {
-    return (takeTrueBranch && !takeFalseBranch && (currentChoice == 1) || //1 is true branch
-        (!takeTrueBranch && takeFalseBranch && currentChoice == 0)); //0 is false branch
-  }
-
   public long getNumberOfUnresolvedChoices() {
     return this.unresolvedChoices;
   }
@@ -194,14 +131,6 @@ public class HeuristicListener extends PathListener {
 
   public long getNumberOfNewChoices() {
     return this.newChoices;
-  }
-
-  @Override
-  public CFGGenerator getCFGGenerator(Config jpfConf) {
-    String[] classpaths = jpfConf.getProperty("classpath").split(",");
-    return CachingCFGGenerator
-        .buildFromDeserializedCFGs(classpaths, 
-            getSerializedInputDir(jpfConf), getSerializer());
   }
 
   @Override

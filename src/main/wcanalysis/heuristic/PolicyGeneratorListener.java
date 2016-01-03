@@ -60,12 +60,6 @@ public class PolicyGeneratorListener extends PathListener {
   }
 
   @Override
-  public CFGGenerator getCFGGenerator(Config jpfConf) {
-    String[] classpaths = jpfConf.getProperty("classpath").split(",");
-    return new CachingCFGGenerator(classpaths);
-  }
-
-  @Override
   public boolean visualize(Config jpfConf) {
     return jpfConf.hasValue(VIS_OUTPUT_PATH_CONF);
   }
