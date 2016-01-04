@@ -1,12 +1,6 @@
 package wcanalysis.heuristic;
 
 import gov.nasa.jpf.symbc.numeric.PathCondition;
-import isstac.structure.cfg.Block;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Kasper Luckow
@@ -21,4 +15,6 @@ public abstract class State implements CSVable, Comparable<State> {
   public PathCondition getPathCondition() {
     return this.pc;
   }
+  
+  public abstract int getWC();
 }

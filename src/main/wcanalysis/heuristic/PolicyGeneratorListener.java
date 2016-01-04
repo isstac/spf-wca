@@ -1,29 +1,8 @@
 package wcanalysis.heuristic;
 
-import isstac.structure.cfg.Block;
-import isstac.structure.cfg.CFG;
-import isstac.structure.cfg.CFGGenerator;
-import isstac.structure.cfg.CachingCFGGenerator;
-import isstac.structure.cfg.util.CFGToDOT;
-import isstac.structure.cfg.util.DotAttribute;
-import wcanalysis.heuristic.DecisionCollection.FalseDecisionCollection;
-import wcanalysis.heuristic.DecisionCollection.TrueDecisionCollection;
 import wcanalysis.heuristic.util.Util;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Logger;
-
-import att.grappa.Attribute;
-import att.grappa.Graph;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.search.Search;
@@ -77,7 +56,7 @@ public class PolicyGeneratorListener extends PathListener {
   }
 
   @Override
-  public File getSerializationDir(Config jpfConf) {
+  public File getPolicyBaseDir(Config jpfConf) {
     File out = Util.createDirIfNotExist(jpfConf.getString(SER_OUTPUT_PATH_CONF, SER_OUTPUT_PATH_DEF));
     return out;
   }

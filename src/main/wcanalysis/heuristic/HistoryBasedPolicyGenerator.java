@@ -1,6 +1,6 @@
 package wcanalysis.heuristic;
 
-import java.util.ArrayList;
+import java.util.Set;
 
 /**
  * @author Kasper Luckow
@@ -19,7 +19,7 @@ public class HistoryBasedPolicyGenerator implements PolicyGenerator<HistoryBased
   }
   
   @Override
-  public HistoryBasedPolicy generate(WorstCasePath path) {
-    return new HistoryBasedPolicy(path, this.maxHistSize);
+  public HistoryBasedPolicy generate(Set<String> measuredMethods, WorstCasePath path) {
+    return new HistoryBasedPolicy(path, measuredMethods, this.maxHistSize);
   }
 }

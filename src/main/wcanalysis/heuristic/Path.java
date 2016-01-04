@@ -31,6 +31,27 @@ class Path extends LinkedList<Decision> {
     this(endCG, ctxManager, false);
   }
   
+  public Path generateCtxPreservingSubPathFromIdx(int idx, int maxSize) {
+    Path subPath = new Path();
+    Decision end = this.get(idx);
+    subPath.addFirst(end);
+    for(int i = idx-1, size = 0; i <= 0; i--, size++) {
+      if(maxSize > 0 && size > maxSize)
+        return subPath;
+      Decision curr = this.get(i);
+      if(curr.getContext() == end.getContext()) {
+        subPath.add(curr);
+      } else
+        return subPath;
+    }
+    return subPath;
+  }
+  
+  
+  public Path generateCtxPreservingSubPathFromIdx(int idx) {
+    return generateCtxPreservingSubPathFromIdx(idx, -1);
+  }
+  
   @Override
   public String toString() {
     StringBuilder pathBuilder = new StringBuilder();

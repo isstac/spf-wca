@@ -9,9 +9,8 @@ import isstac.structure.cfg.util.DotAttribute;
 import isstac.structure.serialize.GraphSerializer;
 import isstac.structure.serialize.JavaSerializer;
 import wcanalysis.heuristic.ContextManager.CGContext;
-import wcanalysis.heuristic.DecisionCollection.FalseDecisionCollection;
-import wcanalysis.heuristic.DecisionCollection.TrueDecisionCollection;
 import wcanalysis.heuristic.util.PathVisualizer;
+import wcanalysis.heuristic.util.Util;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -72,9 +71,9 @@ public abstract class PathListener extends PropertyListenerAdapter {
   //JPF conf strings
   //Measured methods
   public final static String MEASURED_METHODS = "symbolic.heuristic.measuredmethods";
-  private final static String SYMBOLIC_METHODS = "symbolic.method";
-  private Set<String> measuredMethods;
-  private Set<String> symbolicMethods;
+  public final static String SYMBOLIC_METHODS = "symbolic.method";
+  protected Set<String> measuredMethods;
+  protected Set<String> symbolicMethods;
   
   public final static String POLICY_GENERATOR_CLS_CONF = "symbolic.wc.policygenerator";
   public final static String HISTORY_SIZE_CONF = "symbolic.wc.policy.history.size";
@@ -96,16 +95,14 @@ public abstract class PathListener extends PropertyListenerAdapter {
   private File visDir;
   private final boolean showInstrs;
   
-  //Serialization
-  private File serDir;
-  
   //State
   private StateBuilder stateBuilder;
   protected WorstCasePath wcPath;
   protected ContextManager ctxManager;
   
   protected PolicyGenerator<?> policyGenerator;
-
+  private PolicyManager policyManager;
+  
   public PathListener(Config jpfConf, JPF jpf) {
     this.jpfConf = jpfConf;
     
@@ -120,7 +117,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
     this.symbolicMethods = getSymbolicMethods(this.jpfConf);
     logger.info("Measured methods: " + this.measuredMethods.toString());
     
-    this.serDir = this.getSerializationDir(jpfConf);
+    this.policyManager = new PolicyManager(this.getPolicyBaseDir(jpfConf));
     if(this.visualize(this.jpfConf))
       this.visDir = this.getVisualizationDir(this.jpfConf);
     
@@ -146,25 +143,12 @@ public abstract class PathListener extends PropertyListenerAdapter {
   
   private Set<String> getMeasuredMethods(Config jpfConf) {
     String[] measMeth = jpfConf.getStringArray(MEASURED_METHODS, jpfConf.getStringArray(SYMBOLIC_METHODS));
-    return extractSimpleMethodNames(measMeth);
+    return Util.extractSimpleMethodNames(measMeth);
   }
   
   private Set<String> getSymbolicMethods(Config jpfConf) {
     String[] symMeth = jpfConf.getStringArray(SYMBOLIC_METHODS, jpfConf.getStringArray(MEASURED_METHODS));
-    return extractSimpleMethodNames(symMeth); 
-  }
-  
-  private Set<String> extractSimpleMethodNames(String[] jpfMethodSpecs) {
-    //FIXME: This also means that we do not distinguish between overloaded methods
-    String[] processedMethods = new String[jpfMethodSpecs.length];
-    System.arraycopy(jpfMethodSpecs, 0, processedMethods, 0, jpfMethodSpecs.length);
-    for(int i = 0; i < jpfMethodSpecs.length; i++) {
-      String meth = jpfMethodSpecs[i];
-      int sigBegin = meth.indexOf('(');
-      if(sigBegin >= 0)
-        processedMethods[i] = meth.substring(0, sigBegin);
-    }
-    return new HashSet<String>(Arrays.asList(processedMethods));
+    return Util.extractSimpleMethodNames(symMeth); 
   }
   
   protected boolean isInCallStack(VM vm, ThreadInfo thread, Set<String> tgts) {
@@ -209,16 +193,15 @@ public abstract class PathListener extends PropertyListenerAdapter {
     if(wcPath == null)
       return;
     
-    Policy policy = this.policyGenerator.generate(wcPath);
+    Policy policy = this.policyGenerator.generate(this.measuredMethods, wcPath);
     
     String tgtOutputfileName = "";
     for(String measuredMethod : measuredMethods)
       tgtOutputfileName += measuredMethod.substring(0, measuredMethod.lastIndexOf("("));
     
     if(serialize(jpfConf)) {
-      File of = new File(this.serDir, tgtOutputfileName + ".pol");
-      try(OutputStream fo = new FileOutputStream(of)) {
-        policy.save(fo);
+      try {
+        this.policyManager.savePolicy(policy);
       } catch (IOException e) {
         logger.severe(e.getMessage());
         throw new RuntimeException(e);
@@ -318,7 +301,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
       dotGraph.printGraph(new FileOutputStream(outputFile));
       logger.info("writing dot file to: " + outputFile.getAbsolutePath());
       try {
-        //this will fail on windows likely -- we just catch the exception and continue
+        //this will fail on windows -- we just catch the exception and continue
         CFGToDOT.dot2pdf(outputFile);
       } catch(Exception e) {
         logger.warning(e.getMessage());
@@ -331,5 +314,5 @@ public abstract class PathListener extends PropertyListenerAdapter {
   public abstract boolean visualize(Config jpfConf);
   public abstract File getVisualizationDir(Config jpfConf);
   public abstract boolean serialize(Config jpfConf);
-  public abstract File getSerializationDir(Config jpfConf);
+  public abstract File getPolicyBaseDir(Config jpfConf);
 }

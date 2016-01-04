@@ -6,32 +6,14 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import gov.nasa.jpf.Config;
-import gov.nasa.jpf.Error;
 import gov.nasa.jpf.JPF;
-import gov.nasa.jpf.report.ConsolePublisher;
 import gov.nasa.jpf.report.Publisher;
 import gov.nasa.jpf.report.Reporter;
 import gov.nasa.jpf.report.Statistics;
 import gov.nasa.jpf.symbc.numeric.PathCondition;
-import gov.nasa.jpf.util.Left;
-import gov.nasa.jpf.vm.ClassInfo;
-import gov.nasa.jpf.vm.ClassLoaderInfo;
-import gov.nasa.jpf.vm.Instruction;
-import gov.nasa.jpf.vm.MethodInfo;
-import gov.nasa.jpf.vm.Path;
-import gov.nasa.jpf.vm.Step;
-import gov.nasa.jpf.vm.Transition;
-import gov.nasa.jpf.vm.VM;
-import sidechannel.util.SymbolicVariableCollector;
-import sun.security.tools.PathList;
 import wcanalysis.heuristic.util.OmegaConverter;
 import wcanalysis.heuristic.util.SMTLibConverter;
 
@@ -123,7 +105,7 @@ public abstract class ResultsPublisher extends Publisher {
         String stateCSVHeader = wcState.getCSVHeader();
         if(!stateCSVHeader.endsWith(","))
           stateCSVHeader += ",";
-        String header = "inputSize,historySize," + 
+        String header = "inputSize," + 
             ((this.cfgInputSize >= 0) ? "cfgInputSize," : "") + 
             stateCSVHeader +
             "analysisTime,mem,paths," +
@@ -134,7 +116,6 @@ public abstract class ResultsPublisher extends Publisher {
       }
       
       out.print(conf.getString("target.args") + ",");
-      out.print(pathListener.getDecisionHistorySize() + ",");
       if(cfgInputSize >= 0)
         out.print(cfgInputSize + ",");
       String stateCSVRes = wcState.getCSV();

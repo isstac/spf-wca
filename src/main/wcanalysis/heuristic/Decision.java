@@ -1,12 +1,8 @@
 package wcanalysis.heuristic;
 
 import java.io.Serializable;
-import java.util.LinkedHashMap;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-
-import com.sun.tools.javac.main.JavacOption.XOption;
 
 import gov.nasa.jpf.vm.StackFrame;
 

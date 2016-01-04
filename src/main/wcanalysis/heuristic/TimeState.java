@@ -25,6 +25,11 @@ public class TimeState extends State {
   }
 
   @Override
+  public int getWC() {
+    return getDepth();
+  }
+
+  @Override
   public int compareTo(State o) {
     if(!(o instanceof TimeState)) {
       throw new IllegalStateException("Expected state fo type " + TimeState.class.getName());
@@ -41,5 +46,4 @@ public class TimeState extends State {
   public String getCSV() {
     return this.depth + "," + this.instrExecuted;
   }
-
 }

@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.Set;
 
 import gov.nasa.jpf.vm.ChoiceGenerator;
 
@@ -14,7 +15,8 @@ import gov.nasa.jpf.vm.ChoiceGenerator;
  *
  */
 public abstract class Policy implements Serializable {
-  static enum ResolutionType {
+  
+  static enum ResolutionType implements Serializable {
     PERFECT,
     HISTORY, 
     INVARIANT,
@@ -22,7 +24,8 @@ public abstract class Policy implements Serializable {
     NEW_CHOICE;
   }
   
-  static class Resolution {
+  static class Resolution implements Serializable {
+    private static final long serialVersionUID = 2247935610676857227L;
     public final ResolutionType type;
     public final int choice;
     public Resolution(int choice, ResolutionType type) {
@@ -32,6 +35,20 @@ public abstract class Policy implements Serializable {
   }
   
   private static final long serialVersionUID = -2247935610676857237L;
+  
+  
+  private final Set<String> measuredMethods;
+    
+  public Policy(WorstCasePath wcPath, Set<String> measuredMethods) {
+    this.measuredMethods = measuredMethods;
+    computePolicy(wcPath);
+  }
+  
+  protected abstract void computePolicy(WorstCasePath wcPath);
+  
+  public Set<String> getMeasuredMethods() {
+    return this.measuredMethods;
+  }
   
   public abstract Resolution resolve(ChoiceGenerator<?> cg, ContextManager ctxManager);
   
@@ -46,7 +63,7 @@ public abstract class Policy implements Serializable {
     }
   }
 
-  public static <T extends Policy> T fromObjStream(InputStream in, Class<T> polCls) {
+  public static <T extends Policy> T load(InputStream in, Class<T> polCls) {
     T graph;
     try {
       ObjectInputStream i = new ObjectInputStream(in);

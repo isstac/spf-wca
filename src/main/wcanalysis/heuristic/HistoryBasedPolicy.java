@@ -1,5 +1,6 @@
 package wcanalysis.heuristic;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -10,29 +11,35 @@ import gov.nasa.jpf.vm.ChoiceGenerator;
 import gov.nasa.jpf.vm.Instruction;
 import isstac.structure.cfg.Block;
 import isstac.structure.cfg.CFG;
-import wcanalysis.heuristic.DecisionCollection.FalseDecisionCollection;
-import wcanalysis.heuristic.DecisionCollection.TrueDecisionCollection;
 
 /**
  * @author Kasper Luckow
  *
  */
-public class HistoryBasedPolicy extends Policy { 
+public class HistoryBasedPolicy extends Policy implements ChoiceListener { 
   private static final long serialVersionUID = 3311547338575590448L;
 
   private Map<BranchInstruction, Map<Path, Set<Integer>>> pol;
   private Map<BranchInstruction, Set<Integer>> historylessPol;
   
   public static final int NO_LIMIT = -1;
-  public HistoryBasedPolicy(WorstCasePath wcPath, int maxHistorySize) {
-    computePolicy(wcPath, maxHistorySize);
+  private final int maxHistorySize;
+  
+  private InvariantChecker invariantChecker = null;
+  
+  public HistoryBasedPolicy(WorstCasePath wcPath, Set<String> measuredMethods, int maxHistorySize) {
+    super(wcPath, measuredMethods);
+    this.maxHistorySize = maxHistorySize;
   }
   
-  public HistoryBasedPolicy(WorstCasePath wcPath) {
-    computePolicy(wcPath, NO_LIMIT);
+  public HistoryBasedPolicy(WorstCasePath wcPath, Set<String> measuredMethods, int maxHistorySize, InvariantChecker invariantChecker) {
+    super(wcPath, measuredMethods);
+    this.maxHistorySize = maxHistorySize;
+    this.invariantChecker = invariantChecker; 
   }
   
-  private void computePolicy(WorstCasePath wcPath, int maxHistorySize) {
+  @Override
+  protected void computePolicy(WorstCasePath wcPath) {
     this.pol = new HashMap<>();
     for(int i = wcPath.size(); i > 0; i--) {
       Decision currDecision = wcPath.get(i);
@@ -78,7 +85,17 @@ public class HistoryBasedPolicy extends Policy {
   public Resolution resolve(ChoiceGenerator<?> cg, ContextManager ctxManager) {
     assert cg instanceof PCChoiceGenerator;
     
+    PCChoiceGenerator pcCg = (PCChoiceGenerator)cg;
+    
     BranchInstruction branchInstr = new BranchInstruction(cg.getInsn());
+    
+    if(this.invariantChecker != null) {
+      Set<Integer> allowedChoices = this.invariantChecker.getChoices(branchInstr, pcCg);
+      if(allowedChoices.size() == 1) { //we can uniquely determine one choice
+        return new Resolution(allowedChoices.iterator().next(), ResolutionType.INVARIANT);
+      }
+    }
+    
     //Check whether it can be quickly resolved with historyless policy
     Set<Integer> decisions = this.historylessPol.get(branchInstr);
     //if the historyless policy has no choices stored, neither will the stateful one, so we cannot resolve it
@@ -99,95 +116,12 @@ public class HistoryBasedPolicy extends Policy {
     } else {
       return new Resolution(-1, ResolutionType.UNRESOLVED);
     }
-    
-    //do the invariant checking here
-    
-    
-    
-    Instruction ifInstr = ((PCChoiceGenerator) cg).getInsn();
-    CFG cfg = getCfgExtractor().getCFG(ifInstr);      
-    
-    Block bl = cfg.getBlockWithIndex(ifInstr.getInstructionIndex());      
-    
-    boolean takeFalseBranch = bl.hasAttribute(FalseDecisionCollection.class);
-    boolean takeTrueBranch = bl.hasAttribute(TrueDecisionCollection.class);
-    int currChoice = ((PCChoiceGenerator) cg).getNextChoice();
-    
-    //Check if decision can be resolved "perfectly" i.e. only counts on one decision:
-    if(ignoreState(takeTrueBranch, takeFalseBranch, currChoice)) {
-      vm.getSystemState().setIgnored(true);
-      this.resolvedPerfectChoices++;
-      return;
-    } else if(matchState(takeTrueBranch, takeFalseBranch, currChoice)) {
-      State state = getCurrentState();
-      HeuristicDecisionCounts counts = state.getBlockCounts(bl);
-      counts.incrementForChoice(currChoice);
-      return;
+  }
+
+  @Override
+  public void choiceMade(PCChoiceGenerator cg, int choiceMade) {
+    if(this.invariantChecker != null) {
+      this.invariantChecker.choiceMade(new BranchInstruction(cg.getInsn()), choiceMade);
     }
-    
-    //counts on both branches
-    if(takeTrueBranch && takeFalseBranch) { 
-      //We have to call getPrev here on the previous decision, because in reality we haven't
-      //made the prevDec decision yet -- specifically we may backtrack according to the decision
-      //sets based on history. Agreed, this is pretty ugly, but seems we have to set prevDec in
-      //choicegeneratoradvanced for everything to work correctly with JPFs exploration
-      DecisionHistory currDecisionHistory = null;
-      if(currDec != null)
-        currDecisionHistory = currDec.generateCtxPreservingDecisionHistory(decisionHistorySize);
-      else //bogus
-        currDecisionHistory = new DecisionHistory(0); 
-      
-      FalseDecisionCollection falseDecColl = bl.getAttribute(FalseDecisionCollection.class);
-      boolean matchFalseHistories = falseDecColl.contains(currDecisionHistory);
-      
-      TrueDecisionCollection trueDecColl = bl.getAttribute(TrueDecisionCollection.class);
-      boolean matchTrueHistories = trueDecColl.contains(currDecisionHistory);
-      
-      //Check if decision can be resolved if the current decision history only matches recorded
-      //decisions for one branch
-      if(ignoreState(matchTrueHistories, matchFalseHistories, currChoice)) {
-        vm.getSystemState().setIgnored(true);
-        this.resolvedHistoryChoices++;
-        return;
-      } else if(matchState(matchTrueHistories, matchFalseHistories, currChoice)) {
-        State state = getCurrentState();
-        HeuristicDecisionCounts counts = state.getBlockCounts(bl);
-        counts.incrementForChoice(currChoice);
-        return;
-      }
-      
-      //Check if decision can be resolved by checking
-      //the count invariant for that decision
-      State state = getCurrentState();
-      HeuristicDecisionCounts counts = state.getBlockCounts(bl);
-      Map<Long, CountsInvariant> blId2countsInv = countsInvariants.get(cfg.getFqMethodName());
-      if(blId2countsInv != null) {
-        CountsInvariant countsInvariant = blId2countsInv.get(bl.getId());
-        if(countsInvariant != null) {
-          int tmpFalseCount = counts.falseCount;
-          int tmpTrueCount = counts.trueCount;
-          if(((PCChoiceGenerator) cg).getNextChoice() == 1) //the decision will be true branch
-            tmpTrueCount++;
-          else
-            tmpFalseCount++;
-          
-          if(!countsInvariant.apply(tmpTrueCount, tmpFalseCount)) {
-            //Invariant does not hold, so we prune
-            this.resolvedInvariantChoices++;
-            vm.getSystemState().setIgnored(true);
-            return;
-          }
-        }
-      }
-      
-      counts.incrementForChoice(currChoice);
-      this.unresolvedChoices++;
-    } else if((!bl.hasAttribute(FalseDecisionCollection.class) && !bl.hasAttribute(TrueDecisionCollection.class)) ||
-        (!takeTrueBranch && !takeFalseBranch)) { //branches we did not explore when obtaining counts
-      this.newChoices++;
-    }
-    
-    
-    return 0;
   }
 }

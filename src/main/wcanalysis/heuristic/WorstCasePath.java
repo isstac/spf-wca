@@ -2,13 +2,11 @@ package wcanalysis.heuristic;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
 import gov.nasa.jpf.vm.ChoiceGenerator;
-import gov.nasa.jpf.vm.StackFrame;
-import wcanalysis.heuristic.ContextManager.CGContext;
 
 /**
  * @author Kasper Luckow
@@ -50,46 +48,51 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
      */
 
     //TODO: this is very similar to the path projector in PathListener -- merge?
-    Map<BranchInstruction, Set<DecisionHistory>> branchInstr2TrueDecisions = new HashMap<>();
-    Map<BranchInstruction, Set<DecisionHistory>> branchInstr2FalseDecisions = new HashMap<>();
+    Map<BranchInstruction, Map<Integer, Set<Path>>> branch2histories = new HashMap<>();
     Set<BranchInstruction> branchInstructions = new HashSet<>();
-    for(Decision dec : this) {
-      DecisionHistory history = dec.generateCtxPreservingDecisionHistory(this.decisionHistorySize);
-      BranchInstruction currInstruction = dec.getInstruction();
-      branchInstructions.add(currInstruction);
-      Set<DecisionHistory> histories = null;
+    int maxHistorySize = 1;
+    
+    Decision currentDecision = null;
+    int decIdx = this.size() - 1;
+    Iterator<Decision> decIter = this.descendingIterator();
+    while(decIter.hasNext()) {
+      currentDecision = decIter.next();
+      Path history = this.generateCtxPreservingSubPathFromIdx(decIdx - 1, maxHistorySize);
       
-      if(dec.getChoice() == 0) { //false decision
-        histories = branchInstr2FalseDecisions.get(currInstruction);
-        if(histories == null) {
-          histories = new HashSet<>();
-          branchInstr2FalseDecisions.put(currInstruction, histories);
-        }
-      } else {  //true decision, was if(dec.getChoice() == 1) before
-          histories = branchInstr2TrueDecisions.get(currInstruction);
-          if(histories == null) {
-            histories = new HashSet<>();
-            branchInstr2TrueDecisions.put(currInstruction, histories);
-          }
+      BranchInstruction currInstruction = currentDecision.getInstruction();
+      branchInstructions.add(currInstruction);
+      
+      Map<Integer, Set<Path>> historiesForChoice = branch2histories.get(currInstruction);
+      if(historiesForChoice == null) {
+        historiesForChoice = new HashMap<>();
+        branch2histories.put(currInstruction, historiesForChoice);
       }
-      // else
-       //throw new IllegalStateException();
+      
+      Set<Path> histories = historiesForChoice.get(currentDecision.getChoice());
+      if(histories == null) {
+        histories = new HashSet<>();
+        historiesForChoice.put(currentDecision.getChoice(), histories);
+      }
+      
       histories.add(history);
+      decIdx--;
     }
     
     int pathMeasure = 0;
     for(BranchInstruction branchInstr : branchInstructions) {
-      Set<DecisionHistory> trueHistories = branchInstr2TrueDecisions.get(branchInstr);
-      Set<DecisionHistory> falseHistories = branchInstr2FalseDecisions.get(branchInstr);
-      if((trueHistories == null && falseHistories != null) || //resolved perfectly 
-          (falseHistories == null && trueHistories != null)) {
+      Map<Integer, Set<Path>> histories = branch2histories.get(branchInstr);
+      if(histories.keySet().size() == 1) { //resolved perfectly
         pathMeasure++;
-      } else if(falseHistories != null && trueHistories != null) { //now we check based on histories
-        Set<DecisionHistory> union = new HashSet<>(trueHistories);
-        union.addAll(falseHistories);
+      } else { //now we check based on histories
+        Set<Path> union = new HashSet<>();
+        for(Set<Path> historiesForChoice : histories.values()) {
+          union.addAll(historiesForChoice);
+        }
         
-        Set<DecisionHistory> intersection = new HashSet<DecisionHistory>(trueHistories); // use the copy constructor
-        intersection.retainAll(falseHistories);
+        Set<Path> intersection = new HashSet<>();
+        for(Set<Path> historiesForChoice : histories.values()) {
+          intersection.retainAll(historiesForChoice);
+        }
         
         //the measure is updated with the number of decisions we can uniquely resolve!
         pathMeasure += union.size() - intersection.size();

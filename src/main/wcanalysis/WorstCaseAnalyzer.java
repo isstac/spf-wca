@@ -78,7 +78,6 @@ public class WorstCaseAnalyzer implements JPFShell {
 
   @Override
   public void start(String[] args) {
-    config.setProperty(PathListener.SERIALIZER_CONF, JavaSerializer.class.getName());
     config.setProperty(PolicyGeneratorListener.SER_OUTPUT_PATH_CONF, serializedDir.getAbsolutePath());
     config.setProperty(HeuristicListener.SER_INPUT_PATH, serializedDir.getAbsolutePath());
     
@@ -89,7 +88,6 @@ public class WorstCaseAnalyzer implements JPFShell {
       config.setProperty(HeuristicResultsPublisher.RESULTS_DIR_CONF, heuristicDir.getAbsolutePath());
       
       config.setProperty(PathListener.SHOW_INSTRS_CONF, "false");
-      config.setProperty(PathListener.SHOW_BB_SEQ_CONF, "true");
       
       File visDirHeurstic = Util.createDirIfNotExist(heuristicDir, "visualizations");
       config.setProperty(HeuristicListener.VIS_OUTPUT_PATH_CONF, visDirHeurstic.getAbsolutePath());
@@ -232,8 +230,8 @@ public class WorstCaseAnalyzer implements JPFShell {
 
       //explore guided by policy
       jpf.run();
-      State wcState = heuristic.getWcState();
-      dataCollection.addDatapoint(inputSize, wcState.getDepth());
+      State wcState = heuristic.getWcPath().getWCState();
+      dataCollection.addDatapoint(inputSize, wcState.getWC());
     }
     return dataCollection;
   }

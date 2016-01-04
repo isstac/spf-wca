@@ -4,16 +4,17 @@ import isstac.structure.cfg.Block;
 import isstac.structure.cfg.CFG;
 import isstac.structure.cfg.CFGGenerator;
 import isstac.structure.cfg.CachingCFGGenerator;
-import wcanalysis.heuristic.DecisionCollection.FalseDecisionCollection;
-import wcanalysis.heuristic.DecisionCollection.TrueDecisionCollection;
 import wcanalysis.heuristic.Policy.Resolution;
 import wcanalysis.heuristic.Policy.ResolutionType;
 import wcanalysis.heuristic.util.Util;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+
+import javax.management.RuntimeErrorException;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
@@ -29,6 +30,8 @@ import gov.nasa.jpf.vm.VM;
  */
 public class HeuristicListener extends PathListener {
   
+  private Logger logger = JPF.getLogger(HeuristicListener.class.getName());
+  
   public final static String VIS_OUTPUT_PATH_CONF = "symbolic.wc.heuristic.visualizer.outputpath";
   public final static String SER_OUTPUT_PATH = "symbolic.wc.heuristic.serializer.outputpath";
   
@@ -41,25 +44,19 @@ public class HeuristicListener extends PathListener {
   private long resolvedInvariantChoices = 0;
   private long newChoices = 0;
   
-  private Map<String, Map<Long, CountsInvariant>> countsInvariants = new HashMap<>();
   private Policy policy;
   
   public HeuristicListener(Config jpfConf, JPF jpf) {
     super(jpfConf, jpf);
     
-    //TODO: This stuff is just experimental!
-    //we should make a way of specifying in the jpf file the invariants.
-    //should be fairly easy to make support for
-    Map<Long, CountsInvariant> block2Invariant = new HashMap<>();
-    CountsInvariant mergeSortInvariant = new CountsInvariant() {
-      @Override
-      public boolean apply(long trueCount, long falseCount) {
-        return trueCount < falseCount;
-      }
-    };
-    //16 is the basic block id
-    block2Invariant.put(16L, mergeSortInvariant);
-   // countsInvariants.put("benchmarks.java15.util.Arrays.mergeSort([Ljava/lang/Object;[Ljava/lang/Object;III)V", block2Invariant);
+    PolicyManager policyManager = new PolicyManager(new File(getSerializedInputDir(jpfConf)));
+    
+    try {
+      this.policy = policyManager.loadPolicy(measuredMethods, Policy.class);
+    } catch (IOException | PolicyManagerException e) {
+      logger.severe(e.getMessage());
+      throw new RuntimeException(e);
+    }
   }
   
   private String getSerializedInputDir(Config jpfConfig) {
@@ -103,7 +100,12 @@ public class HeuristicListener extends PathListener {
       }
       
       if(ignoreState)
-        vm.getSystemState().setIgnored(true);      
+        vm.getSystemState().setIgnored(true);
+      
+      if(policy instanceof ChoiceListener) {
+        PCChoiceGenerator pccg = (PCChoiceGenerator)cg;
+        ((ChoiceListener)policy).choiceMade(pccg, pccg.getNextChoice());
+      }
     }
   }
   
@@ -150,7 +152,7 @@ public class HeuristicListener extends PathListener {
   }
 
   @Override
-  public File getSerializationDir(Config jpfConf) {
+  public File getPolicyBaseDir(Config jpfConf) {
     File out = Util.createDirIfNotExist(jpfConf.getString(SER_OUTPUT_PATH, "./ser/policy"));
     return out;
   }
