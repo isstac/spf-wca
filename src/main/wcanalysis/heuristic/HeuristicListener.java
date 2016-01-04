@@ -1,28 +1,16 @@
 package wcanalysis.heuristic;
 
-import isstac.structure.cfg.Block;
-import isstac.structure.cfg.CFG;
-import isstac.structure.cfg.CFGGenerator;
-import isstac.structure.cfg.CachingCFGGenerator;
 import wcanalysis.heuristic.Policy.Resolution;
-import wcanalysis.heuristic.Policy.ResolutionType;
 import wcanalysis.heuristic.util.Util;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Logger;
-
-import javax.management.RuntimeErrorException;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
-import gov.nasa.jpf.search.Search;
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
-import gov.nasa.jpf.util.Predicate;
 import gov.nasa.jpf.vm.ChoiceGenerator;
-import gov.nasa.jpf.vm.Instruction;
 import gov.nasa.jpf.vm.VM;
 
 /**
@@ -101,10 +89,11 @@ public class HeuristicListener extends PathListener {
       
       if(ignoreState)
         vm.getSystemState().setIgnored(true);
-      
-      if(policy instanceof ChoiceListener) {
-        PCChoiceGenerator pccg = (PCChoiceGenerator)cg;
-        ((ChoiceListener)policy).choiceMade(pccg, pccg.getNextChoice());
+      else {
+        if(policy instanceof ChoiceListener) {
+          PCChoiceGenerator pccg = (PCChoiceGenerator)cg;
+          ((ChoiceListener)policy).choiceMade(pccg, pccg.getNextChoice());
+        }
       }
     }
   }

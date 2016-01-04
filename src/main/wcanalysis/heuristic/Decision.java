@@ -47,7 +47,7 @@ public class Decision implements Serializable {
     return new HashCodeBuilder()
         .append(instr)
         .append(choice)
-        .append(context)
+        //.append(context)
         .toHashCode();
   }
 
@@ -58,7 +58,7 @@ public class Decision implements Serializable {
       return new EqualsBuilder()
           .append(instr, other.instr)
           .append(choice, other.choice)
-          .append(context, other.context)
+          //.append(context, other.context)
           .isEquals();
     } else{
       return false;

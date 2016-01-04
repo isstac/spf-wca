@@ -1,13 +1,9 @@
 package wcanalysis.heuristic;
 
-import isstac.structure.cfg.Block;
 import isstac.structure.cfg.CFG;
 import isstac.structure.cfg.CFGGenerator;
 import isstac.structure.cfg.CachingCFGGenerator;
 import isstac.structure.cfg.util.CFGToDOT;
-import isstac.structure.cfg.util.DotAttribute;
-import isstac.structure.serialize.GraphSerializer;
-import isstac.structure.serialize.JavaSerializer;
 import wcanalysis.heuristic.ContextManager.CGContext;
 import wcanalysis.heuristic.util.PathVisualizer;
 import wcanalysis.heuristic.util.Util;
@@ -16,44 +12,21 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import att.grappa.Attribute;
 import att.grappa.Graph;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.PropertyListenerAdapter;
-import gov.nasa.jpf.jvm.bytecode.DoubleCompareInstruction;
-import gov.nasa.jpf.jvm.bytecode.FCMPL;
-import gov.nasa.jpf.jvm.bytecode.IfInstruction;
 import gov.nasa.jpf.search.Search;
-import gov.nasa.jpf.symbc.bytecode.FCMPG;
-import gov.nasa.jpf.symbc.bytecode.LCMP;
-import gov.nasa.jpf.symbc.bytecode.IF_ICMPEQ;
-import gov.nasa.jpf.symbc.bytecode.IF_ICMPGE;
-import gov.nasa.jpf.symbc.bytecode.IF_ICMPGT;
-import gov.nasa.jpf.symbc.bytecode.IF_ICMPLE;
-import gov.nasa.jpf.symbc.bytecode.IF_ICMPLT;
-import gov.nasa.jpf.symbc.bytecode.IF_ICMPNE;
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
 import gov.nasa.jpf.symbc.numeric.PathCondition;
 import gov.nasa.jpf.vm.ChoiceGenerator;
 import gov.nasa.jpf.vm.ElementInfo;
 import gov.nasa.jpf.vm.Instruction;
-import gov.nasa.jpf.vm.MethodInfo;
 import gov.nasa.jpf.vm.StackFrame;
 import gov.nasa.jpf.vm.ThreadInfo;
 import gov.nasa.jpf.vm.VM;
@@ -195,10 +168,6 @@ public abstract class PathListener extends PropertyListenerAdapter {
     
     Policy policy = this.policyGenerator.generate(this.measuredMethods, wcPath);
     
-    String tgtOutputfileName = "";
-    for(String measuredMethod : measuredMethods)
-      tgtOutputfileName += measuredMethod.substring(0, measuredMethod.lastIndexOf("("));
-    
     if(serialize(jpfConf)) {
       try {
         this.policyManager.savePolicy(policy);
@@ -214,11 +183,16 @@ public abstract class PathListener extends PropertyListenerAdapter {
       CFGGenerator cfgGen = new CachingCFGGenerator(classpaths);
       PathProjector sequenceVisualizer = new PathVisualizer(cfgGen);
       Collection<CFG> transformedCFGs = sequenceVisualizer.projectPath(wcPath);
-      for(CFG cfg : transformedCFGs) {
-        visualize(cfg, this.showInstrs, new File(this.visDir, getBaseFileName(cfg)));
+      if(transformedCFGs != null) {
+        for(CFG cfg : transformedCFGs) {
+          visualize(cfg, this.showInstrs, new File(this.visDir, getBaseFileName(cfg) + ".pdf"));
+        }
       }
       
       //output the path to text file
+      String tgtOutputfileName = "";
+      for(String measuredMethod : measuredMethods)
+        tgtOutputfileName += measuredMethod;
       visualize(wcPath, new File(this.visDir, "wcpath_" + tgtOutputfileName + ".txt"));
     }
   }
@@ -253,7 +227,8 @@ public abstract class PathListener extends PropertyListenerAdapter {
 
   @Override
   public void stateAdvanced(Search search) {
-    if(search.isEndState() && !search.isIgnoredState()) {
+    //TODO: check iserrorstate here as was done originally?
+    if(search.isEndState()) {
       checkExecutionPath(search.getVM());
     }
   }

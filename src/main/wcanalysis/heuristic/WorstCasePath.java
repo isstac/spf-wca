@@ -57,7 +57,7 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
     Iterator<Decision> decIter = this.descendingIterator();
     while(decIter.hasNext()) {
       currentDecision = decIter.next();
-      Path history = this.generateCtxPreservingSubPathFromIdx(decIdx - 1, maxHistorySize);
+      Path history = this.generateCtxPreservingHistoryFromIdx(decIdx, maxHistorySize);
       
       BranchInstruction currInstruction = currentDecision.getInstruction();
       branchInstructions.add(currInstruction);
@@ -89,7 +89,7 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
           union.addAll(historiesForChoice);
         }
         
-        Set<Path> intersection = new HashSet<>();
+        Set<Path> intersection = new HashSet<>(union);
         for(Set<Path> historiesForChoice : histories.values()) {
           intersection.retainAll(historiesForChoice);
         }
@@ -112,6 +112,6 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
       return comp;
     
     //otherwise we will select the path that has the highest path measure
-    return this.computePathMeasure() - o.computePathMeasure();
+    return this.getPathmeasure() - o.getPathmeasure();
   }
 }

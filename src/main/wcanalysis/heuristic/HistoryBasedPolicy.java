@@ -41,13 +41,14 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
   @Override
   protected void computePolicy(WorstCasePath wcPath) {
     this.pol = new HashMap<>();
-    for(int i = wcPath.size(); i > 0; i--) {
+    this.historylessPol = new HashMap<>();
+    for(int i = wcPath.size() - 1; i >= 0; i--) {
       Decision currDecision = wcPath.get(i);
       Decision prevDecision;
       Path history = new Path();
       //We get the context preserving history from the current decision
       int currHistorySize = 0;
-      for(int j = i - 1; j <= 0; j--, currHistorySize++) {
+      for(int j = i - 1; j >= 0; j--, currHistorySize++) {
         prevDecision = wcPath.get(j);
         if(prevDecision.getContext() != currDecision.getContext())
           break;
@@ -110,9 +111,10 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
     Path history = new Path(cg.getPreviousChoiceGeneratorOfType(PCChoiceGenerator.class), ctxManager, true);
     
     //If we get here, there must be a history stored for the branch
-    decisions = this.pol.get(branchInstr).get(history);
-    if(decisions.size() == 1) {
-      return new Resolution(decisions.iterator().next(), ResolutionType.HISTORY);
+    Map<Path, Set<Integer>> choices = this.pol.get(branchInstr);
+    Set<Integer> decisionsWithHistory = choices.get(history);
+    if(decisionsWithHistory != null && decisionsWithHistory.size() == 1) {
+      return new Resolution(decisionsWithHistory.iterator().next(), ResolutionType.HISTORY);
     } else {
       return new Resolution(-1, ResolutionType.UNRESOLVED);
     }

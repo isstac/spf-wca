@@ -3,6 +3,9 @@ package wcanalysis.heuristic;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
 import gov.nasa.jpf.vm.ChoiceGenerator;
 import gov.nasa.jpf.vm.StackFrame;
@@ -15,7 +18,11 @@ class Path extends LinkedList<Decision> {
   public Path() { }
 
   public Path(ChoiceGenerator<?> endCG, ContextManager ctxManager, boolean ctxPreserving) {
+    if(endCG == null)
+      return;
     PCChoiceGenerator[] pcs = endCG.getAllOfType(PCChoiceGenerator.class);
+    if(pcs.length == 0)
+      return;
     StackFrame currCtx = ctxManager.getContext(pcs[pcs.length - 1]).stackFrame;
     for(int i = 0; i < pcs.length; i++) {
       PCChoiceGenerator currPc = pcs[i];
@@ -31,25 +38,21 @@ class Path extends LinkedList<Decision> {
     this(endCG, ctxManager, false);
   }
   
-  public Path generateCtxPreservingSubPathFromIdx(int idx, int maxSize) {
+  public Path generateCtxPreservingHistoryFromIdx(int idx, int maxSize) {
     Path subPath = new Path();
-    Decision end = this.get(idx);
-    subPath.addFirst(end);
-    for(int i = idx-1, size = 0; i <= 0; i--, size++) {
-      if(maxSize > 0 && size > maxSize)
+    if(idx <= 0)
+      return subPath;
+    StackFrame ctx = this.get(idx).getContext();
+    for(int i = idx-1, size = 0; i >= 0; i--, size++) {
+      if(size >= maxSize)
         return subPath;
       Decision curr = this.get(i);
-      if(curr.getContext() == end.getContext()) {
-        subPath.add(curr);
+      if(curr.getContext() == ctx) {
+        subPath.addFirst(curr);
       } else
         return subPath;
     }
     return subPath;
-  }
-  
-  
-  public Path generateCtxPreservingSubPathFromIdx(int idx) {
-    return generateCtxPreservingSubPathFromIdx(idx, -1);
   }
   
   @Override
@@ -62,7 +65,7 @@ class Path extends LinkedList<Decision> {
       pathBuilder.append("[[" +  
             "l:" + cur.getInstruction().getLineNumber() + "(o:" +
             cur.getInstruction().getInstructionIndex() + "), " + 
-            ((cur.getChoice() == 1) ? 'T' : (cur.getChoice() == 0) ? 'F' : cur.getChoice()) + "]" + cur.getContext() + "]");
+            ((cur.getChoice() == 1) ? "T" : (cur.getChoice() == 0) ? "F" : cur.getChoice()) + "]" /*+ cur.getContext()*/ + "]");
       if(iter.hasNext())
         pathBuilder.append(", ");
     }
