@@ -47,21 +47,6 @@ public class Path extends LinkedList<Decision> {
   
   public Path(ChoiceGenerator<?> endCG, ContextManager ctxManager, boolean ctxPreserving, int maxSize) {
     generatePath(this, endCG, ctxManager, ctxManager.getContext(endCG), ctxPreserving, maxSize);
-    /*if(endCG == null)
-      return;
-    PCChoiceGenerator[] pcs = endCG.getAllOfType(PCChoiceGenerator.class);
-    if(pcs.length == 0)
-      return;
-    //StackFrame currCtx = ctxManager.getContext(pcs[pcs.length - 1]).stackFrame;
-    StackFrame currCtx = ctxManager.getContext(endCG).stackFrame;
-    for(int i = 0; i < pcs.length && this.size() < maxSize; i++) {
-      PCChoiceGenerator currPc = pcs[i];
-      CGContext cgCtx = ctxManager.getContext(currPc);
-      if(ctxPreserving && currCtx != cgCtx.stackFrame)
-        break;
-      Decision dec = new Decision(new BranchInstruction(currPc.getInsn()), currPc.getNextChoice(), cgCtx.stackFrame);
-      this.add(dec);
-    }*/
   }
   
   public Path(ChoiceGenerator<?> endCG, ContextManager ctxManager, boolean ctxPreserving) {
