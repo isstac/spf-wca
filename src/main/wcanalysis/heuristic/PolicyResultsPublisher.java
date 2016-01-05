@@ -6,6 +6,10 @@ import gov.nasa.jpf.Config;
 import gov.nasa.jpf.report.Reporter;
 import wcanalysis.heuristic.util.Util;
 
+/**
+ * @author Kasper Luckow
+ *
+ */
 public class PolicyResultsPublisher extends ResultsPublisher {
 
   public static final String RESULTS_DIR_CONF = "report.console.wc.policy.resultsdir";

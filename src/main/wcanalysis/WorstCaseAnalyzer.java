@@ -1,6 +1,5 @@
 package wcanalysis;
 
-import isstac.structure.serialize.JavaSerializer;
 import wcanalysis.charting.DataCollection;
 import wcanalysis.charting.WorstCaseChart;
 import wcanalysis.fitting.ExpTrendLine;
@@ -19,8 +18,6 @@ import wcanalysis.heuristic.util.Util;
 
 import java.io.File;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,8 +31,6 @@ import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.JPFShell;
 import gov.nasa.jpf.listener.CoverageAnalyzer;
-import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
-import gov.nasa.jpf.util.JPFLogger;
 
 /**
  * @author Kasper Luckow

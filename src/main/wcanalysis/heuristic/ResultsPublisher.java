@@ -28,7 +28,6 @@ public abstract class ResultsPublisher extends Publisher {
   
   private File file;
   private FileOutputStream fos;
-  private boolean fileExists = false;
   private int cfgInputSize;
   
   private File baseDir;
@@ -52,7 +51,6 @@ public abstract class ResultsPublisher extends Publisher {
     baseDir = getResultsDir(conf);
     
     file = new File(baseDir, resultsFile);
-    fileExists = file.exists();
   }
 
   @Override
