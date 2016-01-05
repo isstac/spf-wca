@@ -1,13 +1,17 @@
-package wcanalysis.heuristic;
+package wcanalysis.heuristic.policy;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
 import gov.nasa.jpf.vm.ChoiceGenerator;
+import wcanalysis.heuristic.BranchInstruction;
+import wcanalysis.heuristic.ContextManager;
+import wcanalysis.heuristic.Decision;
+import wcanalysis.heuristic.InvariantChecker;
+import wcanalysis.heuristic.Path;
+import wcanalysis.heuristic.Resolution;
+import wcanalysis.heuristic.WorstCasePath;
+import wcanalysis.heuristic.Resolution.ResolutionType;
 
 /**
  * @author Kasper Luckow
@@ -16,8 +20,9 @@ import gov.nasa.jpf.vm.ChoiceGenerator;
 public class HistoryBasedPolicy extends Policy implements ChoiceListener { 
   private static final long serialVersionUID = 3311547338575590448L;
 
-  private Map<BranchInstruction, Map<Path, Set<Integer>>> pol;
-  private Map<BranchInstruction, Set<Integer>> historylessPol;
+  
+  private HistoryBasedBranchPolicy historyPolicy;
+  private HistoryLessBranchPolicy historyLessPolicy;
   
   public static final int NO_LIMIT = -1;
   private final int maxHistorySize;
@@ -38,10 +43,12 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
   }
   
   private void computePolicy(WorstCasePath wcPath) {
-    this.pol = new HashMap<>();
-    this.historylessPol = new HashMap<>();
+    HistoryBasedBranchPolicy.Builder historyPolicyBuilder = new HistoryBasedBranchPolicy.Builder();
+    HistoryLessBranchPolicy.Builder historyLessPolicyBuilder = new HistoryLessBranchPolicy.Builder();
+    
     for(int i = wcPath.size() - 1; i >= 0; i--) {
       Decision currDecision = wcPath.get(i);
+      int currentChoice = currDecision.getChoice();
       Decision prevDecision;
       Path history = new Path();
       //We get the context preserving history from the current decision
@@ -55,29 +62,13 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
         history.addFirst(prevDecision);
       }
       BranchInstruction branchInstr = currDecision.getInstruction();
-      Map<Path, Set<Integer>> branchPol = pol.get(branchInstr);
-      if(branchPol == null) {
-        branchPol = new HashMap<>();
-        pol.put(currDecision.getInstruction(), branchPol);
-      }
       
-      Set<Integer> decisions = branchPol.get(history);
-      if(decisions == null) {
-        decisions = new HashSet<>();
-        branchPol.put(history, decisions);
-      }
       
-      int policyChoice = currDecision.getChoice();
-      decisions.add(policyChoice);
-      
-      //also add it to historyless policy
-      Set<Integer> historylessDecisions = historylessPol.get(branchInstr);
-      if(historylessDecisions == null) {
-        historylessDecisions = new HashSet<>();
-        historylessPol.put(branchInstr, historylessDecisions);
-      }
-      historylessDecisions.add(policyChoice);
+      historyPolicyBuilder.addPolicy(branchInstr, history, currentChoice);
+      historyLessPolicyBuilder.addPolicy(branchInstr, currentChoice);
     }
+    this.historyPolicy = historyPolicyBuilder.build();
+    this.historyLessPolicy = historyLessPolicyBuilder.build();
   }
 
   @Override
@@ -96,7 +87,7 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
     }
     
     //Check whether it can be quickly resolved with historyless policy
-    Set<Integer> decisions = this.historylessPol.get(branchInstr);
+    Set<Integer> decisions = this.historyLessPolicy.resolve(branchInstr);
     //if the historyless policy has no choices stored, neither will the stateful one, so we cannot resolve it
     if(decisions.size() == 0)
       return new Resolution(-1, ResolutionType.NEW_CHOICE);
@@ -109,10 +100,9 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
     Path history = Path.generateCtxPreservingHistory(cg, ctxManager, maxHistorySize);
     
     //If we get here, there must be a history stored for the branch
-    Map<Path, Set<Integer>> choices = this.pol.get(branchInstr);
-    Set<Integer> decisionsWithHistory = choices.get(history);
-    if(decisionsWithHistory != null && decisionsWithHistory.size() == 1) {
-      return new Resolution(decisionsWithHistory.iterator().next(), ResolutionType.HISTORY);
+    Set<Integer> choices = this.historyPolicy.resolve(branchInstr, history);
+    if(choices != null && choices.size() == 1) {
+      return new Resolution(choices.iterator().next(), ResolutionType.HISTORY);
     } else {
       return new Resolution(-1, ResolutionType.UNRESOLVED);
     }
@@ -127,22 +117,6 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
   
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
-    for(BranchInstruction branch : pol.keySet()) {
-      sb.append(branch.toString()).append("\n");
-      Map<Path, Set<Integer>> histories = pol.get(branch);
-      for(Path p : histories.keySet()) {
-        sb.append('\t').append(p.toString()).append(" --> {");
-        Set<Integer> choices = histories.get(p);
-        Iterator<Integer> choiceIter = choices.iterator();
-        while(choiceIter.hasNext()) {
-          sb.append(choiceIter.next());
-          if(choiceIter.hasNext())
-            sb.append(",");
-        }
-        sb.append("}\n");
-      }
-    }
-    return sb.toString();
+    return this.historyPolicy.toString();
   }
 }

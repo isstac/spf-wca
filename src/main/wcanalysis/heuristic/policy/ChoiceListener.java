@@ -1,4 +1,4 @@
-package wcanalysis.heuristic;
+package wcanalysis.heuristic.policy;
 
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
 

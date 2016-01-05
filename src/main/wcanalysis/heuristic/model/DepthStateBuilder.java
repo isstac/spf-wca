@@ -1,4 +1,4 @@
-package wcanalysis.heuristic;
+package wcanalysis.heuristic.model;
 
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
 import gov.nasa.jpf.symbc.numeric.PathCondition;
@@ -11,14 +11,14 @@ import gov.nasa.jpf.vm.VM;
  * @author Kasper Luckow
  *
  */
-public class TimeStateBuilder implements StateBuilder {
+public class DepthStateBuilder implements StateBuilder {
 
   private int depth = 0;
   private long instrExecuted = 0;
   
-  public TimeStateBuilder() { }
+  public DepthStateBuilder() { }
   
-  private TimeStateBuilder(int depth, long instrExecuted) {
+  private DepthStateBuilder(int depth, long instrExecuted) {
     this.depth = depth;
     this.instrExecuted = instrExecuted;
   }
@@ -42,12 +42,12 @@ public class TimeStateBuilder implements StateBuilder {
 
   @Override
   public StateBuilder copy() {
-    return new TimeStateBuilder(this.depth, this.instrExecuted);
+    return new DepthStateBuilder(this.depth, this.instrExecuted);
   }
 
   @Override
   public State build(PathCondition resultingPC) {
-    return new TimeState(resultingPC, this.depth, this.instrExecuted);
+    return new DepthState(resultingPC, this.depth, this.instrExecuted);
   }
 
 }

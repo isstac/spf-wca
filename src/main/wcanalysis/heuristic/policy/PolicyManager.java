@@ -1,4 +1,4 @@
-package wcanalysis.heuristic;
+package wcanalysis.heuristic.policy;
 
 import java.io.File;
 import java.io.FileInputStream;

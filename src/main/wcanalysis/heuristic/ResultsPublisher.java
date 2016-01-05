@@ -16,6 +16,7 @@ import gov.nasa.jpf.report.Publisher;
 import gov.nasa.jpf.report.Reporter;
 import gov.nasa.jpf.report.Statistics;
 import gov.nasa.jpf.symbc.numeric.PathCondition;
+import wcanalysis.heuristic.model.State;
 import wcanalysis.heuristic.util.OmegaConverter;
 import wcanalysis.heuristic.util.SMTLibConverter;
 

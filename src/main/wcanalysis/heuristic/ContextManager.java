@@ -5,6 +5,7 @@ import java.util.Map;
 
 import gov.nasa.jpf.vm.ChoiceGenerator;
 import gov.nasa.jpf.vm.StackFrame;
+import wcanalysis.heuristic.model.StateBuilder;
 
 /**
  * @author Kasper Luckow

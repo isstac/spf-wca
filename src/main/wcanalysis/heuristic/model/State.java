@@ -1,6 +1,7 @@
-package wcanalysis.heuristic;
+package wcanalysis.heuristic.model;
 
 import gov.nasa.jpf.symbc.numeric.PathCondition;
+import wcanalysis.heuristic.util.CSVable;
 
 /**
  * @author Kasper Luckow

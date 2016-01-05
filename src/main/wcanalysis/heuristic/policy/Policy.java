@@ -1,4 +1,4 @@
-package wcanalysis.heuristic;
+package wcanalysis.heuristic.policy;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,30 +9,14 @@ import java.io.Serializable;
 import java.util.Set;
 
 import gov.nasa.jpf.vm.ChoiceGenerator;
+import wcanalysis.heuristic.ContextManager;
+import wcanalysis.heuristic.Resolution;
 
 /**
  * @author Kasper Luckow
  *
  */
 public abstract class Policy implements Serializable {
-  
-  static enum ResolutionType implements Serializable {
-    PERFECT,
-    HISTORY, 
-    INVARIANT,
-    UNRESOLVED,
-    NEW_CHOICE;
-  }
-  
-  static class Resolution implements Serializable {
-    private static final long serialVersionUID = 2247935610676857227L;
-    public final ResolutionType type;
-    public final int choice;
-    public Resolution(int choice, ResolutionType type) {
-      this.choice = choice;
-      this.type = type;
-    }
-  }
   
   private static final long serialVersionUID = -2247935610676857237L;
   

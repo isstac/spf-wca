@@ -1,6 +1,8 @@
-package wcanalysis.heuristic;
+package wcanalysis.heuristic.policy;
 
 import java.util.Set;
+
+import wcanalysis.heuristic.WorstCasePath;
 
 /**
  * @author Kasper Luckow

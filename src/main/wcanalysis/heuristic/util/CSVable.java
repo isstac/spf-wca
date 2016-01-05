@@ -1,4 +1,4 @@
-package wcanalysis.heuristic;
+package wcanalysis.heuristic.util;
 
 /**
  * @author Kasper Luckow
