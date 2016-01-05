@@ -1,6 +1,5 @@
 package wcanalysis;
 
-import isstac.structure.serialize.JavaSerializer;
 import wcanalysis.charting.DataCollection;
 import wcanalysis.charting.WorstCaseChart;
 import wcanalysis.fitting.ExpTrendLine;
@@ -19,8 +18,6 @@ import wcanalysis.heuristic.util.Util;
 
 import java.io.File;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,8 +31,6 @@ import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.JPFShell;
 import gov.nasa.jpf.listener.CoverageAnalyzer;
-import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
-import gov.nasa.jpf.util.JPFLogger;
 
 /**
  * @author Kasper Luckow
@@ -78,7 +73,6 @@ public class WorstCaseAnalyzer implements JPFShell {
 
   @Override
   public void start(String[] args) {
-    config.setProperty(PathListener.SERIALIZER_CONF, JavaSerializer.class.getName());
     config.setProperty(PolicyGeneratorListener.SER_OUTPUT_PATH_CONF, serializedDir.getAbsolutePath());
     config.setProperty(HeuristicListener.SER_INPUT_PATH, serializedDir.getAbsolutePath());
     
@@ -89,7 +83,6 @@ public class WorstCaseAnalyzer implements JPFShell {
       config.setProperty(HeuristicResultsPublisher.RESULTS_DIR_CONF, heuristicDir.getAbsolutePath());
       
       config.setProperty(PathListener.SHOW_INSTRS_CONF, "false");
-      config.setProperty(PathListener.SHOW_BB_SEQ_CONF, "true");
       
       File visDirHeurstic = Util.createDirIfNotExist(heuristicDir, "visualizations");
       config.setProperty(HeuristicListener.VIS_OUTPUT_PATH_CONF, visDirHeurstic.getAbsolutePath());
@@ -232,8 +225,8 @@ public class WorstCaseAnalyzer implements JPFShell {
 
       //explore guided by policy
       jpf.run();
-      State wcState = heuristic.getWcState();
-      dataCollection.addDatapoint(inputSize, wcState.getDepth());
+      State wcState = heuristic.getWcPath().getWCState();
+      dataCollection.addDatapoint(inputSize, wcState.getWC());
     }
     return dataCollection;
   }

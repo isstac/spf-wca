@@ -1,38 +1,21 @@
 package wcanalysis.heuristic;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import gov.nasa.jpf.Config;
-import gov.nasa.jpf.Error;
 import gov.nasa.jpf.JPF;
-import gov.nasa.jpf.report.ConsolePublisher;
 import gov.nasa.jpf.report.Publisher;
 import gov.nasa.jpf.report.Reporter;
 import gov.nasa.jpf.report.Statistics;
 import gov.nasa.jpf.symbc.numeric.PathCondition;
-import gov.nasa.jpf.util.Left;
-import gov.nasa.jpf.vm.ClassInfo;
-import gov.nasa.jpf.vm.ClassLoaderInfo;
-import gov.nasa.jpf.vm.Instruction;
-import gov.nasa.jpf.vm.MethodInfo;
-import gov.nasa.jpf.vm.Path;
-import gov.nasa.jpf.vm.Step;
-import gov.nasa.jpf.vm.Transition;
-import gov.nasa.jpf.vm.VM;
-import sidechannel.util.SymbolicVariableCollector;
-import sun.security.tools.PathList;
-import wcanalysis.heuristic.State.EndStateData;
 import wcanalysis.heuristic.util.OmegaConverter;
 import wcanalysis.heuristic.util.SMTLibConverter;
 
@@ -45,7 +28,6 @@ public abstract class ResultsPublisher extends Publisher {
   
   private File file;
   private FileOutputStream fos;
-  private boolean fileExists = false;
   private int cfgInputSize;
   
   private File baseDir;
@@ -69,7 +51,6 @@ public abstract class ResultsPublisher extends Publisher {
     baseDir = getResultsDir(conf);
     
     file = new File(baseDir, resultsFile);
-    fileExists = file.exists();
   }
 
   @Override
@@ -84,16 +65,6 @@ public abstract class ResultsPublisher extends Publisher {
       try {        
         fos = new FileOutputStream(file, true);
         out = new PrintWriter(fos);
-        if(!fileExists) {
-          //write header
-          String header = "inputSize,historySize,wcInstrExec," + 
-              ((this.cfgInputSize >= 0) ? "cfgInputSize," : "") + 
-              "analysisTime,mem,depth,paths," +
-              getCustomCSVColumnHeader() +
-              ",wcConstraint";
-          
-          out.println(header);
-        }
       } catch (FileNotFoundException e) {
         throw new RuntimeException(e);
       }
@@ -123,26 +94,62 @@ public abstract class ResultsPublisher extends Publisher {
 
   @Override
   public void publishStatistics() {
+
+  }
+  
+  private static boolean isFileEmpty(File file) {
+    try(BufferedReader br = new BufferedReader(new FileReader(file))) {
+        if(br.readLine() == null) {
+          return true;
+        } else
+          return false;
+    } catch (IOException e1) {
+      e1.printStackTrace();
+      return false;
+    }
+  }
+  
+  @Override
+  public void publishResult() {
     PathListener pathListener = getListener();
     if(pathListener != null) {
+      
       Statistics stat = reporter.getStatistics();
-      State wcState = pathListener.getWcState();
+      
+      State wcState = pathListener.getWcPath().getWCState();
+      if(isFileEmpty(file)) {
+        //write header
+        
+        String stateCSVHeader = wcState.getCSVHeader();
+        if(!stateCSVHeader.endsWith(","))
+          stateCSVHeader += ",";
+        String header = "inputSize," + 
+            ((this.cfgInputSize >= 0) ? "cfgInputSize," : "") + 
+            stateCSVHeader +
+            "analysisTime,mem,paths," +
+            getCustomCSVColumnHeader() +
+            ",wcConstraint";
+        
+        out.println(header);
+      }
+      
       out.print(conf.getString("target.args") + ",");
-      out.print(pathListener.getDecisionHistorySize() + ",");
-      out.print(wcState.getInstrExecuted() + ",");
       if(cfgInputSize >= 0)
         out.print(cfgInputSize + ",");
+      String stateCSVRes = wcState.getCSV();
+      if(!stateCSVRes.endsWith(","))
+        stateCSVRes += ",";
+      out.print(stateCSVRes);
       out.print((reporter.getElapsedTime()/1000) + ",");
       out.print((stat.maxUsed >> 20) + ",");
-      out.print(wcState.getDepth() + ",");
       out.print(stat.endStates + ",");
       out.print(this.getCustomCSVColumnData() + ",");
       
-      if(!wcState.hasStateData() || !(wcState.getStateData() instanceof State.EndStateData)) {
+      if(wcState.getPathCondition() == null) {
         logger.severe("Worst case result state does not have associated constraints! Is it the worst case state at all?");
         out.println("CONSTRAINT N/A");
       } else {
-        PathCondition pc = ((EndStateData)wcState.getStateData()).getPC();
+        PathCondition pc = wcState.getPathCondition();
         if(generateSMTLibFormat) {
           String smtLibPc = new SMTLibConverter().convert(pc);
           writeConstraintsFile(smtLibPc, ".smt2");
@@ -155,6 +162,7 @@ public abstract class ResultsPublisher extends Publisher {
         out.println(pcStr);
       }
     }
+
   }
   
   private void writeConstraintsFile(String constraints, String fileExt) {
