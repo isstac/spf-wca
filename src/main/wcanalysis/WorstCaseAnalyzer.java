@@ -13,7 +13,7 @@ import wcanalysis.heuristic.PolicyGeneratorListener;
 import wcanalysis.heuristic.PathListener;
 import wcanalysis.heuristic.PolicyResultsPublisher;
 import wcanalysis.heuristic.ResultsPublisher;
-import wcanalysis.heuristic.State;
+import wcanalysis.heuristic.model.State;
 import wcanalysis.heuristic.util.Util;
 
 import java.io.File;

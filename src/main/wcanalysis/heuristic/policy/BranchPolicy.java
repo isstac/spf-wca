@@ -1,6 +1,8 @@
-package wcanalysis.heuristic;
+package wcanalysis.heuristic.policy;
 
 import java.io.Serializable;
+
+import wcanalysis.heuristic.BranchInstruction;
 
 /**
  * @author Kasper Luckow

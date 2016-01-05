@@ -1,4 +1,4 @@
-package wcanalysis.heuristic;
+package wcanalysis.heuristic.policy;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,6 +9,8 @@ import java.io.Serializable;
 import java.util.Set;
 
 import gov.nasa.jpf.vm.ChoiceGenerator;
+import wcanalysis.heuristic.ContextManager;
+import wcanalysis.heuristic.Resolution;
 
 /**
  * @author Kasper Luckow

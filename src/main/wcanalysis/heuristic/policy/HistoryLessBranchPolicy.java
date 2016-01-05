@@ -1,7 +1,10 @@
-package wcanalysis.heuristic;
+package wcanalysis.heuristic.policy;
 
 import java.util.Map;
 import java.util.Set;
+
+import wcanalysis.heuristic.BranchInstruction;
+import wcanalysis.heuristic.Path;
 
 /**
  * @author Kasper Luckow

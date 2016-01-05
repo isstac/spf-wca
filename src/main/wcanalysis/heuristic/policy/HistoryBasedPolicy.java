@@ -1,9 +1,16 @@
-package wcanalysis.heuristic;
+package wcanalysis.heuristic.policy;
 
 import java.util.Set;
 
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
 import gov.nasa.jpf.vm.ChoiceGenerator;
+import wcanalysis.heuristic.BranchInstruction;
+import wcanalysis.heuristic.ContextManager;
+import wcanalysis.heuristic.Decision;
+import wcanalysis.heuristic.InvariantChecker;
+import wcanalysis.heuristic.Path;
+import wcanalysis.heuristic.Resolution;
+import wcanalysis.heuristic.WorstCasePath;
 import wcanalysis.heuristic.Resolution.ResolutionType;
 
 /**

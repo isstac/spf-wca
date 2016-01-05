@@ -1,4 +1,4 @@
-package wcanalysis.heuristic;
+package wcanalysis.heuristic.model;
 
 import gov.nasa.jpf.symbc.numeric.PathCondition;
 
@@ -6,11 +6,11 @@ import gov.nasa.jpf.symbc.numeric.PathCondition;
  * @author Kasper Luckow
  *
  */
-public class TimeState extends State {
+public class DepthState extends State {
   private final int depth;
   private final long instrExecuted;
   
-  public TimeState(PathCondition pc, int depth, long instrExecuted) {
+  public DepthState(PathCondition pc, int depth, long instrExecuted) {
     super(pc);
     this.depth = depth;
     this.instrExecuted = instrExecuted;
@@ -31,10 +31,10 @@ public class TimeState extends State {
 
   @Override
   public int compareTo(State o) {
-    if(!(o instanceof TimeState)) {
-      throw new IllegalStateException("Expected state fo type " + TimeState.class.getName());
+    if(!(o instanceof DepthState)) {
+      throw new IllegalStateException("Expected state fo type " + DepthState.class.getName());
     }
-    return this.depth - ((TimeState)o).depth;
+    return this.depth - ((DepthState)o).depth;
   }
 
   @Override

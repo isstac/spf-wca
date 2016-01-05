@@ -1,4 +1,4 @@
-package wcanalysis.heuristic;
+package wcanalysis.heuristic.model;
 
 import gov.nasa.jpf.symbc.numeric.PathCondition;
 import gov.nasa.jpf.vm.ChoiceGenerator;

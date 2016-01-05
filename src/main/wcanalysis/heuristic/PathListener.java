@@ -5,6 +5,13 @@ import isstac.structure.cfg.CFGGenerator;
 import isstac.structure.cfg.CachingCFGGenerator;
 import isstac.structure.cfg.util.CFGToDOT;
 import wcanalysis.heuristic.ContextManager.CGContext;
+import wcanalysis.heuristic.model.DepthStateBuilder;
+import wcanalysis.heuristic.model.State;
+import wcanalysis.heuristic.model.StateBuilder;
+import wcanalysis.heuristic.policy.HistoryBasedPolicyGenerator;
+import wcanalysis.heuristic.policy.Policy;
+import wcanalysis.heuristic.policy.PolicyGenerator;
+import wcanalysis.heuristic.policy.PolicyManager;
 import wcanalysis.heuristic.util.PathVisualizer;
 import wcanalysis.heuristic.util.Util;
 
@@ -100,7 +107,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
     if(jpfConf.hasValue(WORST_CASE_STATE_BLDR_CONF)) {
       this.stateBuilder = jpfConf.getInstance(WORST_CASE_STATE_BLDR_CONF, StateBuilder.class);
     } else
-      this.stateBuilder = new TimeStateBuilder();
+      this.stateBuilder = new DepthStateBuilder();
     
     if(jpfConf.hasValue(POLICY_GENERATOR_CLS_CONF)) {
       this.policyGenerator = jpfConf.getInstance(POLICY_GENERATOR_CLS_CONF, PolicyGenerator.class);
