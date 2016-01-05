@@ -11,27 +11,64 @@ import gov.nasa.jpf.vm.ChoiceGenerator;
 import gov.nasa.jpf.vm.StackFrame;
 import wcanalysis.heuristic.ContextManager.CGContext;
 
+/**
+ * @author Kasper Luckow
+ * TODO: Clean up how (sub)paths can be generated (static methods, from CGs, ...)
+ * both context preserving and not context preserving. 
+ */
 class Path extends LinkedList<Decision> {
   
   private static final long serialVersionUID = -1691414612424473640L;
   
   public Path() { }
 
-  public Path(ChoiceGenerator<?> endCG, ContextManager ctxManager, boolean ctxPreserving) {
+  //TODO: ugly
+  public static Path generateCtxPreservingHistory(ChoiceGenerator<?> endCG, ContextManager ctxManager, int maxSize) {
+    Path p = new Path();
+    PCChoiceGenerator previousPCcg = endCG.getPreviousChoiceGeneratorOfType(PCChoiceGenerator.class);
+    generatePath(p, previousPCcg, ctxManager, ctxManager.getContext(endCG), true, maxSize);
+    return p;
+  }
+  
+  private static void generatePath(Path path, ChoiceGenerator<?> endCG, ContextManager ctxManager, CGContext ctx, boolean ctxPreserving, int maxSize) {
     if(endCG == null)
       return;
     PCChoiceGenerator[] pcs = endCG.getAllOfType(PCChoiceGenerator.class);
     if(pcs.length == 0)
       return;
-    StackFrame currCtx = ctxManager.getContext(pcs[pcs.length - 1]).stackFrame;
-    for(int i = 0; i < pcs.length; i++) {
+    for(int i = pcs.length - 1; i >= 0; i--) {
+      if(maxSize > 0 && path.size() >= maxSize)
+        break;
+      PCChoiceGenerator currPc = pcs[i];
+      CGContext currCtx = ctxManager.getContext(currPc);
+      if(ctxPreserving && ctx.stackFrame != currCtx.stackFrame)
+        break;
+      Decision dec = new Decision(new BranchInstruction(currPc.getInsn()), currPc.getNextChoice(), currCtx.stackFrame);
+      path.addFirst(dec);
+    }
+  }
+  
+  public Path(ChoiceGenerator<?> endCG, ContextManager ctxManager, boolean ctxPreserving, int maxSize) {
+    generatePath(this, endCG, ctxManager, ctxManager.getContext(endCG), ctxPreserving, maxSize);
+    /*if(endCG == null)
+      return;
+    PCChoiceGenerator[] pcs = endCG.getAllOfType(PCChoiceGenerator.class);
+    if(pcs.length == 0)
+      return;
+    //StackFrame currCtx = ctxManager.getContext(pcs[pcs.length - 1]).stackFrame;
+    StackFrame currCtx = ctxManager.getContext(endCG).stackFrame;
+    for(int i = 0; i < pcs.length && this.size() < maxSize; i++) {
       PCChoiceGenerator currPc = pcs[i];
       CGContext cgCtx = ctxManager.getContext(currPc);
       if(ctxPreserving && currCtx != cgCtx.stackFrame)
         break;
       Decision dec = new Decision(new BranchInstruction(currPc.getInsn()), currPc.getNextChoice(), cgCtx.stackFrame);
       this.add(dec);
-    }
+    }*/
+  }
+  
+  public Path(ChoiceGenerator<?> endCG, ContextManager ctxManager, boolean ctxPreserving) {
+    this(endCG, ctxManager, ctxPreserving, -1);
   }
   
   public Path(ChoiceGenerator<?> endCG, ContextManager ctxManager) {
@@ -59,16 +96,13 @@ class Path extends LinkedList<Decision> {
   public String toString() {
     StringBuilder pathBuilder = new StringBuilder();
     Iterator<Decision> iter = this.iterator();
-    Decision cur = null;
+    pathBuilder.append("(");
     while(iter.hasNext()) {
-      cur = iter.next();
-      pathBuilder.append("[[" +  
-            "l:" + cur.getInstruction().getLineNumber() + "(o:" +
-            cur.getInstruction().getInstructionIndex() + "), " + 
-            ((cur.getChoice() == 1) ? "T" : (cur.getChoice() == 0) ? "F" : cur.getChoice()) + "]" /*+ cur.getContext()*/ + "]");
+      pathBuilder.append(iter.next().toString());
       if(iter.hasNext())
         pathBuilder.append(", ");
     }
+    pathBuilder.append(")");
     return pathBuilder.toString();
   }
 }

@@ -39,12 +39,9 @@ public abstract class Policy implements Serializable {
   
   private final Set<String> measuredMethods;
     
-  public Policy(WorstCasePath wcPath, Set<String> measuredMethods) {
+  public Policy(Set<String> measuredMethods) {
     this.measuredMethods = measuredMethods;
-    computePolicy(wcPath);
   }
-  
-  protected abstract void computePolicy(WorstCasePath wcPath);
   
   public Set<String> getMeasuredMethods() {
     return this.measuredMethods;

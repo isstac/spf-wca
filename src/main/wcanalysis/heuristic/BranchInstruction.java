@@ -85,4 +85,12 @@ public class BranchInstruction implements Serializable {
       return false;
     }
   }
+  
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("l:" + this.getLineNumber())
+      .append("(o:").append(this.getInstructionIndex()).append(")");
+    return sb.toString();
+  }
 }

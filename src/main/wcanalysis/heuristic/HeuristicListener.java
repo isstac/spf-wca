@@ -1,6 +1,7 @@
 package wcanalysis.heuristic;
 
 import wcanalysis.heuristic.Policy.Resolution;
+import wcanalysis.heuristic.Policy.ResolutionType;
 import wcanalysis.heuristic.util.Util;
 
 import java.io.File;
@@ -62,7 +63,12 @@ public class HeuristicListener extends PathListener {
     if(cg instanceof PCChoiceGenerator) {
       Resolution res = policy.resolve(cg, ctxManager);
       
-      boolean ignoreState = ((PCChoiceGenerator)cg).getNextChoice() != res.choice;
+      boolean ignoreState = false;
+      if(!res.type.equals(ResolutionType.UNRESOLVED) && !res.type.equals(ResolutionType.NEW_CHOICE)) {
+        ignoreState = ((PCChoiceGenerator)cg).getNextChoice() != res.choice;
+        if(ignoreState)
+          vm.getSystemState().setIgnored(true);
+      }
       
       switch(res.type) {
       case UNRESOLVED:
@@ -87,9 +93,7 @@ public class HeuristicListener extends PathListener {
          throw new IllegalStateException("Unhandled resolution type");
       }
       
-      if(ignoreState)
-        vm.getSystemState().setIgnored(true);
-      else {
+      if(!ignoreState) {
         if(policy instanceof ChoiceListener) {
           PCChoiceGenerator pccg = (PCChoiceGenerator)cg;
           ((ChoiceListener)policy).choiceMade(pccg, pccg.getNextChoice());

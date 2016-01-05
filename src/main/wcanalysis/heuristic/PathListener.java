@@ -51,7 +51,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
   public final static String POLICY_GENERATOR_CLS_CONF = "symbolic.wc.policygenerator";
   public final static String HISTORY_SIZE_CONF = "symbolic.wc.policy.history.size";
   protected final static int DEF_HISTORY_SIZE = 0; 
-  
+
   //Visualization
   public final static String SHOW_INSTRS_CONF = "symbolic.wc.visualizer.showinstructions";  
   

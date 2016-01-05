@@ -67,6 +67,13 @@ public class Decision implements Serializable {
 
   @Override
   public String toString() {
-    return "(s:" + instr.getLineNumber() + "," + ((choice == 1) ? 'T' : (choice == 0) ? 'F' : choice) + ")";
+    StringBuilder sb = new StringBuilder();
+    sb.append("<")  
+       .append(this.getInstruction().toString())
+       .append(", ") 
+       .append(((this.getChoice() == 1) ? "T" : (this.getChoice() == 0) ? "F" : this.getChoice()))
+       .append(">" /*+ cur.getContext() + "]"*/);
+    
+    return sb.toString();
   }
 }

@@ -1,8 +1,10 @@
 package wcanalysis.heuristic;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -94,12 +96,30 @@ public abstract class ResultsPublisher extends Publisher {
 
   @Override
   public void publishStatistics() {
+
+  }
+  
+  private static boolean isFileEmpty(File file) {
+    try(BufferedReader br = new BufferedReader(new FileReader(file))) {
+        if(br.readLine() == null) {
+          return true;
+        } else
+          return false;
+    } catch (IOException e1) {
+      e1.printStackTrace();
+      return false;
+    }
+  }
+  
+  @Override
+  public void publishResult() {
     PathListener pathListener = getListener();
     if(pathListener != null) {
       
       Statistics stat = reporter.getStatistics();
+      
       State wcState = pathListener.getWcPath().getWCState();
-      if(!fileExists) {
+      if(isFileEmpty(file)) {
         //write header
         
         String stateCSVHeader = wcState.getCSVHeader();
@@ -144,6 +164,7 @@ public abstract class ResultsPublisher extends Publisher {
         out.println(pcStr);
       }
     }
+
   }
   
   private void writeConstraintsFile(String constraints, String fileExt) {

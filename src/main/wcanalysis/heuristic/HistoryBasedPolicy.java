@@ -1,16 +1,13 @@
 package wcanalysis.heuristic;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
 import gov.nasa.jpf.vm.ChoiceGenerator;
-import gov.nasa.jpf.vm.Instruction;
-import isstac.structure.cfg.Block;
-import isstac.structure.cfg.CFG;
 
 /**
  * @author Kasper Luckow
@@ -28,18 +25,19 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
   private InvariantChecker invariantChecker = null;
   
   public HistoryBasedPolicy(WorstCasePath wcPath, Set<String> measuredMethods, int maxHistorySize) {
-    super(wcPath, measuredMethods);
+    super(measuredMethods);
     this.maxHistorySize = maxHistorySize;
+    computePolicy(wcPath);
   }
   
   public HistoryBasedPolicy(WorstCasePath wcPath, Set<String> measuredMethods, int maxHistorySize, InvariantChecker invariantChecker) {
-    super(wcPath, measuredMethods);
+    super(measuredMethods);
     this.maxHistorySize = maxHistorySize;
     this.invariantChecker = invariantChecker; 
+    computePolicy(wcPath);
   }
   
-  @Override
-  protected void computePolicy(WorstCasePath wcPath) {
+  private void computePolicy(WorstCasePath wcPath) {
     this.pol = new HashMap<>();
     this.historylessPol = new HashMap<>();
     for(int i = wcPath.size() - 1; i >= 0; i--) {
@@ -52,7 +50,7 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
         prevDecision = wcPath.get(j);
         if(prevDecision.getContext() != currDecision.getContext())
           break;
-        if(maxHistorySize > 0 && currHistorySize > maxHistorySize)
+        if(currHistorySize >= maxHistorySize)
           break;
         history.addFirst(prevDecision);
       }
@@ -108,7 +106,7 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
     }
     
     //TODO: history generation should be made prettier -- it is not obvious what is going on here
-    Path history = new Path(cg.getPreviousChoiceGeneratorOfType(PCChoiceGenerator.class), ctxManager, true);
+    Path history = Path.generateCtxPreservingHistory(cg, ctxManager, maxHistorySize);
     
     //If we get here, there must be a history stored for the branch
     Map<Path, Set<Integer>> choices = this.pol.get(branchInstr);
@@ -125,5 +123,26 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
     if(this.invariantChecker != null) {
       this.invariantChecker.choiceMade(new BranchInstruction(cg.getInsn()), choiceMade);
     }
+  }
+  
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    for(BranchInstruction branch : pol.keySet()) {
+      sb.append(branch.toString()).append("\n");
+      Map<Path, Set<Integer>> histories = pol.get(branch);
+      for(Path p : histories.keySet()) {
+        sb.append('\t').append(p.toString()).append(" --> {");
+        Set<Integer> choices = histories.get(p);
+        Iterator<Integer> choiceIter = choices.iterator();
+        while(choiceIter.hasNext()) {
+          sb.append(choiceIter.next());
+          if(choiceIter.hasNext())
+            sb.append(",");
+        }
+        sb.append("}\n");
+      }
+    }
+    return sb.toString();
   }
 }
