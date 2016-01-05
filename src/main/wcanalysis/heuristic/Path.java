@@ -13,7 +13,7 @@ import wcanalysis.heuristic.ContextManager.CGContext;
  * TODO: Clean up how (sub)paths can be generated (static methods, from CGs, ...)
  * both context preserving and not context preserving. 
  */
-class Path extends LinkedList<Decision> {
+public class Path extends LinkedList<Decision> {
   
   private static final long serialVersionUID = -1691414612424473640L;
   
