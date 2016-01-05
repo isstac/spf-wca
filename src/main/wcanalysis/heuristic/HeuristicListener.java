@@ -1,7 +1,6 @@
 package wcanalysis.heuristic;
 
-import wcanalysis.heuristic.Policy.Resolution;
-import wcanalysis.heuristic.Policy.ResolutionType;
+import wcanalysis.heuristic.Resolution.ResolutionType;
 import wcanalysis.heuristic.util.Util;
 
 import java.io.File;
