@@ -18,10 +18,12 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
   private static final long serialVersionUID = -6739423849594132561L;
   private final State finalState;
   private int pathMeasure = -1;
+  private final int maxHistorySize;
   
-  public WorstCasePath(State endState, ChoiceGenerator<?> endCG, ContextManager ctxManager) {
+  public WorstCasePath(State endState, ChoiceGenerator<?> endCG, ContextManager ctxManager, int maxHistorySize) {
     super(endCG, ctxManager);
     this.finalState = endState;
+    this.maxHistorySize = maxHistorySize;
   }
   
   public State getWCState() {
@@ -47,18 +49,17 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
      * if it can be resolved perfectly
      * 3. How many choices can be resolved with invariant pruning
      */
-
-    //TODO: this is very similar to the path projector in PathListener -- merge?
+    
     Map<BranchInstruction, Map<Integer, Set<Path>>> branch2histories = new HashMap<>();
     Set<BranchInstruction> branchInstructions = new HashSet<>();
-    int maxHistorySize = 1;
+
     
     Decision currentDecision = null;
     int decIdx = this.size() - 1;
     Iterator<Decision> decIter = this.descendingIterator();
     while(decIter.hasNext()) {
       currentDecision = decIter.next();
-      Path history = this.generateCtxPreservingHistoryFromIdx(decIdx, maxHistorySize);
+      Path history = this.generateCtxPreservingHistoryFromIdx(decIdx, this.maxHistorySize);
       
       BranchInstruction currInstruction = currentDecision.getInstruction();
       branchInstructions.add(currInstruction);

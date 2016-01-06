@@ -82,6 +82,9 @@ public abstract class PathListener extends PropertyListenerAdapter {
   
   protected PolicyGenerator<?> policyGenerator;
   private PolicyManager policyManager;
+  //TODO: History should not be set here -- it is related to the policy (historyless, stateful, etc).
+  //in fact the path measure computation is policy dependent! Extract path measure computation from WorstCasePath someday...
+  private int historySize;
   
   public PathListener(Config jpfConf, JPF jpf) {
     this.jpfConf = jpfConf;
@@ -109,10 +112,10 @@ public abstract class PathListener extends PropertyListenerAdapter {
     } else
       this.stateBuilder = new DepthStateBuilder();
     
+    this.historySize = jpfConf.getInt(HISTORY_SIZE_CONF, DEF_HISTORY_SIZE);
     if(jpfConf.hasValue(POLICY_GENERATOR_CLS_CONF)) {
       this.policyGenerator = jpfConf.getInstance(POLICY_GENERATOR_CLS_CONF, PolicyGenerator.class);
     } else {
-      int historySize = jpfConf.getInt(HISTORY_SIZE_CONF, DEF_HISTORY_SIZE);
       this.policyGenerator = new HistoryBasedPolicyGenerator(historySize);
     }
     
@@ -248,7 +251,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
       pcNew = pc.make_copy();
     }
     State currentState = this.stateBuilder.build(pcNew);
-    WorstCasePath currentWcPath = new WorstCasePath(currentState, vm.getSystemState().getChoiceGenerator(), this.ctxManager);
+    WorstCasePath currentWcPath = new WorstCasePath(currentState, vm.getSystemState().getChoiceGenerator(), this.ctxManager, this.historySize);
     
     if(currentWcPath.compareTo(this.wcPath) > 0) {
       this.wcPath = currentWcPath;
