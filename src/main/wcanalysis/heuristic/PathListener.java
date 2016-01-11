@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import att.grappa.Graph;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
@@ -190,7 +192,11 @@ public abstract class PathListener extends PropertyListenerAdapter {
     if(visualize(jpfConf)) {      
       //we project the worst case path on the cfg and output it
       String[] classpaths = jpfConf.getProperty("classpath").split(",");
-      CFGGenerator cfgGen = new CachingCFGGenerator(classpaths);
+      String[] stdLibCl = {System.getProperties().getProperty("java.class.path"),
+          System.getProperties().getProperty("sun.boot.class.path")};
+      String[] completeCl = (String[])ArrayUtils.addAll(classpaths, stdLibCl);
+      
+      CFGGenerator cfgGen = new CachingCFGGenerator(completeCl);
       PathProjector sequenceVisualizer = new PathVisualizer(cfgGen);
       Collection<CFG> transformedCFGs = sequenceVisualizer.projectPath(wcPath);
       if(transformedCFGs != null) {
