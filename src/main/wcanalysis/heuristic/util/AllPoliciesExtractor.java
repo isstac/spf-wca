@@ -31,7 +31,6 @@ public class AllPoliciesExtractor implements JPFShell {
       this.conf.setProperty("target.args", ""+i);
       JPF jpf = new JPF(this.conf);
       jpf.addListener(new PolicyGeneratorListener(this.conf, jpf)); //weird instantiation...
-
       //get policy
       jpf.run();
     }
