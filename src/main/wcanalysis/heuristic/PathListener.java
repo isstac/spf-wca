@@ -192,8 +192,10 @@ public abstract class PathListener extends PropertyListenerAdapter {
     if(visualize(jpfConf)) {      
       //we project the worst case path on the cfg and output it
       String[] classpaths = jpfConf.getProperty("classpath").split(",");
-      String[] stdLibCl = {System.getProperties().getProperty("java.class.path"),
-          System.getProperties().getProperty("sun.boot.class.path")};
+      String pathSeparator = System.getProperties().getProperty("path.separator");
+      String[] javaCl = System.getProperties().getProperty("java.class.path").split(pathSeparator);
+      String[] bootCl = System.getProperties().getProperty("sun.boot.class.path").split(pathSeparator);
+      String[] stdLibCl = (String[])ArrayUtils.addAll(javaCl, bootCl);
       String[] completeCl = (String[])ArrayUtils.addAll(classpaths, stdLibCl);
       
       CFGGenerator cfgGen = new CachingCFGGenerator(completeCl);
