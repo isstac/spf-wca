@@ -1,5 +1,6 @@
 package wcanalysis.heuristic.policy;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +37,7 @@ public class HistoryBasedBranchPolicy implements BranchPolicy {
     if(pol.containsKey(branch)) {
       return pol.get(branch).get(history);
     }
-    return null;
+    return new HashSet<>();
   }
 
   @Override
