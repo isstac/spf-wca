@@ -89,7 +89,7 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
     //Check whether it can be quickly resolved with historyless policy
     Set<Integer> decisions = this.historyLessPolicy.resolve(branchInstr);
     //if the historyless policy has no choices stored, neither will the stateful one, so we cannot resolve it
-    if(decisions.size() == 0)
+    if(decisions == null || decisions.size() == 0)
       return new Resolution(-1, ResolutionType.NEW_CHOICE);
     //if there is ONLY one decision (i.e. one choice), then we can resolve the CG "perfectly"
     else if(decisions.size() == 1) {
