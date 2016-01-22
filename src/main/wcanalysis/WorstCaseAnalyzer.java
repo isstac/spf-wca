@@ -47,6 +47,8 @@ public class WorstCaseAnalyzer implements JPFShell {
   private static final String PREDICT_MODEL_SIZE_CONF = "symbolic.worstcase.predictionmodel.size";
   private static final String MAX_INPUT_REQ_CONF = "symbolic.worstcase.req.maxinputsize";
   private static final String MAX_RES_REQ_CONF = "symbolic.worstcase.req.maxres";
+  
+  private static final String NO_SOLVER_HEURISTIC_CONF = "symbolic.worstcase.heuristic.nosolver";
 
   private final Logger logger;
   private final Config config;
@@ -211,6 +213,10 @@ public class WorstCaseAnalyzer implements JPFShell {
   }
 
   private DataCollection performAnalysis(Config jpfConf) {
+    boolean noSolver = jpfConf.getBoolean(NO_SOLVER_HEURISTIC_CONF, false);
+    if(noSolver) {
+      jpfConf.setProperty("symbolic.dp", "no_solver");
+    }
     int maxInput = jpfConf.getInt(MAX_INPUT_CONF);
     jpfConf.setProperty("report.console.class", HeuristicResultsPublisher.class.getName());
     
