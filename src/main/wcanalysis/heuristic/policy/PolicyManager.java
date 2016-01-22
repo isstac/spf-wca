@@ -52,7 +52,13 @@ public class PolicyManager {
         measMethodsStr += meas;
       }
       throw new PolicyManagerException("Multiple policies found for measured methods: " + measMethodsStr);
-    } else {
+    } else if(policies.size() == 0) {
+        String measMethodsStr = "";
+        for(String meas : measuredMethods) {
+          measMethodsStr += meas;
+        }
+        throw new PolicyManagerException("No policies found for measured methods: " + measMethodsStr);
+      } {
       return policies.get(0);
     }
   }
