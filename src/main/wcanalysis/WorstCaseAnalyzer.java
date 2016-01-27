@@ -18,8 +18,10 @@ import wcanalysis.heuristic.util.Util;
 
 import java.io.File;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -139,7 +141,7 @@ public class WorstCaseAnalyzer implements JPFShell {
 
 
     DecimalFormat df = new DecimalFormat("#.00000");
-    Set<TrendModelData> trendLines = new HashSet<>();
+    List<TrendModelData> trendLines = new ArrayList<>();
 
     //The prediction models we are considering
     trendLines.add(new TrendModelData(new PolyTrendLine(1), "1st poly"));
@@ -167,7 +169,10 @@ public class WorstCaseAnalyzer implements JPFShell {
       double x = xPredict[i];
       for(TrendModelData trendData : trendLines) {
         XYSeries series = trend2series.get(trendData);
-        series.add(x, trendData.trendLine.predict(x));
+        if(trendData.trendLine.getDomainPredicate().apply(x)) {
+          double yPred = trendData.trendLine.predict(x);
+          series.add(x, yPred);
+        }
       }
     }
     

@@ -2,6 +2,10 @@ package wcanalysis.fitting;
 
 import java.text.DecimalFormat;
 
+import com.google.common.base.Predicate;
+
+import gov.nasa.jpf.util.Pair;
+
 /**
  * @author Kasper Luckow
  * TODO: check that the output of getFunction is correct
@@ -27,4 +31,24 @@ public class ExpTrendLine extends OLSTrendLine {
               .append(" + ").append(df.format(b) + "^x");
     return functionSb.toString();
   }
+
+  @Override
+  public Predicate<Double> getDomainPredicate() {
+    return new Predicate<Double>() {
+      @Override
+      public boolean apply(Double arg0) {
+        return true;
+      }
+    };
+  }
+
+  @Override
+  public Predicate<Double> getRangePredicate() {
+    return new Predicate<Double>() {
+      @Override
+      public boolean apply(Double arg0) {
+        return arg0 > 0.0;
+      }
+    };
+  }  
 }

@@ -2,6 +2,8 @@ package wcanalysis.fitting;
 
 import java.text.DecimalFormat;
 
+import com.google.common.base.Predicate;
+
 /**
  * @author Kasper Luckow
  * TODO: check that the output of getFunction is correct
@@ -26,5 +28,25 @@ public class LogTrendLine extends OLSTrendLine {
     functionSb.append(df.format(super.coef.getColumn(0)[0]))
               .append(" + ").append("log(" + df.format(b) + ")");
     return functionSb.toString();
+  }
+
+  @Override
+  public Predicate<Double> getDomainPredicate() {
+    return new Predicate<Double>() {
+      @Override
+      public boolean apply(Double arg0) {
+        return arg0 > 0.0;
+      }
+    };
+  }
+
+  @Override
+  public Predicate<Double> getRangePredicate() {
+    return new Predicate<Double>() {
+      @Override
+      public boolean apply(Double arg0) {
+        return true;
+      }
+    };
   }
 }
