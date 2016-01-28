@@ -3,7 +3,13 @@ package wcanalysis.charting;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.geom.Rectangle2D;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
@@ -21,6 +27,9 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RectangleEdge;
+import org.jfree.ui.RefineryUtilities;
+
+import wcanalysis.fitting.FunctionFitter;
 
 /**
  * @author Kasper Luckow
@@ -32,7 +41,37 @@ public class WorstCaseChart extends ApplicationFrame implements ChartMouseListen
   private Crosshair xCrosshair;
   private Crosshair yCrosshair;
   private ChartPanel chartPanel;
-
+  
+  public static void main(String[] args) throws IOException {
+    if(args.length < 1) {
+      System.err.print("Accepts one arg: path to csv file");
+      System.exit(-1);
+    }
+    
+    String csvFile = args[0];
+    
+    Reader in = new FileReader(csvFile);
+    DataCollection dataCollection = new DataCollection();
+    Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(in);
+    boolean first = true;
+    for(CSVRecord rec : records) {
+      if(first) { //probably the most ridiculous csv library when you have to do this?
+        first = false;
+        continue;
+      }
+      int x = Integer.parseInt(rec.get(0));
+      int y = Integer.parseInt(rec.get(1));
+      dataCollection.addDatapoint(x, y);
+    }
+    
+    XYSeriesCollection series = FunctionFitter.computeSeries(dataCollection, (int)(dataCollection.size()+3));
+    WorstCaseChart wcChart = new WorstCaseChart(series);
+    
+    wcChart.pack();
+    RefineryUtilities.centerFrameOnScreen(wcChart);
+    wcChart.setVisible(true);
+  }
+  
   public WorstCaseChart(XYSeriesCollection dataCollection) {
     super("Worst case");
     JFreeChart chart = createChart(dataCollection);

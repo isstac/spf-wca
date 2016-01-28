@@ -3,7 +3,9 @@ package wcanalysis;
 import wcanalysis.charting.DataCollection;
 import wcanalysis.charting.WorstCaseChart;
 import wcanalysis.fitting.ExpTrendLine;
+import wcanalysis.fitting.FunctionFitter;
 import wcanalysis.fitting.LogTrendLine;
+import wcanalysis.fitting.NLogTrendLine;
 import wcanalysis.fitting.PolyTrendLine;
 import wcanalysis.fitting.PowerTrendLine;
 import wcanalysis.fitting.TrendLine;
@@ -44,13 +46,13 @@ public class WorstCaseAnalyzer implements JPFShell {
   private static final String VERBOSE_CONF = "symbolic.worstcase.verbose";
   private static final String OUTPUT_DIR_CONF = "symbolic.worstcase.outputpath";
 
-  private static final String PREDICTION_MODEL_DATA_POINTS_CONF = "symbolic.worstcase.datapointsnum";
-
   private static final String PREDICT_MODEL_SIZE_CONF = "symbolic.worstcase.predictionmodel.size";
   private static final String MAX_INPUT_REQ_CONF = "symbolic.worstcase.req.maxinputsize";
   private static final String MAX_RES_REQ_CONF = "symbolic.worstcase.req.maxres";
   
   private static final String NO_SOLVER_HEURISTIC_CONF = "symbolic.worstcase.heuristic.nosolver";
+  
+  private static final String REUSE_POLICY_CONF = "symbolic.worstcase.reusepolicy";
 
   private final Logger logger;
   private final Config config;
@@ -106,8 +108,8 @@ public class WorstCaseAnalyzer implements JPFShell {
     DataCollection dataCollection = performAnalysis(config);
     logger.info("step 2 done");
 
-    int dataPointsNum = config.getInt(PREDICTION_MODEL_DATA_POINTS_CONF, 100);
-    XYSeriesCollection dataset = computeSeries(dataCollection, dataPointsNum);
+    int predictionModelSize = config.getInt(PREDICT_MODEL_SIZE_CONF, (int)(dataCollection.size()*1.5));
+    XYSeriesCollection dataset = FunctionFitter.computeSeries(dataCollection, predictionModelSize);
     logger.info("Computing prediction models done");
 
     WorstCaseChart chart;
@@ -123,67 +125,10 @@ public class WorstCaseAnalyzer implements JPFShell {
     chart.setVisible(true);
   }
 
-  private class TrendModelData {
-    final TrendLine trendLine;
-    final String desc;
-    public TrendModelData(TrendLine trend, String desc) {
-      this.trendLine = trend;
-      this.desc = desc;
-    }
-  }
-  
-  private XYSeriesCollection computeSeries(DataCollection rawData, int numberOfDataPoints) {
-    XYSeriesCollection dataset = new XYSeriesCollection();
-
-    XYSeries rawSeries = new XYSeries("Raw");
-    for(int i = 0; i < rawData.x.length; i++) //ugly conversion and ugly non-iterable
-      rawSeries.add(rawData.x[i], rawData.y[i]);
-
-
-    DecimalFormat df = new DecimalFormat("#.00000");
-    List<TrendModelData> trendLines = new ArrayList<>();
-
-    //The prediction models we are considering
-    trendLines.add(new TrendModelData(new PolyTrendLine(1), "1st poly"));
-    trendLines.add(new TrendModelData(new PolyTrendLine(2), "2nd poly"));
-    trendLines.add(new TrendModelData(new PolyTrendLine(3), "3rd poly"));
-    trendLines.add(new TrendModelData(new ExpTrendLine(), "exp"));
-    trendLines.add(new TrendModelData(new PowerTrendLine(), "pow"));
-    trendLines.add(new TrendModelData(new LogTrendLine(), "log"));
-    
-    HashMap<TrendModelData, XYSeries> trend2series = new HashMap<>();
-    
-    for(TrendModelData trendData : trendLines) {
-      trendData.trendLine.setValues(rawData.y, rawData.x);
-      trend2series.put(trendData, new XYSeries(trendData.desc + ": "  + 
-          trendData.trendLine.getFunction() + " (r^2="+df.format(trendData.trendLine.getRSquared()) + ")"));
-    }
-
-    int predictionModelSize = config.getInt(PREDICT_MODEL_SIZE_CONF, (int)(rawData.size*1.5));
-    double[] xPredict = new double[predictionModelSize];
-    System.arraycopy(rawData.x, 0, xPredict, 0, rawData.x.length);
-    for(int i = rawData.x.length; i < predictionModelSize; i++)
-      xPredict[i] = xPredict[i-1] + 1.0;
-
-    for(int i = 0; i < predictionModelSize; i++) {
-      double x = xPredict[i];
-      for(TrendModelData trendData : trendLines) {
-        XYSeries series = trend2series.get(trendData);
-        if(trendData.trendLine.getDomainPredicate().apply(x)) {
-          double yPred = trendData.trendLine.predict(x);
-          series.add(x, yPred);
-        }
-      }
-    }
-    
-    dataset.addSeries(rawSeries);
-    for(XYSeries series : trend2series.values()) {
-      dataset.addSeries(series);
-    }
-    return dataset;
-  }
-
   private void getPolicy(Config jpfConf) {
+    if(jpfConf.getBoolean(REUSE_POLICY_CONF, false)) // just skip if we reuse the policy already computed
+      return;
+      
     int policyInputSize = jpfConf.getInt(HEURISTIC_SIZE_CONF);
     if(verbose) {
       //apparently have to set this guy before instantiating the jpf object
@@ -219,7 +164,7 @@ public class WorstCaseAnalyzer implements JPFShell {
     int maxInput = jpfConf.getInt(MAX_INPUT_CONF);
     jpfConf.setProperty("report.console.class", HeuristicResultsPublisher.class.getName());
     
-    DataCollection dataCollection = new DataCollection(maxInput + 1);
+    DataCollection dataCollection = new DataCollection();
 
     for(int inputSize = 0; inputSize <= maxInput; inputSize++) {//TODO: should maxInput be included?
       System.out.println("Exploring with heuristic input size " + inputSize);
