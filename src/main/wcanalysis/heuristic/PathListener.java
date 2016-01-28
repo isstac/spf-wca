@@ -158,7 +158,8 @@ public abstract class PathListener extends PropertyListenerAdapter {
     //TODO: check if there is a difference between the following cg and currentCg passed to this method
     ChoiceGenerator<?> cg = vm.getSystemState().getChoiceGenerator();
     if(cg instanceof PCChoiceGenerator) {
-      this.stateBuilder.handleChoiceGeneratorAdvanced(vm, currentCG);
+      if(isInMeasuredMethodCallStack(vm, vm.getCurrentThread()))
+        this.stateBuilder.handleChoiceGeneratorAdvanced(vm, currentCG);
       CGContext ctx = this.ctxManager.getContext(cg);
       if(ctx == null) {        
         //TODO: Should it be CG or currentCG here?
