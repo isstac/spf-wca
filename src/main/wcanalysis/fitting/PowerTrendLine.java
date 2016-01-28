@@ -44,7 +44,7 @@ public class PowerTrendLine extends OLSTrendLine {
     return new Predicate<Double>() {
       @Override
       public boolean apply(Double arg0) {
-        return true;
+        return arg0 > 0.0; //weird
       }
     };
   }
