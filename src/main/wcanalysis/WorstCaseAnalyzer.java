@@ -15,6 +15,7 @@ import wcanalysis.heuristic.PolicyGeneratorListener;
 import wcanalysis.heuristic.PathListener;
 import wcanalysis.heuristic.PolicyResultsPublisher;
 import wcanalysis.heuristic.ResultsPublisher;
+import wcanalysis.heuristic.WorstCasePath;
 import wcanalysis.heuristic.model.State;
 import wcanalysis.heuristic.util.Util;
 
@@ -81,6 +82,10 @@ public class WorstCaseAnalyzer implements JPFShell {
   public void start(String[] args) {
     config.setProperty(PolicyGeneratorListener.SER_OUTPUT_PATH_CONF, serializedDir.getAbsolutePath());
     config.setProperty(HeuristicListener.SER_INPUT_PATH, serializedDir.getAbsolutePath());
+    
+    //Setting this config will ouput the policy obtained from the worst case path of the HEURISTIC search (phase 2) 
+    //-- here it will overwrite the previous policy
+    //config.setProperty(HeuristicListener.SER_OUTPUT_PATH, serializedDir.getAbsolutePath());
     
     if(verbose) {
       config.setProperty(ResultsPublisher.SMTLIB_CONF, "true");
@@ -166,7 +171,7 @@ public class WorstCaseAnalyzer implements JPFShell {
     
     DataCollection dataCollection = new DataCollection();
 
-    for(int inputSize = 0; inputSize <= maxInput; inputSize++) {//TODO: should maxInput be included?
+    for(int inputSize = 1; inputSize <= maxInput; inputSize++) {//TODO: should maxInput be included?
       System.out.println("Exploring with heuristic input size " + inputSize);
       jpfConf.setProperty("target.args", ""+inputSize);
       JPF jpf = new JPF(jpfConf);
@@ -175,8 +180,14 @@ public class WorstCaseAnalyzer implements JPFShell {
 
       //explore guided by policy
       jpf.run();
-      State wcState = heuristic.getWcPath().getWCState();
-      dataCollection.addDatapoint(inputSize, wcState.getWC());
+      WorstCasePath wcPath = heuristic.getWcPath();
+
+      if(wcPath == null) {
+        logger.severe("No worst case path found for input size " + inputSize);
+      } else {
+        State wcState = wcPath.getWCState();
+        dataCollection.addDatapoint(inputSize, wcState.getWC());
+      }
     }
     return dataCollection;
   }
