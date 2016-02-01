@@ -1,11 +1,16 @@
 package wcanalysis.fitting;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
@@ -16,10 +21,12 @@ import wcanalysis.charting.DataCollection;
  *
  */
 public class FunctionFitter {
+  
   public static XYSeriesCollection computeSeries(DataCollection rawData, int predictionModelSize) {
     XYSeriesCollection dataset = new XYSeriesCollection();
 
     XYSeries rawSeries = new XYSeries("Raw");
+    rawSeries.setDescription("Raw");
     double[] rxs = rawData.getX();
     double[] rys = rawData.getY();
     for(int i = 0; i < rawData.size(); i++) //ugly conversion and ugly non-iterable
@@ -42,8 +49,12 @@ public class FunctionFitter {
     
     for(TrendModelData trendData : trendLines) {
       trendData.trendLine.setValues(rawData.getY(), rawData.getX());
-      trend2series.put(trendData, new XYSeries(trendData.desc + ": "  + 
-          trendData.trendLine.getFunction() + " (r^2="+df.format(trendData.trendLine.getRSquared()) + ")"));
+      String func = trendData.trendLine.getFunction() + " (r^2="+df.format(trendData.trendLine.getRSquared()) + ")";
+      XYSeries s = new XYSeries(trendData.desc + ": "  + 
+          func);
+      System.out.println(func);
+      s.setDescription(trendData.desc);
+      trend2series.put(trendData, s);
     }
 
     double[] xPredict = new double[predictionModelSize];
@@ -68,5 +79,17 @@ public class FunctionFitter {
       dataset.addSeries(series);
     }
     return dataset;
+  }
+  
+  private static final Object[] FILE_HEADER = {"x","y"};
+  public static void seriesToCSV(XYSeries series, Writer w) throws IOException {
+    
+    CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator("\n");
+    try(CSVPrinter csvFilePrinter = new CSVPrinter(w, csvFileFormat)) {
+      csvFilePrinter.printRecord(FILE_HEADER);
+      for(int i = 0; i < series.getItemCount(); i++) {
+        csvFilePrinter.printRecord(series.getX(i), series.getY(i));
+      }
+    }
   }
 }
