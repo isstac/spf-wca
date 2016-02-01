@@ -117,7 +117,10 @@ public abstract class ResultsPublisher extends Publisher {
       
       Statistics stat = reporter.getStatistics();
       
-      State wcState = pathListener.getWcPath().getWCState();
+      WorstCasePath wcPath = pathListener.getWcPath();
+      if(wcPath == null)
+        return;
+      State wcState = wcPath.getWCState();
       if(isFileEmpty(file)) {
         //write header
         
