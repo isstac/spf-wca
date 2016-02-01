@@ -3,10 +3,14 @@ package wcanalysis.charting;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.geom.Rectangle2D;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.Writer;
+import java.util.List;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
@@ -24,6 +28,7 @@ import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RectangleEdge;
@@ -44,8 +49,18 @@ public class WorstCaseChart extends ApplicationFrame implements ChartMouseListen
   
   public static void main(String[] args) throws IOException {
     if(args.length < 1) {
-      System.err.print("Accepts one arg: path to csv file");
+      System.err.print("Accepts 2 args: path to csv file and optionally \"output\" which will output the data set of the models");
       System.exit(-1);
+    }
+    
+    boolean output = false;
+    if(args.length == 2) {
+      if(args[1].equalsIgnoreCase("output")) {
+        output = true;
+      } else {
+        System.err.print("second arg should be \"output\"");
+        System.exit(-1);
+      }
     }
     
     String csvFile = args[0];
@@ -64,7 +79,16 @@ public class WorstCaseChart extends ApplicationFrame implements ChartMouseListen
       dataCollection.addDatapoint(x, y);
     }
     
-    XYSeriesCollection series = FunctionFitter.computeSeries(dataCollection, (int)(dataCollection.size()+3));
+    XYSeriesCollection series = FunctionFitter.computeSeries(dataCollection, 130);
+    if(output) {
+      File baseDir = new File(csvFile).getParentFile();
+      for(XYSeries ser : (List<XYSeries>)series.getSeries()) {
+        String fileName = ser.getDescription() + ".csv";
+        File f = new File(baseDir, fileName);
+        Writer w = new FileWriter(f);
+        FunctionFitter.seriesToCSV(ser, w);
+      }
+    }
     WorstCaseChart wcChart = new WorstCaseChart(series);
     
     wcChart.pack();
