@@ -28,6 +28,11 @@ public class PolicyManager {
     for(String meas : policy.getMeasuredMethods()) {
       policyFileName += meas;
     }
+    
+    // Prune to prevent FileNotFoundException (File name too long) (max 255 chars)
+    if (policyFileName.length()>251)
+    	policyFileName = policyFileName.substring(0, 250);
+    
     File policyFile = new File(this.baseDir, policyFileName + POLICY_EXTENSION);
     try(FileOutputStream fo = new FileOutputStream(policyFile)) {
       policy.save(fo);
