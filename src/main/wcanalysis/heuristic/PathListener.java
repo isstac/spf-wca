@@ -212,6 +212,11 @@ public abstract class PathListener extends PropertyListenerAdapter {
       String tgtOutputfileName = "";
       for(String measuredMethod : measuredMethods)
         tgtOutputfileName += measuredMethod;
+      
+      // Prune to prevent FileNotFoundException (File name too long) (max 255 chars)
+      if (tgtOutputfileName.length()>244)
+    	  tgtOutputfileName = tgtOutputfileName.substring(0, 243);
+      
       visualize(wcPath, new File(this.visDir, "wcpath_" + tgtOutputfileName + ".txt"));
     }
   }
