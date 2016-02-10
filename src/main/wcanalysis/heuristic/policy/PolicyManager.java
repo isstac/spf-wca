@@ -41,7 +41,10 @@ public class PolicyManager {
   
   public <T extends Policy> T loadPolicy(Collection<String> measuredMethods, Class<T> type) throws FileNotFoundException, IOException, PolicyManagerException {
     ArrayList<T> policies = new ArrayList<>();
-    for(File f : this.baseDir.listFiles()) {
+    File[] baseDirFiles = this.baseDir.listFiles();
+    if(baseDirFiles == null)
+      throw new PolicyManagerException("The provided base dir for loading policies is invalid. Received: " + this.baseDir.getPath());
+    for(File f : baseDirFiles) {
       if(f.getName().endsWith(POLICY_EXTENSION)) {
         try(InputStream in = new FileInputStream(f)) {
           T pol = Policy.load(in, type);
