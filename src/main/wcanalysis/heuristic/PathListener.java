@@ -5,7 +5,7 @@ import isstac.structure.cfg.CFGGenerator;
 import isstac.structure.cfg.CachingCFGGenerator;
 import isstac.structure.cfg.util.CFGToDOT;
 import wcanalysis.heuristic.ContextManager.CGContext;
-import wcanalysis.heuristic.model.DepthStateBuilder;
+import wcanalysis.heuristic.model.DepthState;
 import wcanalysis.heuristic.model.State;
 import wcanalysis.heuristic.model.StateBuilder;
 import wcanalysis.heuristic.policy.HistoryBasedPolicyGenerator;
@@ -33,9 +33,12 @@ import gov.nasa.jpf.PropertyListenerAdapter;
 import gov.nasa.jpf.search.Search;
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
 import gov.nasa.jpf.symbc.numeric.PathCondition;
+import gov.nasa.jpf.util.SourceRef;
 import gov.nasa.jpf.vm.ChoiceGenerator;
+import gov.nasa.jpf.vm.ClassInfo;
 import gov.nasa.jpf.vm.ElementInfo;
 import gov.nasa.jpf.vm.Instruction;
+import gov.nasa.jpf.vm.MethodInfo;
 import gov.nasa.jpf.vm.StackFrame;
 import gov.nasa.jpf.vm.ThreadInfo;
 import gov.nasa.jpf.vm.VM;
@@ -112,7 +115,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
     if(jpfConf.hasValue(WORST_CASE_STATE_BLDR_CONF)) {
       this.stateBuilder = jpfConf.getInstance(WORST_CASE_STATE_BLDR_CONF, StateBuilder.class);
     } else
-      this.stateBuilder = new DepthStateBuilder();
+      this.stateBuilder = new DepthState.DepthStateBuilder();
     
     this.historySize = jpfConf.getInt(HISTORY_SIZE_CONF, DEF_HISTORY_SIZE);
     if(jpfConf.hasValue(POLICY_GENERATOR_CLS_CONF)) {
@@ -250,6 +253,16 @@ public abstract class PathListener extends PropertyListenerAdapter {
     if(search.isEndState()) {
       checkExecutionPath(search.getVM());
     }
+  }
+  
+  @Override
+  public void objectCreated(VM vm, ThreadInfo ti, ElementInfo ei) {
+    this.stateBuilder.handleObjectCreated(vm, ti, ei);
+  }
+
+  @Override
+  public void objectReleased(VM vm, ThreadInfo ti, ElementInfo ei) {
+    this.stateBuilder.handleObjectReleased(vm, ti, ei);
   }
 
   private void checkExecutionPath(VM vm) {

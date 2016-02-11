@@ -17,5 +17,6 @@ public abstract class State implements CSVable, Comparable<State> {
     return this.pc;
   }
   
-  public abstract int getWC();
+  // Should this return a double, or would we like to parameterize this (e.g. to subclasses of Number)?
+  public abstract double getWC();
 }
