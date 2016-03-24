@@ -101,7 +101,6 @@ public class WorstCaseAnalyzer implements JPFShell {
       File visDirPolicy = Util.createDirIfNotExist(policyDir, "visualizations");
       config.setProperty(PolicyGeneratorListener.VIS_OUTPUT_PATH_CONF, visDirPolicy.getAbsolutePath());
     }
-    
 
     //Step 1: get the policy to guide the search. We will get this at the inputsize
     //corresponding to symbolic.worstcase.policy.inputsize

@@ -283,8 +283,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
     
     if(currentWcPath.compareTo(this.wcPath) > 0) {
       this.wcPath = currentWcPath;
-    } else
-      System.out.println("not greater");
+    }
   }
 
   public WorstCasePath getWcPath() {
