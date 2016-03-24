@@ -168,13 +168,14 @@ public abstract class PathListener extends PropertyListenerAdapter {
         //TODO: Should it be CG or currentCG here?
         this.ctxManager.addContext(cg, vm.getCurrentThread().getCallerStackFrame(), this.stateBuilder.copy());
       } else {
-        this.stateBuilder = ctx.stateBuilder;
+        this.stateBuilder = ctx.stateBuilder.copy();
       }
     }
   }
   
   @Override
   public void searchFinished(Search search) {
+    checkExecutionPath(search.getVM());
     searchFinished(this.wcPath);
   }
   
@@ -255,9 +256,9 @@ public abstract class PathListener extends PropertyListenerAdapter {
   @Override
   public void stateAdvanced(Search search) {
     //TODO: check iserrorstate here as was done originally?
-    if(search.isEndState()) {
+    //if(search.isEndState()) {
       checkExecutionPath(search.getVM());
-    }
+    //}
   }
   
   @Override
@@ -282,7 +283,8 @@ public abstract class PathListener extends PropertyListenerAdapter {
     
     if(currentWcPath.compareTo(this.wcPath) > 0) {
       this.wcPath = currentWcPath;
-    }
+    } else
+      System.out.println("not greater");
   }
 
   public WorstCasePath getWcPath() {
