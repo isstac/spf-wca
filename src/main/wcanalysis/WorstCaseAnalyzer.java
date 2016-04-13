@@ -44,6 +44,7 @@ public class WorstCaseAnalyzer implements JPFShell {
 
   private static final String HEURISTIC_SIZE_CONF = "symbolic.worstcase.policy.inputsize";
   private static final String MAX_INPUT_CONF = "symbolic.worstcase.input.max";
+  private static final String STEP_INPUT_SIZE_CONF = "symbolic.worstcase.input.stepsize";
   private static final String VERBOSE_CONF = "symbolic.worstcase.verbose";
   private static final String OUTPUT_DIR_CONF = "symbolic.worstcase.outputpath";
 
@@ -166,11 +167,12 @@ public class WorstCaseAnalyzer implements JPFShell {
       jpfConf.setProperty("symbolic.dp", "no_solver");
     }
     int maxInput = jpfConf.getInt(MAX_INPUT_CONF);
+    int step = jpfConf.getInt(STEP_INPUT_SIZE_CONF, 1);
     jpfConf.setProperty("report.console.class", HeuristicResultsPublisher.class.getName());
     
     DataCollection dataCollection = new DataCollection();
 
-    for(int inputSize = 1; inputSize <= maxInput; inputSize++) {//TODO: should maxInput be included?
+    for(int inputSize = 1; inputSize <= maxInput; inputSize += step) {//TODO: should maxInput be included?
       System.out.println("Exploring with heuristic input size " + inputSize);
       jpfConf.setProperty("target.args", ""+inputSize);
       JPF jpf = new JPF(jpfConf);
