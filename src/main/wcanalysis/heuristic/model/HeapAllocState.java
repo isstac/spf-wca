@@ -63,7 +63,7 @@ public final class HeapAllocState extends State {
   @Override
   public int compareTo(State o) {
     if(!(o instanceof HeapAllocState)) {
-      throw new IllegalStateException("Expected state fo type " + HeapAllocState.class.getName());
+      throw new IllegalStateException("Expected state of type " + HeapAllocState.class.getName());
     }
     
     //The notion of worst case is ONLY determined by the total size of allocations along the path; not the number of allocs
