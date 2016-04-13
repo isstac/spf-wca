@@ -13,9 +13,11 @@ public final class HeapAllocState extends State {
   public final static class HeapAllocStateBuilder extends StateBuilderAdapter {
 
     private long heapAlloced = 0;
-    
+
     //For now, we only keep this guy for statistics purposes...
     private long allocNum = 0;
+    
+    public HeapAllocStateBuilder() { }
     
     private HeapAllocStateBuilder(long memAlloced, long allocNum) {
       this.heapAlloced = memAlloced;
