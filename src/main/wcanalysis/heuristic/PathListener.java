@@ -86,10 +86,13 @@ public abstract class PathListener extends PropertyListenerAdapter {
   protected ContextManager ctxManager;
   
   protected PolicyGenerator<?> policyGenerator;
+  protected WorstCasePath.Builder worstCasePathBuilder;
+  
   private PolicyManager policyManager;
   //TODO: History should not be set here -- it is related to the policy (historyless, stateful, etc).
   //in fact the path measure computation is policy dependent! Extract path measure computation from WorstCasePath someday...
   private int historySize;
+  private boolean adaptive = false;
   
   public PathListener(Config jpfConf, JPF jpf) {
     this.jpfConf = jpfConf;
@@ -111,21 +114,29 @@ public abstract class PathListener extends PropertyListenerAdapter {
     
     this.showInstrs = jpfConf.getBoolean(SHOW_INSTRS_CONF, false);
     
+    this.ctxManager = new ContextManager();
+    
     //Initialize state
     if(jpfConf.hasValue(WORST_CASE_STATE_BLDR_CONF)) {
       this.stateBuilder = jpfConf.getInstance(WORST_CASE_STATE_BLDR_CONF, StateBuilder.class);
     } else
       this.stateBuilder = new DepthState.DepthStateBuilder();
     
-    this.historySize = jpfConf.getInt(HISTORY_SIZE_CONF, DEF_HISTORY_SIZE);
     if(jpfConf.hasValue(POLICY_GENERATOR_CLS_CONF)) {
       this.policyGenerator = jpfConf.getInstance(POLICY_GENERATOR_CLS_CONF, PolicyGenerator.class);
+      this.worstCasePathBuilder = new WorstCasePath.Builder(ctxManager);
     } else {
-      this.policyGenerator = new HistoryBasedPolicyGenerator(historySize);
+      if(jpfConf.hasValue(HISTORY_SIZE_CONF)) {
+        this.historySize = jpfConf.getInt(HISTORY_SIZE_CONF);
+        this.policyGenerator = new HistoryBasedPolicyGenerator(historySize);
+        this.worstCasePathBuilder = new WorstCasePath.Builder(ctxManager, historySize);
+      } else {
+        adaptive = true;
+        this.policyGenerator = new HistoryBasedPolicyGenerator(adaptive);
+        this.worstCasePathBuilder = new WorstCasePath.Builder(ctxManager);
+      }
     }
-    
-    this.ctxManager = new ContextManager();
-    
+
     this.wcPath = null;
   }
   
@@ -279,12 +290,11 @@ public abstract class PathListener extends PropertyListenerAdapter {
       pcNew = pc.make_copy();
     }
     State currentState = this.stateBuilder.build(pcNew);
-    WorstCasePath currentWcPath = new WorstCasePath(currentState, vm.getSystemState().getChoiceGenerator(), this.ctxManager, this.historySize);
+    WorstCasePath currentWcPath = this.worstCasePathBuilder.build(currentState, vm.getSystemState().getChoiceGenerator());
     
     if(currentWcPath.compareTo(this.wcPath) > 0) {
       this.wcPath = currentWcPath;
-    } //else
-      //System.out.println("not greater");
+    }
   }
 
   public WorstCasePath getWcPath() {

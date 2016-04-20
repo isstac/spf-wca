@@ -17,14 +17,34 @@ import wcanalysis.heuristic.model.State;
 public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
 
   private static final long serialVersionUID = -6739423849594132561L;
+  
+  public static class Builder {
+    private final ContextManager ctxManager;
+    private final PathMeasureComputation pathMeasureComp;
+    
+    public Builder(ContextManager ctxManager, int maxHistory) {
+      this.pathMeasureComp = new DefaultPathMeasure(new FixedLengthCtxHistoryGenerator(maxHistory));
+      this.ctxManager = ctxManager;
+    }
+    
+    public Builder(ContextManager ctxManager) {
+      this.pathMeasureComp = new DefaultPathMeasure(new MaxLengthCtxHistoryGenerator());
+      this.ctxManager = ctxManager;
+    }
+    
+    public WorstCasePath build(State endState, ChoiceGenerator<?> endCG) {
+      return new WorstCasePath(endState, endCG, ctxManager, pathMeasureComp);
+    }    
+  }
+  
   private final State finalState;
   private int pathMeasure = -1;
-  private final int maxHistorySize;
+  private final PathMeasureComputation pathMeasureComp;
   
-  public WorstCasePath(State endState, ChoiceGenerator<?> endCG, ContextManager ctxManager, int maxHistorySize) {
+  private WorstCasePath(State endState, ChoiceGenerator<?> endCG, ContextManager ctxManager, PathMeasureComputation pathMeasureComp) {
     super(endCG, ctxManager);
     this.finalState = endState;
-    this.maxHistorySize = maxHistorySize;
+    this.pathMeasureComp = pathMeasureComp;
   }
   
   public State getWCState() {
@@ -33,77 +53,9 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
   
   public int getPathmeasure() {
     if(this.pathMeasure == -1) { //caching of result
-      this.pathMeasure = computePathMeasure();
+      this.pathMeasure = pathMeasureComp.compute(this);
     }
     return this.pathMeasure;
-  }
-  
-  private int computePathMeasure() {
-    /*
-     * A lot of interesting things happen here. An end state is considered "better"
-     * if it passes the following checks (in that order):
-     * 1. It has a larger depth
-     * 2. Path measure is greater (i.e. more choices can resolved perfectly with the policy)
-     * The path measure is computed by the following computation:
-     * 1. If a decision has only counts on one branch, it can be resolved perfectly
-     * 2. If counts are present on both branches, use the history of decisions to determine
-     * if it can be resolved perfectly
-     * 3. How many choices can be resolved with invariant pruning
-     */
-    
-    Map<BranchInstruction, Map<Integer, Set<Path>>> branch2histories = new HashMap<>();
-    Set<BranchInstruction> branchInstructions = new HashSet<>();
-
-    
-    Decision currentDecision = null;
-    int decIdx = this.size() - 1;
-    
-    ListIterator<Decision> decIter = this.listIterator(this.size());
-    while(decIter.hasPrevious()) {
-      currentDecision = decIter.previous();
-      Path history = this.generateCtxPreservingHistoryFromIdx(decIdx, this.maxHistorySize);
-      
-      BranchInstruction currInstruction = currentDecision.getInstruction();
-      branchInstructions.add(currInstruction);
-      
-      Map<Integer, Set<Path>> historiesForChoice = branch2histories.get(currInstruction);
-      if(historiesForChoice == null) {
-        historiesForChoice = new HashMap<>();
-        branch2histories.put(currInstruction, historiesForChoice);
-      }
-      
-      Set<Path> histories = historiesForChoice.get(currentDecision.getChoice());
-      if(histories == null) {
-        histories = new HashSet<>();
-        historiesForChoice.put(currentDecision.getChoice(), histories);
-      }
-      
-      histories.add(history);
-      decIdx--;
-    }
-    
-    int pathMeasure = 0;
-    for(BranchInstruction branchInstr : branchInstructions) {
-      Map<Integer, Set<Path>> histories = branch2histories.get(branchInstr);
-      if(histories.keySet().size() == 1) { //resolved perfectly
-        pathMeasure++;
-      } else { //now we check based on histories
-        Set<Path> union = new HashSet<>();
-        for(Set<Path> historiesForChoice : histories.values()) {
-          union.addAll(historiesForChoice);
-        }
-        
-        Set<Path> intersection = new HashSet<>(union);
-        for(Set<Path> historiesForChoice : histories.values()) {
-          intersection.retainAll(historiesForChoice);
-        }
-        
-        //the measure is updated with the number of decisions we can uniquely resolve!
-        pathMeasure += union.size() - intersection.size();
-      }
-      //FIXME!!!!!!! Take into account the invariant pruning here in the path measure
-    }
-    return pathMeasure;
   }
 
 

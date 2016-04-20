@@ -75,12 +75,20 @@ public class Path extends ArrayList<Decision> {
   }
   
   public Path generateCtxPreservingHistoryFromIdx(int idx, int maxSize) {
+    return generateCtxPreservingHistoryFromIdx(idx, false, maxSize);
+  }
+  
+  public Path generateCtxPreservingHistoryFromIdx(int idx) {
+    return generateCtxPreservingHistoryFromIdx(idx, true, -1);
+  }
+  
+  private Path generateCtxPreservingHistoryFromIdx(int idx, boolean full, int maxSize) {
     Path subPath = new Path();
     if(idx <= 0)
       return subPath;
     StackFrame ctx = this.get(idx).getContext();
     for(int i = idx-1, size = 0; i >= 0; i--, size++) {
-      if(size >= maxSize)
+      if(!full && size >= maxSize)
         return subPath;
       Decision curr = this.get(i);
       if(curr.getContext() == ctx) {

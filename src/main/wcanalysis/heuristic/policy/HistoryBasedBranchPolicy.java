@@ -18,34 +18,29 @@ public class HistoryBasedBranchPolicy implements BranchPolicy {
 
   public static class Builder extends HistoryBranchPolicyBuilder<HistoryBasedBranchPolicy> {
     @Override
-    public HistoryBasedBranchPolicy build(Map<BranchInstruction, Map<Path, Set<Integer>>> pol,
-        Map<BranchInstruction, Map<Integer, Integer>> choice2counts) {
-      return new HistoryBasedBranchPolicy(pol, choice2counts);
+    public HistoryBasedBranchPolicy build(Map<BranchInstruction, BranchPolicyStorage> pol) {
+      return new HistoryBasedBranchPolicy(pol);
     }
   }
   
-  private final Map<BranchInstruction, Map<Path, Set<Integer>>> pol;
-  private final Map<BranchInstruction, Map<Integer, Integer>> choice2counts;
+  private final Map<BranchInstruction, BranchPolicyStorage> pol;
   
-  protected HistoryBasedBranchPolicy(Map<BranchInstruction, Map<Path, Set<Integer>>> pol, 
-      Map<BranchInstruction, Map<Integer, Integer>> choice2counts) {
+  protected HistoryBasedBranchPolicy(Map<BranchInstruction, BranchPolicyStorage> pol) {
     this.pol = pol;
-    this.choice2counts = choice2counts;
   }
   
   @Override
   public Set<Integer> resolve(BranchInstruction branch, Path history) {
     if(pol.containsKey(branch)) {
-      return pol.get(branch).get(history);
+      return pol.get(branch).getChoicesForLongestSuffix(history);
     }
     return new HashSet<>();
   }
 
   @Override
   public int getCountsForChoice(BranchInstruction branch, int choice) {
-    if(choice2counts.containsKey(branch)) {
-      Integer count = choice2counts.get(branch).get(choice);
-      return (count != null) ? count : 0;
+    if(pol.containsKey(branch)) {
+      return pol.get(branch).getCountsForChoice(choice);
     }
     return 0;
   }
@@ -54,19 +49,9 @@ public class HistoryBasedBranchPolicy implements BranchPolicy {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     for(BranchInstruction branch : pol.keySet()) {
-      sb.append(branch.toString()).append("\n");
-      Map<Path, Set<Integer>> histories = pol.get(branch);
-      for(Path p : histories.keySet()) {
-        sb.append('\t').append(p.toString()).append(" --> {");
-        Set<Integer> choices = histories.get(p);
-        Iterator<Integer> choiceIter = choices.iterator();
-        while(choiceIter.hasNext()) {
-          sb.append(choiceIter.next());
-          if(choiceIter.hasNext())
-            sb.append(",");
-        }
-        sb.append("}\n");
-      }
+      sb.append(branch.toString()).append(":\n");
+      BranchPolicyStorage histories = pol.get(branch);
+      sb.append(histories.toString()).append("\n");
     }
     return sb.toString();
   }

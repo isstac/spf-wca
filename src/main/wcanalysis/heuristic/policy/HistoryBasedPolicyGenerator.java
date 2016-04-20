@@ -10,18 +10,24 @@ import wcanalysis.heuristic.WorstCasePath;
  */
 public class HistoryBasedPolicyGenerator implements PolicyGenerator<HistoryBasedPolicy> {
 
-  private final int maxHistSize;
+  private HistoryBasedPolicy.Builder bldr;
   
-  public HistoryBasedPolicyGenerator(int maxHistSize) {
-    this.maxHistSize = maxHistSize;
+  private HistoryBasedPolicyGenerator() {
+    bldr = new HistoryBasedPolicy.Builder();
   }
   
-  public HistoryBasedPolicyGenerator() {
-    this.maxHistSize = HistoryBasedPolicy.NO_LIMIT;
+  public HistoryBasedPolicyGenerator(int maxHistSize) {
+    this();
+    bldr.setMaxHistorySize(maxHistSize);
+  }
+  
+  public HistoryBasedPolicyGenerator(boolean adaptive) {
+    this();
+    bldr.setAdaptive(adaptive);
   }
   
   @Override
   public HistoryBasedPolicy generate(Set<String> measuredMethods, WorstCasePath path) {
-    return new HistoryBasedPolicy(path, measuredMethods, this.maxHistSize);
+    return bldr.build(path, measuredMethods);
   }
 }

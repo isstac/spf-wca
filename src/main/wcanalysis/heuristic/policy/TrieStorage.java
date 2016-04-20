@@ -1,8 +1,11 @@
 package wcanalysis.heuristic.policy;
 
 import java.io.Serializable;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,7 +19,7 @@ import wcanalysis.heuristic.Path;
  * @author Kasper Luckow
  *
  */
-public class AdaptivePolicy implements Serializable {
+public class TrieStorage implements BranchPolicyStorage {
   private static final long serialVersionUID = -8230467461615793375L;
 
   private static class Node implements Serializable {
@@ -45,8 +48,16 @@ public class AdaptivePolicy implements Serializable {
       return this.choices;
     }
     
+    public boolean hasChoices() {
+      return this.choices.size() > 0;
+    }
+    
     public void addChoice(int choice) {
       this.choices.add(choice);
+    }
+    
+    public Set<Node> getChildren() {
+      return this.next.values();
     }
 
     public Decision getDecisionForChild(Node child) {
@@ -54,7 +65,10 @@ public class AdaptivePolicy implements Serializable {
     }
 
     public Node getNext(Decision curr) {
-      return next.get(curr);
+      if(next.containsKey(curr))
+        return next.get(curr);
+      else
+        return null;
     }
 
     public void addNext(Decision dec, Node next) {
@@ -131,12 +145,10 @@ public class AdaptivePolicy implements Serializable {
       if(x == null) {
         x = new Node(parent);
       }
-      Decision dec;
-      if(key.size() >= d)
+      Decision dec = null;
+      if(key.size() > d)
         dec = key.get(d);
-      else
-        dec = null; //this is not very nice.
-      if(d == key.size()) {
+      if(d >= key.size() - 1) {
         assert x.getChoices() != null;
         x.addChoice(choice);
         Set<Node> endNodesForDec = this.endNodes.get(dec);
@@ -152,8 +164,8 @@ public class AdaptivePolicy implements Serializable {
       return x;
     }
     
-    public AdaptivePolicy build() {
-      return new AdaptivePolicy(root, endNodes, choice2Counts);
+    public TrieStorage build() {
+      return new TrieStorage(root, endNodes, choice2Counts);
     }
   }
   
@@ -161,12 +173,13 @@ public class AdaptivePolicy implements Serializable {
   private final Node root;
   private final Map<Integer, Integer> choice2Counts;
   
-  private AdaptivePolicy(Node root, Map<Decision, Set<Node>> endNodes, Map<Integer, Integer> choice2Counts) {
+  private TrieStorage(Node root, Map<Decision, Set<Node>> endNodes, Map<Integer, Integer> choice2Counts) {
     this.endNodes = endNodes;
     this.root = root;
     this.choice2Counts = choice2Counts;
   }
   
+  @Override
   public int getCountsForChoice(int choice) {
     if(this.choice2Counts.containsKey(choice)) {
       return this.choice2Counts.get(choice);
@@ -176,6 +189,7 @@ public class AdaptivePolicy implements Serializable {
   }
   
   //This is pretty ugly.
+  @Override
   public Set<Integer> getChoicesForLongestSuffix(Path history) {
     Decision last;
     if(history.size() > 0) {
@@ -218,5 +232,45 @@ public class AdaptivePolicy implements Serializable {
       choices.addAll(maxSuffixNode.getChoices());
     }
     return choices;
+  }
+  
+  //seems a bit insane
+  @Override
+  public String toString() {
+    Set<String> paths = new HashSet<>();
+    collectPaths(root, new StringBuilder(), paths);
+    StringBuilder pathStringBuilder = new StringBuilder();
+    Iterator<String> pathIter = paths.iterator();
+    while(pathIter.hasNext()) {
+      pathStringBuilder.append(pathIter.next());
+      if(pathIter.hasNext())
+        pathStringBuilder.append("\n");
+    }
+    return pathStringBuilder.toString();
+  }
+  
+  private void collectPaths(Node node, StringBuilder sb, Set<String> paths) {
+    Decision curr = node.getDecision();
+    if(curr != null)
+      sb.append(curr.toString());
+    if(node.hasChoices()) {
+      StringBuilder pathSb = new StringBuilder(sb);
+      if(curr == null)
+        pathSb.append("Empty");
+      pathSb.append(" --> {");
+      Iterator<Integer> choiceIter = node.getChoices().iterator();
+      while(choiceIter.hasNext()) {
+        pathSb.append(choiceIter.next());
+        if(choiceIter.hasNext())
+          pathSb.append(",");
+      }
+      pathSb.append("}");
+      paths.add(pathSb.toString());
+    }
+    if(curr != null && node.getChildren().size() > 0)
+      sb.append(","); 
+    for(Node child : node.getChildren()) {
+      collectPaths(child, new StringBuilder(sb), paths);
+    }
   }
 }

@@ -19,47 +19,58 @@ import wcanalysis.heuristic.Resolution.ResolutionType;
  */
 public class HistoryBasedPolicy extends Policy implements ChoiceListener { 
   private static final long serialVersionUID = 3311547338575590448L;
-
-//  public static class Builder {
-//    private InvariantChecker invariantChecker = null;
-//    
-//    public Builder() {
-//      
-//    }
-//    
-//    public Builder addInvariantChecker(InvariantChecker invariantChecker) {
-//      this.invariantChecker = invariantChecker;
-//      return this;
-//    }
-//    
-//    public HistoryBasedPolicy buildWithFixedHistory(int maxHistorySize) {
-//      
-//    }
-//    
-//    public HistoryBasedPolicy buildWithAdaptiveHistory() {
-//      
-//    }
-//  }
   
+  public static class Builder {
+    private boolean adaptive = false;
+    private int maxHistorySize = 0;
+    private InvariantChecker invariantChecker = null;
+    
+    public Builder() {}
+    
+    public Builder setAdaptive(boolean adaptive) {
+      this.adaptive = adaptive;
+      return this;
+    }
+
+    public Builder setMaxHistorySize(int maxHistorySize) {
+      this.maxHistorySize = maxHistorySize;
+      return this;
+    }
+    
+    public Builder addInvariantChecker(InvariantChecker invChecker) {
+      this.invariantChecker = invChecker;
+      return this;
+    }
+    
+    public HistoryBasedPolicy build(WorstCasePath wcPath, Set<String> measuredMethods) {
+      if(adaptive)
+        return new HistoryBasedPolicy(wcPath, measuredMethods, invariantChecker, true);
+      else {
+        return new HistoryBasedPolicy(wcPath, measuredMethods, invariantChecker, maxHistorySize);
+      }
+    }
+  }
   
   private HistoryBasedBranchPolicy historyPolicy;
   private HistoryLessBranchPolicy historyLessPolicy;
   
-  public static final int NO_LIMIT = -1;
-  private final int maxHistorySize;
+  public static final int ADAPTIVE = -1;
+  private boolean adaptive = false;
+  
+  private int maxHistorySize = 0;
   
   private InvariantChecker invariantChecker = null;
   
-  
-  public HistoryBasedPolicy(WorstCasePath wcPath, Set<String> measuredMethods, int maxHistorySize) {
+  private HistoryBasedPolicy(WorstCasePath wcPath, Set<String> measuredMethods, InvariantChecker invariantChecker, int maxHistorySize) {
     super(measuredMethods);
     this.maxHistorySize = maxHistorySize;
-
+    this.invariantChecker = invariantChecker; 
+    computePolicy(wcPath);
   }
   
-  public HistoryBasedPolicy(WorstCasePath wcPath, Set<String> measuredMethods, int maxHistorySize, InvariantChecker invariantChecker) {
+  private HistoryBasedPolicy(WorstCasePath wcPath, Set<String> measuredMethods, InvariantChecker invariantChecker, boolean adaptive) {
     super(measuredMethods);
-    this.maxHistorySize = maxHistorySize;
+    this.adaptive = adaptive;
     this.invariantChecker = invariantChecker; 
     computePolicy(wcPath);
   }
@@ -79,17 +90,17 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
         prevDecision = wcPath.get(j);
         if(prevDecision.getContext() != currDecision.getContext())
           break;
-        if(currHistorySize >= maxHistorySize)
+        if(!adaptive && currHistorySize >= maxHistorySize)
           break;
         history.addFirst(prevDecision);
       }
       BranchInstruction branchInstr = currDecision.getInstruction();
       
-      
       historyPolicyBuilder.addPolicy(branchInstr, history, currentChoice);
       historyLessPolicyBuilder.addPolicy(branchInstr, currentChoice);
     }
     this.historyPolicy = historyPolicyBuilder.build();
+    System.out.println(this.historyPolicy.toString());
     this.historyLessPolicy = historyLessPolicyBuilder.build();
   }
 

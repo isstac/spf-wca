@@ -21,15 +21,13 @@ public class HistoryLessBranchPolicy extends HistoryBasedBranchPolicy {
     }
     
     @Override
-    public HistoryLessBranchPolicy build(Map<BranchInstruction, Map<Path, Set<Integer>>> pol,
-        Map<BranchInstruction, Map<Integer, Integer>> choice2counts) {
-      return new HistoryLessBranchPolicy(pol, choice2counts);
+    public HistoryLessBranchPolicy build(Map<BranchInstruction, BranchPolicyStorage> branch2pol) {
+      return new HistoryLessBranchPolicy(branch2pol);
     }
   }
   
-  protected HistoryLessBranchPolicy(Map<BranchInstruction, Map<Path, Set<Integer>>> pol,
-      Map<BranchInstruction, Map<Integer, Integer>> choice2counts) {
-    super(pol, choice2counts);
+  protected HistoryLessBranchPolicy(Map<BranchInstruction, BranchPolicyStorage> policy) {
+    super(policy);
   }
   
   public Set<Integer> resolve(BranchInstruction branch) {
