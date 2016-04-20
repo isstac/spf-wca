@@ -74,7 +74,7 @@ public final class DepthState extends State {
     if(!(o instanceof DepthState)) {
       throw new IllegalStateException("Expected state of type " + DepthState.class.getName());
     }
-    return (int)(this.instrExecuted - ((DepthState)o).instrExecuted);
+    return (int)(this.depth - ((DepthState)o).depth);
   }
 
   @Override

@@ -48,11 +48,16 @@ public abstract class OLSTrendLine implements TrendLine {
       x[i] = xArr.get(i);
       y[i] = yArr.get(i);
     }
-    
+    System.out.println(this.getClass().getName());
+    System.out.println("x:");
     double[][] xData = new double[x.length][]; 
     for (int i = 0; i < x.length; i++) {
       // the implementation determines how to produce a vector of predictors from a single x
       xData[i] = xVector(x[i]);
+      for(double xd : xVector(x[i])) {
+        System.out.print(xd + ",");
+      }
+      System.out.println("");
     }
     if(logY()) { // in some models we are predicting ln y, so we replace each y with ln y
       y = Arrays.copyOf(y, y.length); // user might not be finished with the array we were given
@@ -60,6 +65,12 @@ public abstract class OLSTrendLine implements TrendLine {
         y[i] = Math.log(y[i]);
       }
     }
+
+    System.out.println(y);
+    for(double yd : y) {
+      System.out.print(yd + ",");
+    }
+    System.out.println("");
     OLSMultipleLinearRegression ols = new OLSMultipleLinearRegression();
     ols.setNoIntercept(true); // let the implementation include a constant in xVector if desired
     ols.newSampleData(y, xData); // provide the data to the model

@@ -14,7 +14,7 @@ public class HistoryLessBranchPolicy extends HistoryBasedBranchPolicy {
   
   private static final long serialVersionUID = -767196606158062320L;
 
-  public static class Builder extends BranchPolicyBuilder<HistoryLessBranchPolicy> {
+  public static class Builder extends HistoryBranchPolicyBuilder<HistoryLessBranchPolicy> {
 
     public void addPolicy(BranchInstruction branch, int policyChoice) {
       super.addPolicy(branch, new Path(), policyChoice); // here we make an empty history, i.e. it is stateless

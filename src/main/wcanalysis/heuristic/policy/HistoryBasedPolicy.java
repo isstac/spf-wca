@@ -20,6 +20,27 @@ import wcanalysis.heuristic.Resolution.ResolutionType;
 public class HistoryBasedPolicy extends Policy implements ChoiceListener { 
   private static final long serialVersionUID = 3311547338575590448L;
 
+//  public static class Builder {
+//    private InvariantChecker invariantChecker = null;
+//    
+//    public Builder() {
+//      
+//    }
+//    
+//    public Builder addInvariantChecker(InvariantChecker invariantChecker) {
+//      this.invariantChecker = invariantChecker;
+//      return this;
+//    }
+//    
+//    public HistoryBasedPolicy buildWithFixedHistory(int maxHistorySize) {
+//      
+//    }
+//    
+//    public HistoryBasedPolicy buildWithAdaptiveHistory() {
+//      
+//    }
+//  }
+  
   
   private HistoryBasedBranchPolicy historyPolicy;
   private HistoryLessBranchPolicy historyLessPolicy;
@@ -29,10 +50,11 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
   
   private InvariantChecker invariantChecker = null;
   
+  
   public HistoryBasedPolicy(WorstCasePath wcPath, Set<String> measuredMethods, int maxHistorySize) {
     super(measuredMethods);
     this.maxHistorySize = maxHistorySize;
-    computePolicy(wcPath);
+
   }
   
   public HistoryBasedPolicy(WorstCasePath wcPath, Set<String> measuredMethods, int maxHistorySize, InvariantChecker invariantChecker) {

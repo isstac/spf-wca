@@ -1,5 +1,6 @@
 package wcanalysis.heuristic;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -13,7 +14,7 @@ import wcanalysis.heuristic.ContextManager.CGContext;
  * TODO: Clean up how (sub)paths can be generated (static methods, from CGs, ...)
  * both context preserving and not context preserving. 
  */
-public class Path extends LinkedList<Decision> {
+public class Path extends ArrayList<Decision> {
   
   private static final long serialVersionUID = -1691414612424473640L;
   
@@ -43,6 +44,22 @@ public class Path extends LinkedList<Decision> {
       Decision dec = new Decision(new BranchInstruction(currPc.getInsn()), currPc.getNextChoice(), currCtx.stackFrame);
       path.addFirst(dec);
     }
+  }
+  
+  public void addFirst(Decision dec) {
+    this.add(0, dec);
+  }
+  
+  public void addLast(Decision dec) {
+    this.add(this.size() - 1, dec);
+  }
+  
+  public Decision getFirst() {
+    return this.get(0);
+  }
+  
+  public Decision getLast() {
+    return this.get(this.size() - 1);
   }
   
   public Path(ChoiceGenerator<?> endCG, ContextManager ctxManager, boolean ctxPreserving, int maxSize) {

@@ -3,6 +3,7 @@ package wcanalysis.heuristic;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,9 +57,10 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
     
     Decision currentDecision = null;
     int decIdx = this.size() - 1;
-    Iterator<Decision> decIter = this.descendingIterator();
-    while(decIter.hasNext()) {
-      currentDecision = decIter.next();
+    
+    ListIterator<Decision> decIter = this.listIterator(this.size());
+    while(decIter.hasPrevious()) {
+      currentDecision = decIter.previous();
       Path history = this.generateCtxPreservingHistoryFromIdx(decIdx, this.maxHistorySize);
       
       BranchInstruction currInstruction = currentDecision.getInstruction();

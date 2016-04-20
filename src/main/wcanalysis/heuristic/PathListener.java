@@ -256,9 +256,9 @@ public abstract class PathListener extends PropertyListenerAdapter {
   @Override
   public void stateAdvanced(Search search) {
     //TODO: check iserrorstate here as was done originally?
-    //if(search.isEndState()) {
+    if(search.isEndState()) {
       checkExecutionPath(search.getVM());
-    //}
+    }
   }
   
   @Override

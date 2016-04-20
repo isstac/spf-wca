@@ -16,7 +16,7 @@ public class HistoryBasedBranchPolicy implements BranchPolicy {
 
   private static final long serialVersionUID = 4478984808375928385L;
 
-  public static class Builder extends BranchPolicyBuilder<HistoryBasedBranchPolicy> {
+  public static class Builder extends HistoryBranchPolicyBuilder<HistoryBasedBranchPolicy> {
     @Override
     public HistoryBasedBranchPolicy build(Map<BranchInstruction, Map<Path, Set<Integer>>> pol,
         Map<BranchInstruction, Map<Integer, Integer>> choice2counts) {
@@ -33,6 +33,7 @@ public class HistoryBasedBranchPolicy implements BranchPolicy {
     this.choice2counts = choice2counts;
   }
   
+  @Override
   public Set<Integer> resolve(BranchInstruction branch, Path history) {
     if(pol.containsKey(branch)) {
       return pol.get(branch).get(history);
