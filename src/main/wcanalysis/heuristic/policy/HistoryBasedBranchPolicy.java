@@ -1,7 +1,11 @@
 package wcanalysis.heuristic.policy;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,7 +52,15 @@ public class HistoryBasedBranchPolicy implements BranchPolicy {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    for(BranchInstruction branch : pol.keySet()) {
+    List<BranchInstruction> bList = new ArrayList<>(pol.keySet());
+    Collections.sort(bList, new Comparator<BranchInstruction>() {
+      @Override
+      public int compare(BranchInstruction o1, BranchInstruction o2) {
+        return Integer.compare(o1.getLineNumber(), o2.getLineNumber());
+      }
+    });
+    
+    for(BranchInstruction branch : bList) {
       sb.append(branch.toString()).append(":\n");
       BranchPolicyStorage histories = pol.get(branch);
       sb.append(histories.toString()).append("\n");

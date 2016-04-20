@@ -188,7 +188,7 @@ public class TrieStorage implements BranchPolicyStorage {
     }
   }
   
-  //This is pretty ugly.
+  //This is pretty messy. Too tired to clean it up now...
   @Override
   public Set<Integer> getChoicesForLongestSuffix(Path history) {
     Decision last;
@@ -207,8 +207,17 @@ public class TrieStorage implements BranchPolicyStorage {
       Node curr = end;
       boolean equal = true;
       while(curr != null) {
-        Decision histDecision = history.get(history.size() - 1 - index);
-        if(curr.getDecision().equals(histDecision)) {
+        Decision histDecision = null;
+        int historyIdx = history.size() - 1 - index;
+        if(historyIdx > 0)
+          histDecision = history.get(historyIdx);
+        else
+          break;
+        Decision policyDecision = curr.getDecision();
+        if(policyDecision == null)
+          break;
+        
+        if(policyDecision.equals(histDecision)) {
           suffixLength++;
           curr = curr.getParent();
           index++;
