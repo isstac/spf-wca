@@ -20,6 +20,10 @@ public class Path extends ArrayList<Decision> {
   
   public Path() { }
 
+  public Path(Path other) {
+    super(other);
+  }
+  
   //TODO: ugly
   public static Path generateCtxPreservingHistory(ChoiceGenerator<?> endCG, ContextManager ctxManager, int maxSize) {
     Path p = new Path();

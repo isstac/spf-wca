@@ -2,10 +2,13 @@ package wcanalysis.heuristic.policy;
 
 import java.io.Serializable;
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -79,8 +82,6 @@ public class TrieStorage implements BranchPolicyStorage {
   
   public static class Builder {
     private Node root;      // root of trie
-
-    private Map<Decision, Set<Node>> endNodes = new HashMap<>();
     private Map<Integer, Integer> choice2Counts = new HashMap<>();
     
     public Builder() { }
@@ -120,16 +121,11 @@ public class TrieStorage implements BranchPolicyStorage {
 //    compact(n);
 //  }
 //}
-    /**
-     * Inserts the key-value pair into the symbol table, overwriting the old value
-     * with the new value if the key is already in the symbol table.
-     * If the value is <tt>null</tt>, this effectively deletes the key from the symbol table.
-     * @param key the key
-     * @param val the value
-     * @throws NullPointerException if <tt>key</tt> is <tt>null</tt>
-     */
+
     public Builder put(Path key, int choice) {
-      root = put(root, null, key, choice, 0);
+      Path keyCpy = new Path(key);
+      Collections.reverse(keyCpy);
+      root = put(root, null, keyCpy, choice, 0);
       
       if(!choice2Counts.containsKey(choice)) {
         choice2Counts.put(choice, 1);
@@ -151,12 +147,6 @@ public class TrieStorage implements BranchPolicyStorage {
       if(d >= key.size() - 1) {
         assert x.getChoices() != null;
         x.addChoice(choice);
-        Set<Node> endNodesForDec = this.endNodes.get(dec);
-        if(endNodesForDec == null) {
-          endNodesForDec = new HashSet<>();
-          this.endNodes.put(dec, endNodesForDec);
-        }
-        endNodesForDec.add(x);
         return x;
       }
       Node nxt = put(x.getNext(dec), x, key, choice, d + 1);
@@ -165,16 +155,14 @@ public class TrieStorage implements BranchPolicyStorage {
     }
     
     public TrieStorage build() {
-      return new TrieStorage(root, endNodes, choice2Counts);
+      return new TrieStorage(root, choice2Counts);
     }
   }
   
-  private final Map<Decision, Set<Node>> endNodes;
   private final Node root;
   private final Map<Integer, Integer> choice2Counts;
   
-  private TrieStorage(Node root, Map<Decision, Set<Node>> endNodes, Map<Integer, Integer> choice2Counts) {
-    this.endNodes = endNodes;
+  private TrieStorage(Node root, Map<Integer, Integer> choice2Counts) {
     this.root = root;
     this.choice2Counts = choice2Counts;
   }
@@ -243,7 +231,35 @@ public class TrieStorage implements BranchPolicyStorage {
     return choices;
   }
   
-  //seems a bit insane
+
+  /**
+   * Returns the string in the symbol table that is the longest prefix of <tt>query</tt>,
+   * or <tt>null</tt>, if no such string.
+   * @param query the query string
+   * @return the string in the symbol table that is the longest prefix of <tt>query</tt>,
+   *     or <tt>null</tt> if no such string
+   * @throws NullPointerException if <tt>query</tt> is <tt>null</tt>
+   */
+  public String longestPrefixOf(String query) {
+      int length = longestPrefixOf(root, query, 0, -1);
+      if (length == -1) return null;
+      else return query.substring(0, length);
+  }
+
+  // returns the length of the longest string key in the subtrie
+  // rooted at x that is a prefix of the query string,
+  // assuming the first d character match and we have already
+  // found a prefix match of given length (-1 if no such match)
+  private int longestPrefixOf(Node x, String query, int d, int length) {
+      if (x == null) return length;
+      if (x.val != null) length = d;
+      if (d == query.length()) return length;
+      char c = query.charAt(d);
+      return longestPrefixOf(x.next[c], query, d+1, length);
+  }
+  
+  
+
   @Override
   public String toString() {
     Set<String> paths = new HashSet<>();
