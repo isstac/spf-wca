@@ -176,90 +176,25 @@ public class TrieStorage implements BranchPolicyStorage {
     }
   }
   
-  //This is pretty messy. Too tired to clean it up now...
-  @Override
-  public Set<Integer> getChoicesForLongestSuffix(Path history) {
-    Decision last;
-    if(history.size() > 0) {
-      last = history.get(history.size() - 1);
-    } else {
-      last = null;
-    }
-    
-    Set<Node> ends = endNodes.get(last);
-    Set<Node> maxSuffixNodes = new HashSet<>();
-    int maxSuffix = -1;
-    for(Node end : ends) {
-      int index = 0;
-      int suffixLength = 0;
-      Node curr = end;
-      boolean equal = true;
-      while(curr != null) {
-        Decision histDecision = null;
-        int historyIdx = history.size() - 1 - index;
-        if(historyIdx > 0)
-          histDecision = history.get(historyIdx);
-        else
-          break;
-        Decision policyDecision = curr.getDecision();
-        if(policyDecision == null)
-          break;
-        
-        if(policyDecision.equals(histDecision)) {
-          suffixLength++;
-          curr = curr.getParent();
-          index++;
-        } else {
-          equal = false;
-          break;
-        }
-      }
-      if(equal) {
-        if(suffixLength >= maxSuffix) {
-          if(suffixLength > maxSuffix) {
-            maxSuffixNodes.clear();
-          }
-          maxSuffixNodes.add(end);
-          maxSuffix = suffixLength;
-        }
-      }
-    }
-    Set<Integer> choices = new HashSet<>();
-    for(Node maxSuffixNode : maxSuffixNodes) {
-      choices.addAll(maxSuffixNode.getChoices());
-    }
-    return choices;
+  public Set<Integer> getChoicesForLongestPrefix(Path key) {
+      Node x = getNodeWithLongestPrefix(root, key, 0, null);
+      if (x == null) return null;
+      return x.getChoices();
   }
   
-
-  /**
-   * Returns the string in the symbol table that is the longest prefix of <tt>query</tt>,
-   * or <tt>null</tt>, if no such string.
-   * @param query the query string
-   * @return the string in the symbol table that is the longest prefix of <tt>query</tt>,
-   *     or <tt>null</tt> if no such string
-   * @throws NullPointerException if <tt>query</tt> is <tt>null</tt>
-   */
-  public String longestPrefixOf(String query) {
-      int length = longestPrefixOf(root, query, 0, -1);
-      if (length == -1) return null;
-      else return query.substring(0, length);
-  }
-
-  // returns the length of the longest string key in the subtrie
-  // rooted at x that is a prefix of the query string,
-  // assuming the first d character match and we have already
-  // found a prefix match of given length (-1 if no such match)
-  private int longestPrefixOf(Node x, String query, int d, int length) {
-      if (x == null) return length;
-      if (x.val != null) length = d;
-      if (d == query.length()) return length;
-      char c = query.charAt(d);
-      return longestPrefixOf(x.next[c], query, d+1, length);
+  private Node getNodeWithLongestPrefix(Node x, Path key, int d, Node longestSuffixNode) {
+    if(x == null)
+      return null;
+    if(x.hasChoices()) {
+      longestSuffixNode = x;
+    }
+    if(d == key.size()) {
+      return longestSuffixNode;
+    }
+    Decision c = key.get(d);
+    return getNodeWithLongestPrefix(x.getNext(c), key, d+1, longestSuffixNode);
   }
   
-  
-
   @Override
   public String toString() {
     Set<String> paths = new HashSet<>();

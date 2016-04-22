@@ -36,7 +36,7 @@ public class HistoryBasedBranchPolicy implements BranchPolicy {
   @Override
   public Set<Integer> resolve(BranchInstruction branch, Path history) {
     if(pol.containsKey(branch)) {
-      return pol.get(branch).getChoicesForLongestSuffix(history);
+      return pol.get(branch).getChoicesForLongestPrefix(history);
     }
     return new HashSet<>();
   }
