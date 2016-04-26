@@ -44,6 +44,7 @@ public class FunctionFitter {
     trendLines.add(new TrendModelData(new PowerTrendLine(), "pow"));
     trendLines.add(new TrendModelData(new LogTrendLine(), "log"));
     trendLines.add(new TrendModelData(new NLogTrendLine(), "nlog"));
+    trendLines.add(new TrendModelData(new FactorialTrendline(), "fac"));
     
     HashMap<TrendModelData, XYSeries> trend2series = new HashMap<>();
     
