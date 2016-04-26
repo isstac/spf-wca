@@ -50,7 +50,7 @@ public final class DepthState extends State {
   private final int depth;
   private final long instrExecuted;
   
-  private DepthState(PathCondition pc, int depth, long instrExecuted) {
+  DepthState(PathCondition pc, int depth, long instrExecuted) {
     super(pc);
     this.depth = depth;
     this.instrExecuted = instrExecuted;
