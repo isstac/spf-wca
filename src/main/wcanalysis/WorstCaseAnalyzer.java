@@ -55,6 +55,10 @@ public class WorstCaseAnalyzer implements JPFShell {
   private static final String NO_SOLVER_HEURISTIC_CONF = "symbolic.worstcase.heuristic.nosolver";
   
   private static final String REUSE_POLICY_CONF = "symbolic.worstcase.reusepolicy";
+  
+  // explore specific series of inputs for the ASE experiments
+  private static final String ASE_EXP_HEURISTIC_CONF = "symbolic.worstcase.aseexp";
+  private static final int NVALUES[] = {1,2,3,4,5,10,15,20,30,100,250,1000};
 
   private final Logger logger;
   private final Config config;
@@ -170,26 +174,38 @@ public class WorstCaseAnalyzer implements JPFShell {
     int step = jpfConf.getInt(STEP_INPUT_SIZE_CONF, 1);
     jpfConf.setProperty("report.console.class", HeuristicResultsPublisher.class.getName());
     
+    boolean aseExp = jpfConf.getBoolean(ASE_EXP_HEURISTIC_CONF, false);
+    
     DataCollection dataCollection = new DataCollection();
 
-    for(int inputSize = 1; inputSize <= maxInput; inputSize += step) {//TODO: should maxInput be included?
-      System.out.println("Exploring with heuristic input size " + inputSize);
-      jpfConf.setProperty("target.args", ""+inputSize);
-      JPF jpf = new JPF(jpfConf);
-      HeuristicListener heuristic = new HeuristicListener(jpfConf, jpf);
-      jpf.addListener(heuristic); //weird instantiation...
-
-      //explore guided by policy
-      jpf.run();
-      WorstCasePath wcPath = heuristic.getWcPath();
-
-      if(wcPath == null) {
-        logger.severe("No worst case path found for input size " + inputSize);
-      } else {
-        State wcState = wcPath.getWCState();
-        dataCollection.addDatapoint(inputSize, wcState.getWC());
-      }
+    if (aseExp) {
+    	for (int inputSize : NVALUES)
+    		dataCollection = explore(inputSize, dataCollection, jpfConf);
+    } else {
+      for(int inputSize = 1; inputSize <= maxInput; inputSize += step) //TODO: should maxInput be included?
+    	  dataCollection = explore(inputSize, dataCollection, jpfConf);
     }
+    
     return dataCollection;
+  }
+  
+  private DataCollection explore(int inputSize, DataCollection dataCollection, Config jpfConf) {
+	  System.out.println("Exploring with heuristic input size " + inputSize);
+	  jpfConf.setProperty("target.args", ""+inputSize);
+	  JPF jpf = new JPF(jpfConf);
+	  HeuristicListener heuristic = new HeuristicListener(jpfConf, jpf);
+	  jpf.addListener(heuristic); //weird instantiation...
+
+	  //explore guided by policy
+	  jpf.run();
+	  WorstCasePath wcPath = heuristic.getWcPath();
+
+	  if(wcPath == null) {
+		  logger.severe("No worst case path found for input size " + inputSize);
+	  } else {
+		  State wcState = wcPath.getWCState();
+		  dataCollection.addDatapoint(inputSize, wcState.getWC());
+	  }
+	  return dataCollection;
   }
 }
