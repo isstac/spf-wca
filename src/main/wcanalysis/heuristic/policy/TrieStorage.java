@@ -2,13 +2,10 @@ package wcanalysis.heuristic.policy;
 
 import java.io.Serializable;
 import java.util.ArrayDeque;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -82,6 +79,8 @@ public class TrieStorage implements BranchPolicyStorage {
   
   public static class Builder {
     private Node root;      // root of trie
+
+    private Map<Decision, Set<Node>> endNodes = new HashMap<>();
     private Map<Integer, Integer> choice2Counts = new HashMap<>();
     
     public Builder() { }
@@ -121,11 +120,16 @@ public class TrieStorage implements BranchPolicyStorage {
 //    compact(n);
 //  }
 //}
-
+    /**
+     * Inserts the key-value pair into the symbol table, overwriting the old value
+     * with the new value if the key is already in the symbol table.
+     * If the value is <tt>null</tt>, this effectively deletes the key from the symbol table.
+     * @param key the key
+     * @param val the value
+     * @throws NullPointerException if <tt>key</tt> is <tt>null</tt>
+     */
     public Builder put(Path key, int choice) {
-      Path keyCpy = new Path(key);
-      Collections.reverse(keyCpy);
-      root = put(root, null, keyCpy, choice, 0);
+      root = put(root, null, key, choice, 0);
       
       if(!choice2Counts.containsKey(choice)) {
         choice2Counts.put(choice, 1);
@@ -144,9 +148,15 @@ public class TrieStorage implements BranchPolicyStorage {
       Decision dec = null;
       if(key.size() > d)
         dec = key.get(d);
-      if(d >= key.size() - 1) {
+      if(d == key.size()) {
         assert x.getChoices() != null;
         x.addChoice(choice);
+        Set<Node> endNodesForDec = this.endNodes.get(dec);
+        if(endNodesForDec == null) {
+          endNodesForDec = new HashSet<>();
+          this.endNodes.put(dec, endNodesForDec);
+        }
+        endNodesForDec.add(x);
         return x;
       }
       Node nxt = put(x.getNext(dec), x, key, choice, d + 1);
@@ -155,14 +165,16 @@ public class TrieStorage implements BranchPolicyStorage {
     }
     
     public TrieStorage build() {
-      return new TrieStorage(root, choice2Counts);
+      return new TrieStorage(root, endNodes, choice2Counts);
     }
   }
   
+  private final Map<Decision, Set<Node>> endNodes;
   private final Node root;
   private final Map<Integer, Integer> choice2Counts;
   
-  private TrieStorage(Node root, Map<Integer, Integer> choice2Counts) {
+  private TrieStorage(Node root, Map<Decision, Set<Node>> endNodes, Map<Integer, Integer> choice2Counts) {
+    this.endNodes = endNodes;
     this.root = root;
     this.choice2Counts = choice2Counts;
   }
@@ -176,25 +188,62 @@ public class TrieStorage implements BranchPolicyStorage {
     }
   }
   
-  public Set<Integer> getChoicesForLongestPrefix(Path key) {
-      Node x = getNodeWithLongestPrefix(root, key, 0, null);
-      if (x == null) return null;
-      return x.getChoices();
+  //This is pretty messy. Too tired to clean it up now...
+  @Override
+  public Set<Integer> getChoicesForLongestSuffix(Path history) {
+    Decision last;
+    if(history.size() > 0) {
+      last = history.get(history.size() - 1);
+    } else {
+      last = null;
+    }
+    
+    Set<Node> ends = endNodes.get(last);
+    Set<Node> maxSuffixNodes = new HashSet<>();
+    int maxSuffix = -1;
+    for(Node end : ends) {
+      int index = 0;
+      int suffixLength = 0;
+      Node curr = end;
+      boolean equal = true;
+      while(curr != null) {
+        Decision histDecision = null;
+        int historyIdx = history.size() - 1 - index;
+        if(historyIdx > 0)
+          histDecision = history.get(historyIdx);
+        else
+          break;
+        Decision policyDecision = curr.getDecision();
+        if(policyDecision == null)
+          break;
+        
+        if(policyDecision.equals(histDecision)) {
+          suffixLength++;
+          curr = curr.getParent();
+          index++;
+        } else {
+          equal = false;
+          break;
+        }
+      }
+      if(equal) {
+        if(suffixLength >= maxSuffix) {
+          if(suffixLength > maxSuffix) {
+            maxSuffixNodes.clear();
+          }
+          maxSuffixNodes.add(end);
+          maxSuffix = suffixLength;
+        }
+      }
+    }
+    Set<Integer> choices = new HashSet<>();
+    for(Node maxSuffixNode : maxSuffixNodes) {
+      choices.addAll(maxSuffixNode.getChoices());
+    }
+    return choices;
   }
   
-  private Node getNodeWithLongestPrefix(Node x, Path key, int d, Node longestSuffixNode) {
-    if(x == null)
-      return null;
-    if(x.hasChoices()) {
-      longestSuffixNode = x;
-    }
-    if(d == key.size()) {
-      return longestSuffixNode;
-    }
-    Decision c = key.get(d);
-    return getNodeWithLongestPrefix(x.getNext(c), key, d+1, longestSuffixNode);
-  }
-  
+  //seems a bit insane
   @Override
   public String toString() {
     Set<String> paths = new HashSet<>();

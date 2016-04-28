@@ -10,6 +10,6 @@ import wcanalysis.heuristic.Path;
  *
  */
 public interface BranchPolicyStorage extends Serializable {
-  public Set<Integer> getChoicesForLongestPrefix(Path history);
+  public Set<Integer> getChoicesForLongestSuffix(Path history);
   public int getCountsForChoice(int choice);
 }

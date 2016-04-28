@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.logging.Logger;
+
+import gov.nasa.jpf.JPF;
 
 /**
  * @author Kasper Luckow
@@ -15,6 +18,8 @@ import java.util.Collection;
  */
 public class PolicyManager {
 
+  private static final Logger logger = JPF.getLogger("policymanager");
+  
   private final File baseDir;
   
   private static final String POLICY_EXTENSION = ".pol";
@@ -37,6 +42,7 @@ public class PolicyManager {
     try(FileOutputStream fo = new FileOutputStream(policyFile)) {
       policy.save(fo);
     }
+    logger.info("Saved policy: " + policy.toString());
   }
   
   public <T extends Policy> T loadPolicy(Collection<String> measuredMethods, Class<T> type) throws FileNotFoundException, IOException, PolicyManagerException {

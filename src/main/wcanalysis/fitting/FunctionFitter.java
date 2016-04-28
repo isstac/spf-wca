@@ -51,9 +51,7 @@ public class FunctionFitter {
     for(TrendModelData trendData : trendLines) {
       trendData.trendLine.setValues(rawData.getY(), rawData.getX());
       String func = trendData.trendLine.getFunction() + " (r^2="+df.format(trendData.trendLine.getRSquared()) + ")";
-      XYSeries s = new XYSeries(trendData.desc + ": "  + 
-          func);
-      System.out.println(func);
+      XYSeries s = new XYSeries(trendData.desc + ": "  + func);
       s.setDescription(trendData.desc);
       trend2series.put(trendData, s);
     }

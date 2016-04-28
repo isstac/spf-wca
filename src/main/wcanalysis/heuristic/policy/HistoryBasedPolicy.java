@@ -100,7 +100,6 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
       historyLessPolicyBuilder.addPolicy(branchInstr, currentChoice);
     }
     this.historyPolicy = historyPolicyBuilder.build();
-    System.out.println(this.historyPolicy.toString());
     this.historyLessPolicy = historyLessPolicyBuilder.build();
   }
 

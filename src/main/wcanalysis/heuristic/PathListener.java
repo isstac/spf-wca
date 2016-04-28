@@ -291,7 +291,9 @@ public abstract class PathListener extends PropertyListenerAdapter {
     }
     State currentState = this.stateBuilder.build(pcNew);
     WorstCasePath currentWcPath = this.worstCasePathBuilder.build(currentState, vm.getSystemState().getChoiceGenerator());
-    
+    if(currentWcPath.size() == 20) {
+      System.out.println(currentWcPath.toString());
+    }
     if(currentWcPath.compareTo(this.wcPath) > 0) {
       this.wcPath = currentWcPath;
     }
