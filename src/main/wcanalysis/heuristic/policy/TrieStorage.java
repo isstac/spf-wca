@@ -120,6 +120,10 @@ public class TrieStorage implements BranchPolicyStorage {
       return x;
     }
     
+    public TrieStorage build(boolean makeAdaptive) {
+      //return new TrieStorage(root, endNodes, choice2Counts);
+    }
+    
     public TrieStorage build() {
       return new TrieStorage(root, endNodes, choice2Counts);
     }

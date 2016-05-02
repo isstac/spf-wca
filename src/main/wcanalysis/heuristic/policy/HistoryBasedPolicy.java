@@ -1,5 +1,12 @@
 package wcanalysis.heuristic.policy;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
@@ -22,10 +29,12 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
   
   public static class Builder {
     private boolean adaptive = false;
+    private boolean unconstrainedHistorySize = true;
+    
     private int maxHistorySize = 0;
     private InvariantChecker invariantChecker = null;
     
-    public Builder() {}
+    public Builder() { }
     
     public Builder setAdaptive(boolean adaptive) {
       this.adaptive = adaptive;
@@ -33,6 +42,7 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
     }
 
     public Builder setMaxHistorySize(int maxHistorySize) {
+      unconstrainedHistorySize = false;
       this.maxHistorySize = maxHistorySize;
       return this;
     }
@@ -42,9 +52,8 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
       return this;
     }
     
-    private HistoryBasedBranchPolicy computePolicy(WorstCasePath wcPath) {
-      HistoryBasedBranchPolicy.Builder historyPolicyBuilder = new HistoryBasedBranchPolicy.Builder();
-      
+    private Map<BranchInstruction, BranchPolicy> computePolicy(WorstCasePath wcPath) {
+      Map<BranchInstruction, HistoryBasedBranchPolicy.Builder> branch2polbuilder = new HashMap<>();
       for(int i = wcPath.size() - 1; i >= 0; i--) {
         Decision currDecision = wcPath.get(i);
         int currentChoice = currDecision.getChoice();
@@ -56,28 +65,35 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
           prevDecision = wcPath.get(j);
           if(prevDecision.getContext() != currDecision.getContext())
             break;
-          if(!adaptive && currHistorySize >= maxHistorySize)
+          if(!adaptive && !unconstrainedHistorySize && currHistorySize >= maxHistorySize)
             break;
           history.addFirst(prevDecision);
         }
         BranchInstruction branchInstr = currDecision.getInstruction();
         
-        historyPolicyBuilder.addPolicy(branchInstr, history, currentChoice);
+        HistoryBasedBranchPolicy.Builder bldr = branch2polbuilder.get(branchInstr);
+        if(bldr == null) {
+          bldr = new HistoryBasedBranchPolicy.Builder();
+          branch2polbuilder.put(branchInstr, bldr);
+        }
+        bldr.addPolicy(history, currentChoice);
       }
-      return historyPolicyBuilder.build();
+      Map<BranchInstruction, BranchPolicy> branch2pol = new HashMap<>();
+      for(Map.Entry<BranchInstruction, HistoryBasedBranchPolicy.Builder> entry : branch2polbuilder.entrySet()) {
+        HistoryBasedBranchPolicy branchPolicy = entry.getValue().build(adaptive);
+        branch2pol.put(entry.getKey(), branchPolicy);
+      }
+      return branch2pol;
     }
     
     public HistoryBasedPolicy build(WorstCasePath wcPath, Set<String> measuredMethods) {
-      HistoryBasedBranchPolicy policy = computePolicy(wcPath);
-      if(adaptive)
-        return new HistoryBasedPolicy(policy, measuredMethods, invariantChecker, true);
-      else {
-        return new HistoryBasedPolicy(policy, measuredMethods, invariantChecker, maxHistorySize);
-      }
+      Map<BranchInstruction, BranchPolicy> policy = computePolicy(wcPath);
+
+      return new HistoryBasedPolicy(policy, measuredMethods, invariantChecker, true);
     }
   }
   
-  private final HistoryBasedBranchPolicy historyPolicy;
+  private final Map<BranchInstruction, BranchPolicy> policy;
   
   public static final int ADAPTIVE = -1;
   private boolean adaptive = false;
@@ -86,18 +102,18 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
   
   private InvariantChecker invariantChecker = null;
   
-  private HistoryBasedPolicy(HistoryBasedBranchPolicy historyPolicy, Set<String> measuredMethods, InvariantChecker invariantChecker, int maxHistorySize) {
+  private HistoryBasedPolicy(Map<BranchInstruction, BranchPolicy> historyPolicy, Set<String> measuredMethods, InvariantChecker invariantChecker, int maxHistorySize) {
     super(measuredMethods);
     this.maxHistorySize = maxHistorySize;
     this.invariantChecker = invariantChecker;
-    this.historyPolicy = historyPolicy;
+    this.policy = historyPolicy;
   }
   
-  private HistoryBasedPolicy(HistoryBasedBranchPolicy historyPolicy, Set<String> measuredMethods, InvariantChecker invariantChecker, boolean adaptive) {
+  private HistoryBasedPolicy(Map<BranchInstruction, BranchPolicy> historyPolicy, Set<String> measuredMethods, InvariantChecker invariantChecker, boolean adaptive) {
     super(measuredMethods);
     this.adaptive = adaptive;
     this.invariantChecker = invariantChecker;
-    this.historyPolicy = historyPolicy;
+    this.policy = historyPolicy;
   }
 
   @Override
@@ -105,7 +121,6 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
     assert cg instanceof PCChoiceGenerator;
     
     PCChoiceGenerator pcCg = (PCChoiceGenerator)cg;
-    
     BranchInstruction branchInstr = new BranchInstruction(cg.getInsn());
     
     if(this.invariantChecker != null) {
@@ -118,13 +133,20 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
     //TODO: history generation should be made prettier -- it is not obvious what is going on here
     Path history = Path.generateCtxPreservingHistory(cg, ctxManager, maxHistorySize);
     
-    //If we get here, there must be a history stored for the branch
-    Set<Integer> choices = this.historyPolicy.resolve(branchInstr, history);
+    Set<Integer> choices = resolve(branchInstr, history);
     if(choices != null && choices.size() == 1) {
       return new Resolution(choices.iterator().next(), ResolutionType.HISTORY);
     } else {
       return new Resolution(-1, ResolutionType.UNRESOLVED);
     }
+  }
+  
+  private Set<Integer> resolve(BranchInstruction instr, Path history) {
+    BranchPolicy branchPolicy = this.policy.get(instr);
+    if(branchPolicy != null) {
+      return branchPolicy.resolve(history);
+    }
+    return new HashSet<>();
   }
 
   @Override
@@ -136,6 +158,20 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
   
   @Override
   public String toString() {
-    return this.historyPolicy.toString();
+    StringBuilder sb = new StringBuilder();
+    List<BranchInstruction> bList = new ArrayList<>(policy.keySet());
+    Collections.sort(bList, new Comparator<BranchInstruction>() {
+      @Override
+      public int compare(BranchInstruction o1, BranchInstruction o2) {
+        return Integer.compare(o1.getLineNumber(), o2.getLineNumber());
+      }
+    });
+    
+    for(BranchInstruction branch : bList) {
+      sb.append(branch.toString()).append(":\n");
+      BranchPolicy histories = policy.get(branch);
+      sb.append(histories.toString()).append("\n");
+    }
+    return sb.toString();
   }
 }

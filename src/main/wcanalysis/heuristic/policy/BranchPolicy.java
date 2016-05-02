@@ -11,6 +11,6 @@ import wcanalysis.heuristic.Path;
  *
  */
 public interface BranchPolicy extends Serializable {
-  public int getCountsForChoice(BranchInstruction branch, int choice);
-  public Set<Integer> resolve(BranchInstruction branch, Path history);
+  public int getCountsForChoice(int choice);
+  public Set<Integer> resolve(Path history);
 }

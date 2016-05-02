@@ -9,6 +9,6 @@ import wcanalysis.heuristic.Path;
  */
 public interface BranchPolicyBuilder<T extends BranchPolicy> {
  
-  public void addPolicy(BranchInstruction branch, Path history, int policyChoice);
+  public void addPolicy(Path history, int policyChoice);
   public T build();
 }
