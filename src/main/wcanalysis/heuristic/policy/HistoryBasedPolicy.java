@@ -42,17 +42,42 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
       return this;
     }
     
+    private HistoryBasedBranchPolicy computePolicy(WorstCasePath wcPath) {
+      HistoryBasedBranchPolicy.Builder historyPolicyBuilder = new HistoryBasedBranchPolicy.Builder();
+      
+      for(int i = wcPath.size() - 1; i >= 0; i--) {
+        Decision currDecision = wcPath.get(i);
+        int currentChoice = currDecision.getChoice();
+        Decision prevDecision;
+        Path history = new Path();
+        //We get the context preserving history from the current decision
+        int currHistorySize = 0;
+        for(int j = i - 1; j >= 0; j--, currHistorySize++) {
+          prevDecision = wcPath.get(j);
+          if(prevDecision.getContext() != currDecision.getContext())
+            break;
+          if(!adaptive && currHistorySize >= maxHistorySize)
+            break;
+          history.addFirst(prevDecision);
+        }
+        BranchInstruction branchInstr = currDecision.getInstruction();
+        
+        historyPolicyBuilder.addPolicy(branchInstr, history, currentChoice);
+      }
+      return historyPolicyBuilder.build();
+    }
+    
     public HistoryBasedPolicy build(WorstCasePath wcPath, Set<String> measuredMethods) {
+      HistoryBasedBranchPolicy policy = computePolicy(wcPath);
       if(adaptive)
-        return new HistoryBasedPolicy(wcPath, measuredMethods, invariantChecker, true);
+        return new HistoryBasedPolicy(policy, measuredMethods, invariantChecker, true);
       else {
-        return new HistoryBasedPolicy(wcPath, measuredMethods, invariantChecker, maxHistorySize);
+        return new HistoryBasedPolicy(policy, measuredMethods, invariantChecker, maxHistorySize);
       }
     }
   }
   
-  private HistoryBasedBranchPolicy historyPolicy;
-  private HistoryLessBranchPolicy historyLessPolicy;
+  private final HistoryBasedBranchPolicy historyPolicy;
   
   public static final int ADAPTIVE = -1;
   private boolean adaptive = false;
@@ -61,46 +86,18 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
   
   private InvariantChecker invariantChecker = null;
   
-  private HistoryBasedPolicy(WorstCasePath wcPath, Set<String> measuredMethods, InvariantChecker invariantChecker, int maxHistorySize) {
+  private HistoryBasedPolicy(HistoryBasedBranchPolicy historyPolicy, Set<String> measuredMethods, InvariantChecker invariantChecker, int maxHistorySize) {
     super(measuredMethods);
     this.maxHistorySize = maxHistorySize;
-    this.invariantChecker = invariantChecker; 
-    computePolicy(wcPath);
+    this.invariantChecker = invariantChecker;
+    this.historyPolicy = historyPolicy;
   }
   
-  private HistoryBasedPolicy(WorstCasePath wcPath, Set<String> measuredMethods, InvariantChecker invariantChecker, boolean adaptive) {
+  private HistoryBasedPolicy(HistoryBasedBranchPolicy historyPolicy, Set<String> measuredMethods, InvariantChecker invariantChecker, boolean adaptive) {
     super(measuredMethods);
     this.adaptive = adaptive;
-    this.invariantChecker = invariantChecker; 
-    computePolicy(wcPath);
-  }
-  
-  private void computePolicy(WorstCasePath wcPath) {
-    HistoryBasedBranchPolicy.Builder historyPolicyBuilder = new HistoryBasedBranchPolicy.Builder();
-    HistoryLessBranchPolicy.Builder historyLessPolicyBuilder = new HistoryLessBranchPolicy.Builder();
-    
-    for(int i = wcPath.size() - 1; i >= 0; i--) {
-      Decision currDecision = wcPath.get(i);
-      int currentChoice = currDecision.getChoice();
-      Decision prevDecision;
-      Path history = new Path();
-      //We get the context preserving history from the current decision
-      int currHistorySize = 0;
-      for(int j = i - 1; j >= 0; j--, currHistorySize++) {
-        prevDecision = wcPath.get(j);
-        if(prevDecision.getContext() != currDecision.getContext())
-          break;
-        if(!adaptive && currHistorySize >= maxHistorySize)
-          break;
-        history.addFirst(prevDecision);
-      }
-      BranchInstruction branchInstr = currDecision.getInstruction();
-      
-      historyPolicyBuilder.addPolicy(branchInstr, history, currentChoice);
-      historyLessPolicyBuilder.addPolicy(branchInstr, currentChoice);
-    }
-    this.historyPolicy = historyPolicyBuilder.build();
-    this.historyLessPolicy = historyLessPolicyBuilder.build();
+    this.invariantChecker = invariantChecker;
+    this.historyPolicy = historyPolicy;
   }
 
   @Override
@@ -117,17 +114,7 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
         return new Resolution(allowedChoices.iterator().next(), ResolutionType.INVARIANT);
       }
     }
-    
-    //Check whether it can be quickly resolved with historyless policy
-    Set<Integer> decisions = this.historyLessPolicy.resolve(branchInstr);
-    //if the historyless policy has no choices stored, neither will the stateful one, so we cannot resolve it
-    if(decisions == null || decisions.size() == 0)
-      return new Resolution(-1, ResolutionType.NEW_CHOICE);
-    //if there is ONLY one decision (i.e. one choice), then we can resolve the CG "perfectly"
-    else if(decisions.size() == 1) {
-      return new Resolution(decisions.iterator().next(), ResolutionType.PERFECT);
-    }
-    
+
     //TODO: history generation should be made prettier -- it is not obvious what is going on here
     Path history = Path.generateCtxPreservingHistory(cg, ctxManager, maxHistorySize);
     

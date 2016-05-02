@@ -17,7 +17,7 @@ import wcanalysis.heuristic.Path;
 
 /**
  * @author Kasper Luckow
- *
+ * TODO: Get rid of endnodes -- they are not used for anything but matching longest suffix
  */
 public class TrieStorage implements BranchPolicyStorage {
   private static final long serialVersionUID = -8230467461615793375L;
@@ -78,56 +78,13 @@ public class TrieStorage implements BranchPolicyStorage {
   
   
   public static class Builder {
-    private Node root;      // root of trie
+    private Node root; // root of trie
 
     private Map<Decision, Set<Node>> endNodes = new HashMap<>();
     private Map<Integer, Integer> choice2Counts = new HashMap<>();
     
     public Builder() { }
 
-//    public Set<Integer> get(Path key) {
-//      Node x = get(root, key, 0);
-//      if (x == null)
-//        return null;
-//      return x.getChoices();
-//    }
-//
-//    public boolean contains(Path key) {
-//      return get(key) != null;
-//    }
-//
-//    private Node get(Node x, Path key, int d) {
-//      if(x == null)
-//        return null;
-//      if(d == key.size())
-//        return x;
-//      Decision c = key.get(d);
-//      return get(x.getNext(c), key, d+1);
-//    }
-//  public void compact() {
-//  compact(root);
-//}
-//
-//private void compact(Node n) {
-//  if(n.isEndNode() || n.childrenSize() > 1) {
-//    return;
-//  } else {
-//    //ugly
-//    Decision child = n.next.keySet().iterator().next();
-//    Node newRoot = n.getNext(child);
-//    n.next.put(child, null);
-//    n = newRoot;
-//    compact(n);
-//  }
-//}
-    /**
-     * Inserts the key-value pair into the symbol table, overwriting the old value
-     * with the new value if the key is already in the symbol table.
-     * If the value is <tt>null</tt>, this effectively deletes the key from the symbol table.
-     * @param key the key
-     * @param val the value
-     * @throws NullPointerException if <tt>key</tt> is <tt>null</tt>
-     */
     public Builder put(Path key, int choice) {
       root = put(root, null, key, choice, 0);
       
@@ -137,7 +94,6 @@ public class TrieStorage implements BranchPolicyStorage {
         int currentCount = choice2Counts.get(choice);
         choice2Counts.put(choice, ++currentCount);
       }
-      
       return this;
     }
 
@@ -169,7 +125,9 @@ public class TrieStorage implements BranchPolicyStorage {
     }
   }
   
+  @Deprecated
   private final Map<Decision, Set<Node>> endNodes;
+  
   private final Node root;
   private final Map<Integer, Integer> choice2Counts;
   
@@ -188,8 +146,29 @@ public class TrieStorage implements BranchPolicyStorage {
     }
   }
   
-  //This is pretty messy. Too tired to clean it up now...
+  public boolean containsChoices(Path key) {
+    return getChoices(key) != null;
+  }
+
+  private Node get(Node x, Path key, int d) {
+    if(x == null)
+      return null;
+    if(d == key.size())
+      return x;
+    Decision c = key.get(d);
+    return get(x.getNext(c), key, d+1);
+  }
+
   @Override
+  public Set<Integer> getChoices(Path history) {
+    Node x = get(root, history, 0);
+    if(x == null)
+      return null;
+    return x.getChoices();
+  }
+  
+  //This is pretty messy. Too tired to clean it up now...
+  @Deprecated
   public Set<Integer> getChoicesForLongestSuffix(Path history) {
     Decision last;
     if(history.size() > 0) {

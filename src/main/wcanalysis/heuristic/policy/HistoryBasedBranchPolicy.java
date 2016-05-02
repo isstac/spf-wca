@@ -3,6 +3,7 @@ package wcanalysis.heuristic.policy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -20,8 +21,32 @@ public class HistoryBasedBranchPolicy implements BranchPolicy {
 
   private static final long serialVersionUID = 4478984808375928385L;
 
-  public static class Builder extends HistoryBranchPolicyBuilder<HistoryBasedBranchPolicy> {
+  public static class Builder implements BranchPolicyBuilder<HistoryBasedBranchPolicy> {
+    private final Map<BranchInstruction, TrieStorage.Builder> branch2polbuilder;
+    public Builder() {
+      branch2polbuilder = new HashMap<>();
+    }
+    
     @Override
+    public void addPolicy(BranchInstruction branch, Path history, int policyChoice) {
+      TrieStorage.Builder bldr = this.branch2polbuilder.get(branch);
+      if(bldr == null) {
+        bldr = new TrieStorage.Builder();
+        this.branch2polbuilder.put(branch, bldr);
+      }
+      
+      bldr.put(history, policyChoice);
+    }
+    
+    @Override
+    public HistoryBasedBranchPolicy build() {
+      Map<BranchInstruction, BranchPolicyStorage> branch2pol = new HashMap<>();
+      for(Map.Entry<BranchInstruction, TrieStorage.Builder> entry : branch2polbuilder.entrySet()) {
+        branch2pol.put(entry.getKey(), entry.getValue().build());
+      }
+      return build(branch2pol);
+    }
+    
     public HistoryBasedBranchPolicy build(Map<BranchInstruction, BranchPolicyStorage> pol) {
       return new HistoryBasedBranchPolicy(pol);
     }
@@ -29,14 +54,14 @@ public class HistoryBasedBranchPolicy implements BranchPolicy {
   
   private final Map<BranchInstruction, BranchPolicyStorage> pol;
   
-  protected HistoryBasedBranchPolicy(Map<BranchInstruction, BranchPolicyStorage> pol) {
+  private HistoryBasedBranchPolicy(Map<BranchInstruction, BranchPolicyStorage> pol) {
     this.pol = pol;
   }
   
   @Override
   public Set<Integer> resolve(BranchInstruction branch, Path history) {
     if(pol.containsKey(branch)) {
-      return pol.get(branch).getChoicesForLongestSuffix(history);
+      return pol.get(branch).getChoices(history);
     }
     return new HashSet<>();
   }
