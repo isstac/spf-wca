@@ -23,8 +23,8 @@ public class PowerTrendLine extends OLSTrendLine {
     DecimalFormat df = new DecimalFormat("#.00");
     
     double b = super.coef.getColumn(0)[1];
-    functionSb.append(df.format(super.coef.getColumn(0)[0]))
-              .append(" + ").append("x^" + df.format(b));
+    functionSb.append("e^(" + df.format(super.coef.getColumn(0)[0]))
+              .append(" + ").append(df.format(b)).append("*ln(x))");
     return functionSb.toString();
   }
   

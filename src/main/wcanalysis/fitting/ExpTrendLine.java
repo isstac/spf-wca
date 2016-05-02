@@ -27,8 +27,8 @@ public class ExpTrendLine extends OLSTrendLine {
     DecimalFormat df = new DecimalFormat("#.00");
     
     double b = super.coef.getColumn(0)[1];
-    functionSb.append(df.format(super.coef.getColumn(0)[0]))
-              .append(" + ").append(df.format(b) + "^x");
+    functionSb.append("e^(").append(df.format(super.coef.getColumn(0)[0]))
+              .append(" + ").append(df.format(b) + "*x)");
     return functionSb.toString();
   }
 
