@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jfree.data.xy.XYSeries;
@@ -55,7 +56,11 @@ public class WorstCaseAnalyzer implements JPFShell {
   
   private static final String REUSE_POLICY_CONF = "symbolic.worstcase.reusepolicy";
 
-  private final Logger logger;
+  private static final Logger logger = JPF.getLogger(WorstCaseAnalyzer.class.getName());
+  static {
+    logger.setLevel(Level.ALL);
+  }
+  
   private final Config config;
   private final boolean verbose;
 
@@ -66,7 +71,6 @@ public class WorstCaseAnalyzer implements JPFShell {
   private File heuristicDir;
   
   public WorstCaseAnalyzer(Config config) {
-    this.logger = JPF.getLogger(WorstCaseAnalyzer.class.getName());
     this.config = config;
     this.verbose = config.getBoolean(VERBOSE_CONF, true);
     this.rootDir = Util.createDirIfNotExist(config.getString(OUTPUT_DIR_CONF, ""));
@@ -172,14 +176,19 @@ public class WorstCaseAnalyzer implements JPFShell {
     DataCollection dataCollection = new DataCollection();
 
     for(int inputSize = 1; inputSize <= maxInput; inputSize++) {//TODO: should maxInput be included?
-      System.out.println("Exploring with heuristic input size " + inputSize);
+      logger.info("Exploring with heuristic input size " + inputSize + "...");
       jpfConf.setProperty("target.args", ""+inputSize);
       JPF jpf = new JPF(jpfConf);
       HeuristicListener heuristic = new HeuristicListener(jpfConf, jpf);
       jpf.addListener(heuristic); //weird instantiation...
 
       //explore guided by policy
+      long start = System.currentTimeMillis();
       jpf.run();
+      long end = System.currentTimeMillis();
+      
+      logger.info("Heuristic exploration at input size " + inputSize + " done. Took " + ((end-start)/1000) + "s");
+      
       WorstCasePath wcPath = heuristic.getWcPath();
 
       if(wcPath == null) {

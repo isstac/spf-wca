@@ -27,7 +27,7 @@ import wcanalysis.heuristic.Resolution.ResolutionType;
 public class HistoryBasedPolicy extends Policy implements ChoiceListener { 
   private static final long serialVersionUID = 3311547338575590448L;
   
-  public static class Builder {
+  public static class Builder implements PolicyGenerator<HistoryBasedPolicy> {
     private boolean adaptive = false;
     private boolean unconstrainedHistorySize = true;
     
@@ -86,32 +86,18 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
       return branch2pol;
     }
     
-    public HistoryBasedPolicy build(WorstCasePath wcPath, Set<String> measuredMethods) {
-      Map<BranchInstruction, BranchPolicy> policy = computePolicy(wcPath);
-
-      return new HistoryBasedPolicy(policy, measuredMethods, invariantChecker, true);
+    @Override
+    public HistoryBasedPolicy generate(Set<String> measuredMethods, WorstCasePath path) {
+      Map<BranchInstruction, BranchPolicy> policy = computePolicy(path);
+      return new HistoryBasedPolicy(policy, measuredMethods, invariantChecker);
     }
   }
   
-  private final Map<BranchInstruction, BranchPolicy> policy;
-  
-  public static final int ADAPTIVE = -1;
-  private boolean adaptive = false;
-  
-  private int maxHistorySize = 0;
-  
+  private final Map<BranchInstruction, BranchPolicy> policy;  
   private InvariantChecker invariantChecker = null;
   
-  private HistoryBasedPolicy(Map<BranchInstruction, BranchPolicy> historyPolicy, Set<String> measuredMethods, InvariantChecker invariantChecker, int maxHistorySize) {
+  private HistoryBasedPolicy(Map<BranchInstruction, BranchPolicy> historyPolicy, Set<String> measuredMethods, InvariantChecker invariantChecker) {
     super(measuredMethods);
-    this.maxHistorySize = maxHistorySize;
-    this.invariantChecker = invariantChecker;
-    this.policy = historyPolicy;
-  }
-  
-  private HistoryBasedPolicy(Map<BranchInstruction, BranchPolicy> historyPolicy, Set<String> measuredMethods, InvariantChecker invariantChecker, boolean adaptive) {
-    super(measuredMethods);
-    this.adaptive = adaptive;
     this.invariantChecker = invariantChecker;
     this.policy = historyPolicy;
   }
@@ -129,24 +115,18 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
         return new Resolution(allowedChoices.iterator().next(), ResolutionType.INVARIANT);
       }
     }
-
-    //TODO: history generation should be made prettier -- it is not obvious what is going on here
-    Path history = Path.generateCtxPreservingHistory(cg, ctxManager, maxHistorySize);
-    
-    Set<Integer> choices = resolve(branchInstr, history);
-    if(choices != null && choices.size() == 1) {
-      return new Resolution(choices.iterator().next(), ResolutionType.HISTORY);
-    } else {
-      return new Resolution(-1, ResolutionType.UNRESOLVED);
-    }
-  }
-  
-  private Set<Integer> resolve(BranchInstruction instr, Path history) {
-    BranchPolicy branchPolicy = this.policy.get(instr);
+    BranchPolicy branchPolicy = this.policy.get(branchInstr);
     if(branchPolicy != null) {
-      return branchPolicy.resolve(history);
+      //TODO: history generation should be made prettier -- it is not obvious what is going on here
+      Path history = Path.generateCtxPreservingHistory(cg, ctxManager, branchPolicy.getMaxHistorySize());
+      Set<Integer> choices = branchPolicy.resolve(history);
+      if(choices != null && choices.size() == 1) {
+        return new Resolution(choices.iterator().next(), ResolutionType.HISTORY);
+      } else {
+        return new Resolution(-1, ResolutionType.UNRESOLVED);
+      }
     }
-    return new HashSet<>();
+    return new Resolution(-1, ResolutionType.UNRESOLVED);
   }
 
   @Override

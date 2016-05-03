@@ -27,6 +27,8 @@ public class Path extends ArrayList<Decision> {
   //TODO: ugly
   public static Path generateCtxPreservingHistory(ChoiceGenerator<?> endCG, ContextManager ctxManager, int maxSize) {
     Path p = new Path();
+    if(maxSize <= 0)
+      return p;
     PCChoiceGenerator previousPCcg = endCG.getPreviousChoiceGeneratorOfType(PCChoiceGenerator.class);
     generatePath(p, previousPCcg, ctxManager, ctxManager.getContext(endCG), true, maxSize);
     return p;

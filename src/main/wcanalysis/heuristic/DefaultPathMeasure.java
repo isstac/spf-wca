@@ -19,7 +19,7 @@ public class DefaultPathMeasure implements PathMeasureComputation {
   }
   
   @Override
-  public int compute(WorstCasePath path) {
+  public Result compute(WorstCasePath path) {
     /*
      * A lot of interesting things happen here. An end state is considered "better"
      * if it passes the following checks (in that order):
@@ -63,11 +63,13 @@ public class DefaultPathMeasure implements PathMeasureComputation {
       decIdx--;
     }
     
-    int pathMeasure = 0;
+    int resolutions = 0;
+    int memoryLessResolutions = 0;
     for(BranchInstruction branchInstr : branchInstructions) {
       Map<Integer, Set<Path>> histories = branch2histories.get(branchInstr);
       if(histories.keySet().size() == 1) { //resolved perfectly
-        pathMeasure++;
+        resolutions++;
+        memoryLessResolutions++;
       } else { //now we check based on histories
         Set<Path> union = new HashSet<>();
         for(Set<Path> historiesForChoice : histories.values()) {
@@ -80,10 +82,10 @@ public class DefaultPathMeasure implements PathMeasureComputation {
         }
         
         //the measure is updated with the number of decisions we can uniquely resolve!
-        pathMeasure += union.size() - intersection.size();
+        resolutions += union.size() - intersection.size();
       }
-      //FIXME!!!!!!! Take into account the invariant pruning here in the path measure
+      //TODO Take into account the invariant pruning here in the path measure
     }
-    return pathMeasure;
+    return new Result(resolutions, memoryLessResolutions);
   }
 }

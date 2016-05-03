@@ -15,7 +15,7 @@ import wcanalysis.heuristic.Path;
 
 /**
  * @author Kasper Luckow
- * Actually not needed atm. Just a wrapper for the storage
+ * Actually not needed atm. Just a wrapper for the storage. lame
  */
 public class HistoryBasedBranchPolicy implements BranchPolicy {
 
@@ -63,5 +63,10 @@ public class HistoryBasedBranchPolicy implements BranchPolicy {
   @Override
   public String toString() {
     return storage.toString();
+  }
+
+  @Override
+  public int getMaxHistorySize() {
+    return storage.getMaxHistoryLength();
   }
 }

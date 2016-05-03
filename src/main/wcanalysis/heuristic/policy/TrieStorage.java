@@ -120,8 +120,15 @@ public class TrieStorage implements BranchPolicyStorage {
       return x;
     }
     
+    private void performTruncation() {
+      throw new RuntimeException("Adaptive analysis coming up!");
+    }
+    
     public TrieStorage build(boolean makeAdaptive) {
-      //return new TrieStorage(root, endNodes, choice2Counts);
+      if(makeAdaptive) {
+        performTruncation();
+      }
+      return new TrieStorage(root, endNodes, choice2Counts);
     }
     
     public TrieStorage build() {
@@ -133,6 +140,7 @@ public class TrieStorage implements BranchPolicyStorage {
   private final Map<Decision, Set<Node>> endNodes;
   
   private final Node root;
+  private int height = -1;
   private final Map<Integer, Integer> choice2Counts;
   
   private TrieStorage(Node root, Map<Decision, Set<Node>> endNodes, Map<Integer, Integer> choice2Counts) {
@@ -264,5 +272,23 @@ public class TrieStorage implements BranchPolicyStorage {
     for(Node child : node.getChildren()) {
       collectPaths(child, new StringBuilder(sb), paths);
     }
+  }
+
+  @Override
+  public int getMaxHistoryLength() {
+    if(height < 0)
+      height = getMaxHeight(root, 0);
+    return height;
+  }
+  
+  private int getMaxHeight(Node node, int currHeight) {
+    int childMax = currHeight;
+    for(Node child : node.getChildren()) {
+      int height = getMaxHeight(child, currHeight + 1);
+      if(height > childMax) {
+        childMax = height;
+      }
+    }
+    return childMax;
   }
 }

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import gov.nasa.jpf.vm.ChoiceGenerator;
+import wcanalysis.heuristic.PathMeasureComputation.Result;
 import wcanalysis.heuristic.model.State;
 
 /**
@@ -38,7 +39,7 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
   }
   
   private final State finalState;
-  private int pathMeasure = -1;
+  private Result pathMeasure = null;
   private final PathMeasureComputation pathMeasureComp;
   
   private WorstCasePath(State endState, ChoiceGenerator<?> endCG, ContextManager ctxManager, PathMeasureComputation pathMeasureComp) {
@@ -51,13 +52,12 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
     return this.finalState;
   }
   
-  public int getPathmeasure() {
-    if(this.pathMeasure == -1) { //caching of result
+  public Result getPathmeasure() {
+    if(this.pathMeasure == null) { //caching of result
       this.pathMeasure = pathMeasureComp.compute(this);
     }
     return this.pathMeasure;
   }
-
 
   @Override
   public int compareTo(WorstCasePath o) {
@@ -67,7 +67,19 @@ public class WorstCasePath extends Path implements Comparable<WorstCasePath> {
     if(comp != 0) //final states are different, e.g.  have different depth
       return comp;
     
-    //otherwise we will select the path that has the highest path measure
-    return this.getPathmeasure() - o.getPathmeasure();
+    //We favor a path that has more choices that can be made memoryless
+    //this will be the policy that is "most general" -- we should refine this notion here
+    long memorylessDecisionsDiff = getPathmeasure().getMemorylessResolution() - o.getPathmeasure().getMemorylessResolution();
+    if(memorylessDecisionsDiff > 0) {
+      return 1;
+    } else if(memorylessDecisionsDiff < 0)
+      return -1;
+    
+    //paths must have same memoryless resolutions if we reach this point
+    
+    //otherwise we will select the path that has the highest number of general resolutions
+    long pathMeasureDiff = this.getPathmeasure().getResolutions() - o.getPathmeasure().getResolutions();
+    
+    return (int)pathMeasureDiff;
   }
 }

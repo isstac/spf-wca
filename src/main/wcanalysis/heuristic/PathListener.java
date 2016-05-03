@@ -8,7 +8,7 @@ import wcanalysis.heuristic.ContextManager.CGContext;
 import wcanalysis.heuristic.model.DepthState;
 import wcanalysis.heuristic.model.State;
 import wcanalysis.heuristic.model.StateBuilder;
-import wcanalysis.heuristic.policy.HistoryBasedPolicyGenerator;
+import wcanalysis.heuristic.policy.HistoryBasedPolicy;
 import wcanalysis.heuristic.policy.Policy;
 import wcanalysis.heuristic.policy.PolicyGenerator;
 import wcanalysis.heuristic.policy.PolicyManager;
@@ -92,7 +92,6 @@ public abstract class PathListener extends PropertyListenerAdapter {
   //TODO: History should not be set here -- it is related to the policy (historyless, stateful, etc).
   //in fact the path measure computation is policy dependent! Extract path measure computation from WorstCasePath someday...
   private int historySize;
-  private boolean adaptive = false;
   
   public PathListener(Config jpfConf, JPF jpf) {
     this.jpfConf = jpfConf;
@@ -126,15 +125,16 @@ public abstract class PathListener extends PropertyListenerAdapter {
       this.policyGenerator = jpfConf.getInstance(POLICY_GENERATOR_CLS_CONF, PolicyGenerator.class);
       this.worstCasePathBuilder = new WorstCasePath.Builder(ctxManager);
     } else {
+      HistoryBasedPolicy.Builder histGenerator = new HistoryBasedPolicy.Builder();
       if(jpfConf.hasValue(HISTORY_SIZE_CONF)) {
         this.historySize = jpfConf.getInt(HISTORY_SIZE_CONF);
-        this.policyGenerator = new HistoryBasedPolicyGenerator(historySize);
+        histGenerator.setMaxHistorySize(historySize);
         this.worstCasePathBuilder = new WorstCasePath.Builder(ctxManager, historySize);
-      } else {
-        adaptive = true;
-        this.policyGenerator = new HistoryBasedPolicyGenerator(adaptive);
+      } else { // adaptive by default
+        histGenerator.setAdaptive(true);
         this.worstCasePathBuilder = new WorstCasePath.Builder(ctxManager);
       }
+      this.policyGenerator = histGenerator;
     }
 
     this.wcPath = null;
@@ -176,7 +176,6 @@ public abstract class PathListener extends PropertyListenerAdapter {
         this.stateBuilder.handleChoiceGeneratorAdvanced(vm, currentCG);
       CGContext ctx = this.ctxManager.getContext(cg);
       if(ctx == null) {        
-        //TODO: Should it be CG or currentCG here?
         this.ctxManager.addContext(cg, vm.getCurrentThread().getCallerStackFrame(), this.stateBuilder.copy());
       } else {
         this.stateBuilder = ctx.stateBuilder.copy();
@@ -233,6 +232,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
     	  tgtOutputfileName = tgtOutputfileName.substring(0, 243);
       
       visualize(wcPath, new File(this.visDir, "wcpath_" + tgtOutputfileName + ".txt"));
+      visualize(policy, new File(this.visDir, "policy_" + tgtOutputfileName + ".txt"));
     }
   }
 
@@ -291,9 +291,8 @@ public abstract class PathListener extends PropertyListenerAdapter {
     }
     State currentState = this.stateBuilder.build(pcNew);
     WorstCasePath currentWcPath = this.worstCasePathBuilder.build(currentState, vm.getSystemState().getChoiceGenerator());
-    if(currentWcPath.size() == 20) {
-      System.out.println(currentWcPath.toString());
-    }
+//    if(currentWcPath.size() == 20)
+//      System.out.println(currentWcPath.toString());
     if(currentWcPath.compareTo(this.wcPath) > 0) {
       this.wcPath = currentWcPath;
     }
@@ -308,6 +307,15 @@ public abstract class PathListener extends PropertyListenerAdapter {
     if(jpfConf.hasValue("target.args")) //we assume that the single parameter denotes the input size
       baseFileName += "_inputsize_" + jpfConf.getString("target.args");
     return baseFileName;
+  }
+  
+  protected void visualize(Policy pol, File polFile) {
+    logger.info("writing policy to file: " + polFile.getAbsolutePath());
+    try(PrintWriter out = new PrintWriter(polFile)) {
+      out.println(pol.toString());
+    } catch (FileNotFoundException e) {
+      logger.warning(e.getMessage());
+    }    
   }
   
   protected void visualize(Path path, File wcPathFile) {
