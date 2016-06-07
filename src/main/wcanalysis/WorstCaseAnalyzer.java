@@ -55,6 +55,9 @@ public class WorstCaseAnalyzer implements JPFShell {
   private static final String NO_SOLVER_HEURISTIC_CONF = "symbolic.worstcase.heuristic.nosolver";
   
   private static final String REUSE_POLICY_CONF = "symbolic.worstcase.reusepolicy";
+  
+  private static final String INCR_CONF = "symbolic.worstcase.increment";
+  private static final String START_AT_CONF = "symbolic.worstcase.startat";
 
   private static final Logger logger = JPF.getLogger(WorstCaseAnalyzer.class.getName());
   static {
@@ -69,12 +72,16 @@ public class WorstCaseAnalyzer implements JPFShell {
   private File auxDir;
   private File policyDir;
   private File heuristicDir;
+  private int incr;
+  private int startAt;
   
   public WorstCaseAnalyzer(Config config) {
     this.config = config;
     this.verbose = config.getBoolean(VERBOSE_CONF, true);
     this.rootDir = Util.createDirIfNotExist(config.getString(OUTPUT_DIR_CONF, ""));
     this.serializedDir = Util.createDirIfNotExist(rootDir, "serialized");
+    this.startAt= config.getInt(START_AT_CONF,1);
+    this.incr = config.getInt(INCR_CONF,1);
     if(verbose) {
       this.auxDir = Util.createDirIfNotExist(rootDir, "verbose");
       this.policyDir = Util.createDirIfNotExist(auxDir, "policy");
@@ -175,7 +182,7 @@ public class WorstCaseAnalyzer implements JPFShell {
     
     DataCollection dataCollection = new DataCollection();
 
-    for(int inputSize = 1; inputSize <= maxInput; inputSize++) {//TODO: should maxInput be included?
+    for(int inputSize = this.startAt; inputSize <= maxInput; inputSize += this.incr) {//TODO: should maxInput be included?
       logger.info("Exploring with heuristic input size " + inputSize + "...");
       jpfConf.setProperty("target.args", ""+inputSize);
       JPF jpf = new JPF(jpfConf);
