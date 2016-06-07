@@ -111,13 +111,12 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
     
     if(this.invariantChecker != null) {
       Set<Integer> allowedChoices = this.invariantChecker.getChoices(branchInstr, pcCg);
-      if(allowedChoices.size() == 1) { //we can uniquely determine one choice
+      if(allowedChoices.size() == 1) { //we can uniquely determine a choice
         return new Resolution(allowedChoices.iterator().next(), ResolutionType.INVARIANT);
       }
     }
     BranchPolicy branchPolicy = this.policy.get(branchInstr);
     if(branchPolicy != null) {
-      //TODO: history generation should be made prettier -- it is not obvious what is going on here
       Path history = Path.generateCtxPreservingHistory(cg, ctxManager, branchPolicy.getMaxHistorySize());
       Set<Integer> choices = branchPolicy.resolve(history);
       if(choices != null && choices.size() == 1) {
