@@ -8,24 +8,24 @@ import gov.nasa.jpf.vm.ThreadInfo;
 import gov.nasa.jpf.vm.VM;
 
 /**
- * @author Kasper Luckow
+ * @author Kasper Luckow, Rody Kersten
  * Simple statebuilder for tracking memory allocations along paths
  */
 public final class MaxLiveHeapState extends State {
   public final static class MaxLiveHeapStateBuilder extends StateBuilderAdapter {
 
     private long maxLiveHeap = 0;
+    private long initialHeap = -1;
+    
+    /**
+     * TODO: maintain list of allocated objects, then go over list to check which are live.
+     */
     
     public MaxLiveHeapStateBuilder() {}
     
-    private MaxLiveHeapStateBuilder(long maxLiveHeap) {
+    private MaxLiveHeapStateBuilder(long maxLiveHeap, long initialHeap) {
       this.maxLiveHeap = maxLiveHeap;
-    }
-    
-
-    @Override
-    public void handleObjectCreated(VM vm, ThreadInfo ti, ElementInfo ei) {
-      
+      this.initialHeap = initialHeap;
     }
     
     /**
@@ -41,20 +41,32 @@ public final class MaxLiveHeapState extends State {
      */
     @Override
     public void handleInstructionExecuted(VM vm, ThreadInfo currentThread, Instruction nextInstruction,
-        Instruction executedInstruction) {
-      
-      Heap heap = vm.getHeap();
-      int currHeapSize = 0;
-      for(ElementInfo info : heap.liveObjects()) {
-        currHeapSize += info.getHeapSize();
-      }
-      if(currHeapSize > maxLiveHeap)
-        maxLiveHeap = currHeapSize;
+    		Instruction executedInstruction) {
+
+    	//force garbage collect before initial heap size measurement
+    	if (initialHeap == -1) {
+    		vm.activateGC();vm.activateGC();vm.activateGC();vm.activateGC();vm.activateGC();
+    	}
+
+    	Heap heap = vm.getHeap();
+    	int currHeapSize = 0;
+    	for(ElementInfo info : heap.liveObjects()) {
+    		currHeapSize += info.getHeapSize();
+    	}
+    	System.out.println("Inst: " + executedInstruction);
+    	System.out.println("CURRENT HEAP SIZE: " + currHeapSize);
+    	if (initialHeap == -1) {
+    		initialHeap = currHeapSize;
+    	}
+    	currHeapSize -= initialHeap;
+    	System.out.println("MINUS " + initialHeap + " INITIAL = " + currHeapSize);
+    	if(currHeapSize > maxLiveHeap)
+    		maxLiveHeap = currHeapSize;
     }
     
     @Override
     public StateBuilder copy() {
-      return new MaxLiveHeapStateBuilder(maxLiveHeap);
+      return new MaxLiveHeapStateBuilder(maxLiveHeap,initialHeap);
     }
     
     @Override

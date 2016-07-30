@@ -4,6 +4,7 @@ import gov.nasa.jpf.symbc.numeric.PathCondition;
 import gov.nasa.jpf.vm.ChoiceGenerator;
 import gov.nasa.jpf.vm.ElementInfo;
 import gov.nasa.jpf.vm.Instruction;
+import gov.nasa.jpf.vm.MethodInfo;
 import gov.nasa.jpf.vm.ThreadInfo;
 import gov.nasa.jpf.vm.VM;
 
@@ -22,7 +23,9 @@ public interface StateBuilder {
   public void handleInstructionExecuted(VM vm, ThreadInfo currentThread, Instruction nextInstruction, Instruction executedInstruction);
   
   public void handleObjectCreated(VM vm, ThreadInfo ti, ElementInfo ei);
-  public void handleObjectReleased(VM vm, ThreadInfo ti, ElementInfo ei);
+  public void handleObjectReleased(VM vm, ThreadInfo ti, ElementInfo ei);  
+  public void handleMethodEntered(VM vm, ThreadInfo ti, MethodInfo ei);
+  public void handleMethodExited(VM vm, ThreadInfo ti, MethodInfo ei);
   
   public State build(PathCondition resultingPC);
 }

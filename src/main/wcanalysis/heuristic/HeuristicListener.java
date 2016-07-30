@@ -1,5 +1,6 @@
 package wcanalysis.heuristic;
 
+import wcanalysis.WorstCaseAnalyzer;
 import wcanalysis.heuristic.Resolution.ResolutionType;
 import wcanalysis.heuristic.policy.ChoiceListener;
 import wcanalysis.heuristic.policy.Policy;
@@ -36,18 +37,23 @@ public class HeuristicListener extends PathListener {
   private long resolvedInvariantChoices = 0;
   private long newChoices = 0;
   
+  private boolean policiesEnabled;
   private Policy policy;
   
   public HeuristicListener(Config jpfConf, JPF jpf) {
     super(jpfConf, jpf);
     
-    PolicyManager policyManager = new PolicyManager(new File(getSerializedInputDir(jpfConf)));
-    
-    try {
-      this.policy = policyManager.loadPolicy(measuredMethods, Policy.class);
-    } catch (IOException | PolicyManagerException e) {
-      logger.severe(e.getMessage());
-      throw new RuntimeException(e);
+    policiesEnabled = jpfConf.getBoolean(WorstCaseAnalyzer.ENABLE_POLICIES, WorstCaseAnalyzer.ENABLE_POLICIES_DEF);
+
+    if (policiesEnabled) {
+    	PolicyManager policyManager = new PolicyManager(new File(getSerializedInputDir(jpfConf)));
+
+    	try {
+    		this.policy = policyManager.loadPolicy(measuredMethods, Policy.class);
+    	} catch (IOException | PolicyManagerException e) {
+    		logger.severe(e.getMessage());
+    		throw new RuntimeException(e);
+    	}
     }
   }
   
@@ -64,7 +70,12 @@ public class HeuristicListener extends PathListener {
     super.choiceGeneratorAdvanced(vm, currentCG);
     ChoiceGenerator<?> cg = vm.getSystemState().getChoiceGenerator();
     if(cg instanceof PCChoiceGenerator) {
-      Resolution res = policy.resolve(cg, ctxManager);
+    	
+      Resolution res;
+      if (policiesEnabled)
+    	  res = policy.resolve(cg, ctxManager);
+      else
+    	  res = new Resolution(-1, ResolutionType.NEW_CHOICE);
       
       boolean ignoreState = false;
       if(!res.type.equals(ResolutionType.UNRESOLVED) && !res.type.equals(ResolutionType.NEW_CHOICE)) {
