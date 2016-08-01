@@ -58,6 +58,9 @@ public class WorstCaseAnalyzer implements JPFShell {
   
   private static final String INCR_CONF = "symbolic.worstcase.increment";
   private static final String START_AT_CONF = "symbolic.worstcase.startat";
+  
+  public static final String ENABLE_POLICIES = "symbolic.wc.heuristic.enablepolicies";
+  public static final boolean ENABLE_POLICIES_DEF = true;
 
   private static final Logger logger = JPF.getLogger(WorstCaseAnalyzer.class.getName());
   static {
@@ -116,7 +119,8 @@ public class WorstCaseAnalyzer implements JPFShell {
 
     //Step 1: get the policy to guide the search. We will get this at the inputsize
     //corresponding to symbolic.worstcase.policy.inputsize
-    getPolicy(config);
+    if (config.getBoolean(WorstCaseAnalyzer.ENABLE_POLICIES, WorstCaseAnalyzer.ENABLE_POLICIES_DEF))
+    	getPolicy(config);
     logger.info("step 1 done");
 
     //Step 2: get "results" with exploration guided by policy obtained from step 1.

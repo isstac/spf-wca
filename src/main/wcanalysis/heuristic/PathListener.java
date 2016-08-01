@@ -33,9 +33,7 @@ import gov.nasa.jpf.PropertyListenerAdapter;
 import gov.nasa.jpf.search.Search;
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
 import gov.nasa.jpf.symbc.numeric.PathCondition;
-import gov.nasa.jpf.util.SourceRef;
 import gov.nasa.jpf.vm.ChoiceGenerator;
-import gov.nasa.jpf.vm.ClassInfo;
 import gov.nasa.jpf.vm.ElementInfo;
 import gov.nasa.jpf.vm.Instruction;
 import gov.nasa.jpf.vm.MethodInfo;
@@ -274,12 +272,30 @@ public abstract class PathListener extends PropertyListenerAdapter {
   
   @Override
   public void objectCreated(VM vm, ThreadInfo ti, ElementInfo ei) {
-    this.stateBuilder.handleObjectCreated(vm, ti, ei);
+	  if(isInMeasuredMethodCallStack(vm, vm.getCurrentThread())) {
+		  this.stateBuilder.handleObjectCreated(vm, ti, ei);
+	  }
   }
 
   @Override
   public void objectReleased(VM vm, ThreadInfo ti, ElementInfo ei) {
-    this.stateBuilder.handleObjectReleased(vm, ti, ei);
+	  if(isInMeasuredMethodCallStack(vm, vm.getCurrentThread())) {
+		  this.stateBuilder.handleObjectReleased(vm, ti, ei);
+	  }
+  }
+  
+  @Override
+  public void methodEntered (VM vm, ThreadInfo ti, MethodInfo mi) {
+	  if(isInMeasuredMethodCallStack(vm, vm.getCurrentThread())) {
+		  this.stateBuilder.handleMethodEntered(vm, ti, mi);
+	  }
+  }
+  
+  @Override
+  public void methodExited (VM vm, ThreadInfo ti, MethodInfo mi) {
+	  if(isInMeasuredMethodCallStack(vm, vm.getCurrentThread())) {
+		  this.stateBuilder.handleMethodExited(vm, ti, mi);
+	  }
   }
 
   private void checkExecutionPath(VM vm) {
