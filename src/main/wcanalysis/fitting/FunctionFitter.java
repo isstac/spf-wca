@@ -7,13 +7,17 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.math3.exception.MathIllegalArgumentException;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import gov.nasa.jpf.util.JPFLogger;
 import wcanalysis.charting.DataCollection;
 
 /**
@@ -21,6 +25,8 @@ import wcanalysis.charting.DataCollection;
  *
  */
 public class FunctionFitter {
+  
+  public static final Logger logger = JPFLogger.getLogger(FunctionFitter.class.getName());
   
   public static XYSeriesCollection computeSeries(DataCollection rawData, int predictionModelSize) {
     XYSeriesCollection dataset = new XYSeriesCollection();
@@ -48,12 +54,19 @@ public class FunctionFitter {
     
     HashMap<TrendModelData, XYSeries> trend2series = new HashMap<>();
     
-    for(TrendModelData trendData : trendLines) {
-      trendData.trendLine.setValues(rawData.getY(), rawData.getX());
-      String func = trendData.trendLine.getFunction() + " (r^2="+df.format(trendData.trendLine.getRSquared()) + ")";
-      XYSeries s = new XYSeries(trendData.desc + ": "  + func);
-      s.setDescription(trendData.desc);
-      trend2series.put(trendData, s);
+    Iterator<TrendModelData> tmIter = trendLines.iterator();
+    while(tmIter.hasNext()) {
+      TrendModelData trendData = tmIter.next();
+      try {
+        trendData.trendLine.setValues(rawData.getY(), rawData.getX());
+        String func = trendData.trendLine.getFunction() + " (r^2="+df.format(trendData.trendLine.getRSquared()) + ")";
+        XYSeries s = new XYSeries(trendData.desc + ": "  + func);
+        s.setDescription(trendData.desc);
+        trend2series.put(trendData, s);
+      } catch(MathIllegalArgumentException e) {
+        logger.severe(e.getMessage());
+        tmIter.remove();
+      }
     }
 
     double[] xPredict = new double[predictionModelSize];
