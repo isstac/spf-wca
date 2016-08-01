@@ -231,8 +231,8 @@ public abstract class PathListener extends PropertyListenerAdapter {
       if (tgtOutputfileName.length()>244)
     	  tgtOutputfileName = tgtOutputfileName.substring(0, 243);
       
-      visualize(wcPath, new File(this.visDir, "wcpath_" + tgtOutputfileName + ".txt"));
-      visualize(policy, new File(this.visDir, "policy_" + tgtOutputfileName + ".txt"));
+      visualize(wcPath, new File(this.visDir, "wcpath_" + tgtOutputfileName + "_inputsize_" + jpfConf.getString("target.args") + ".txt"));
+      visualize(policy, new File(this.visDir, "policy_" + tgtOutputfileName + "_inputsize_" + jpfConf.getString("target.args") + ".txt"));
     }
   }
 
