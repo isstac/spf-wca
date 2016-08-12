@@ -42,21 +42,30 @@ public class HeuristicListener extends PathListener {
   
   public HeuristicListener(Config jpfConf, JPF jpf) {
     super(jpfConf, jpf);
-    
+
     policiesEnabled = jpfConf.getBoolean(WorstCaseAnalyzer.ENABLE_POLICIES, WorstCaseAnalyzer.ENABLE_POLICIES_DEF);
 
     if (policiesEnabled) {
-    	PolicyManager policyManager = new PolicyManager(new File(getSerializedInputDir(jpfConf)));
+      PolicyManager policyManager = new PolicyManager(new File(getSerializedInputDir(jpfConf)));
 
-    	try {
-    		this.policy = policyManager.loadPolicy(measuredMethods, Policy.class);
-    	} catch (IOException | PolicyManagerException e) {
-    		logger.severe(e.getMessage());
-    		throw new RuntimeException(e);
-    	}
+      try {
+        this.policy = policyManager.loadPolicy(measuredMethods, Policy.class);
+      } catch (IOException | PolicyManagerException e) {
+        logger.severe(e.getMessage());
+        throw new RuntimeException(e);
+      }
     }
   }
-  
+
+  public HeuristicListener(Config jpfConf, Policy policy) {
+    super(jpfConf, null);
+
+    policiesEnabled = jpfConf.getBoolean(WorstCaseAnalyzer.ENABLE_POLICIES, WorstCaseAnalyzer.ENABLE_POLICIES_DEF);
+    if(policiesEnabled) {
+      this.policy = policy;
+    }
+  }
+
   private String getSerializedInputDir(Config jpfConfig) {
     String policyInputPath = jpfConfig.getString(SER_INPUT_PATH);
     if(policyInputPath == null)
