@@ -91,6 +91,8 @@ public abstract class PathListener extends PropertyListenerAdapter {
   //in fact the path measure computation is policy dependent! Extract path measure computation from WorstCasePath someday...
   private int historySize;
   
+  private Policy policy;
+  
   public PathListener(Config jpfConf, JPF jpf) {
     this.jpfConf = jpfConf;
     
@@ -181,6 +183,10 @@ public abstract class PathListener extends PropertyListenerAdapter {
     }
   }
   
+  public Policy getComputedPolicy() {
+    return this.policy;
+  }
+  
   @Override
   public void searchFinished(Search search) {
     checkExecutionPath(search.getVM());
@@ -191,11 +197,11 @@ public abstract class PathListener extends PropertyListenerAdapter {
     if(wcPath == null)
       return;
     
-    Policy policy = this.policyGenerator.generate(this.measuredMethods, wcPath);
+    this.policy = this.policyGenerator.generate(this.measuredMethods, wcPath);
     
     if(serialize(jpfConf)) {
       try {
-        this.policyManager.savePolicy(policy);
+        this.policyManager.savePolicy(this.policy);
       } catch (IOException e) {
         logger.severe(e.getMessage());
         throw new RuntimeException(e);

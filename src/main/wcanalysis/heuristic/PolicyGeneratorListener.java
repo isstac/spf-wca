@@ -16,6 +16,7 @@ public class PolicyGeneratorListener extends PathListener {
   
   public final static String VIS_OUTPUT_PATH_CONF = "symbolic.wc.policy.visualizer.outputpath";
   public final static String SER_OUTPUT_PATH_CONF = "symbolic.wc.policy.serializer.outputpath";
+  public final static String SERIALIZE_CONF = "symbolic.wc.policy.serialize";
   public final static String SER_OUTPUT_PATH_DEF = "./ser/policy";
   
   //for statistics
@@ -51,8 +52,8 @@ public class PolicyGeneratorListener extends PathListener {
 
   @Override
   public boolean serialize(Config jpfConf) {
-    //we serialize i.e. store the policy always!
-    return true; 
+    //Note: we serialize if this configuration is not provided
+    return jpfConf.getBoolean(SERIALIZE_CONF, true); 
   }
 
   @Override
