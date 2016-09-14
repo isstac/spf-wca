@@ -1,8 +1,6 @@
 package wcanalysis.heuristic.policy;
 
 import java.io.Serializable;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -97,6 +95,15 @@ public class TrieStorage implements BranchPolicyStorage {
       return this;
     }
 
+    public void addStorage(TrieStorage storage) {
+      Set<PathChoicesPair> pathChoicePairs = storage.getPaths();
+      for(PathChoicesPair pcp : pathChoicePairs) {
+        for(int choice : pcp.choices) {
+          this.put(pcp.path, choice);
+        }
+      }
+    }
+
     private Node put(Node x, Node parent, Path key, int choice, int d) {
       if(x == null) {
         x = new Node(parent);
@@ -133,6 +140,16 @@ public class TrieStorage implements BranchPolicyStorage {
     
     public TrieStorage build() {
       return new TrieStorage(root, endNodes, choice2Counts);
+    }
+  }
+
+  private static class PathChoicesPair {
+    public final Path path;
+    public final Set<Integer> choices;
+
+    public PathChoicesPair(Path path, Set<Integer> choices) {
+      this.path = path;
+      this.choices = choices;
     }
   }
   
@@ -238,7 +255,7 @@ public class TrieStorage implements BranchPolicyStorage {
   @Override
   public String toString() {
     Set<String> paths = new HashSet<>();
-    collectPaths(root, new StringBuilder(), paths);
+    createPathRepresentation(root, new StringBuilder(), paths);
     StringBuilder pathStringBuilder = new StringBuilder();
     Iterator<String> pathIter = paths.iterator();
     while(pathIter.hasNext()) {
@@ -248,8 +265,28 @@ public class TrieStorage implements BranchPolicyStorage {
     }
     return pathStringBuilder.toString();
   }
+
+  private Set<PathChoicesPair> getPaths() {
+    Set<PathChoicesPair> pathChoicePairs = new HashSet<>();
+    getDecisions(root, new Path(), pathChoicePairs);
+    return pathChoicePairs;
+  }
+
+  private void getDecisions(Node node, Path currentPath, Set<PathChoicesPair> pathsDecisions) {
+    Decision curr = node.getDecision();
+    if(curr != null) {
+      currentPath.addLast(curr);
+    }
+    if(node.hasChoices()) {
+      Path completePath = new Path(currentPath);
+      pathsDecisions.add(new PathChoicesPair(completePath, node.choices));
+    }
+    for(Node child : node.getChildren()) {
+      getDecisions(child, currentPath, pathsDecisions);
+    }
+  }
   
-  private void collectPaths(Node node, StringBuilder sb, Set<String> paths) {
+  private void createPathRepresentation(Node node, StringBuilder sb, Set<String> paths) {
     Decision curr = node.getDecision();
     if(curr != null)
       sb.append(curr.toString());
@@ -270,7 +307,7 @@ public class TrieStorage implements BranchPolicyStorage {
     if(curr != null && node.getChildren().size() > 0)
       sb.append(","); 
     for(Node child : node.getChildren()) {
-      collectPaths(child, new StringBuilder(sb), paths);
+      createPathRepresentation(child, new StringBuilder(sb), paths);
     }
   }
 

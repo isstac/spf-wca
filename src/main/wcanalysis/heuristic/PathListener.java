@@ -12,6 +12,7 @@ import wcanalysis.heuristic.policy.HistoryBasedPolicy;
 import wcanalysis.heuristic.policy.Policy;
 import wcanalysis.heuristic.policy.PolicyGenerator;
 import wcanalysis.heuristic.policy.PolicyManager;
+import wcanalysis.heuristic.policy.PolicyManagerException;
 import wcanalysis.heuristic.util.PathVisualizer;
 import wcanalysis.heuristic.util.Util;
 
@@ -53,20 +54,19 @@ public abstract class PathListener extends PropertyListenerAdapter {
    */
   //JPF conf strings
   //Measured methods
-  public final static String MEASURED_METHODS = "symbolic.heuristic.measuredmethods";
-  public final static String SYMBOLIC_METHODS = "symbolic.method";
+  public static final String MEASURED_METHODS = "symbolic.heuristic.measuredmethods";
+  public static final String SYMBOLIC_METHODS = "symbolic.method";
   protected Set<String> measuredMethods;
   protected Set<String> symbolicMethods;
   
-  public final static String POLICY_GENERATOR_CLS_CONF = "symbolic.wc.policygenerator";
-  public final static String HISTORY_SIZE_CONF = "symbolic.wc.policy.history.size";
-  protected final static int DEF_HISTORY_SIZE = 0; 
+  public static final String POLICY_GENERATOR_CLS_CONF = "symbolic.wc.policygenerator";
+  public static final String HISTORY_SIZE_CONF = "symbolic.wc.policy.history.size";
 
   //Visualization
-  public final static String SHOW_INSTRS_CONF = "symbolic.wc.visualizer.showinstructions";  
+  public static final String SHOW_INSTRS_CONF = "symbolic.wc.visualizer.showinstructions";
   
   //Notion of worst case
-  public final static String WORST_CASE_STATE_BLDR_CONF = "symbolic.wc.statebuilder";
+  public static final String WORST_CASE_STATE_BLDR_CONF = "symbolic.wc.statebuilder";
   
   /*
    * State
@@ -87,6 +87,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
   protected WorstCasePath.Builder worstCasePathBuilder;
   
   private PolicyManager policyManager;
+
   //TODO: History should not be set here -- it is related to the policy (historyless, stateful, etc).
   //in fact the path measure computation is policy dependent! Extract path measure computation from WorstCasePath someday...
   private int historySize;
@@ -201,8 +202,8 @@ public abstract class PathListener extends PropertyListenerAdapter {
     
     if(serialize(jpfConf)) {
       try {
-        this.policyManager.savePolicy(this.policy);
-      } catch (IOException e) {
+        this.policyManager.savePolicy(this.policy, this.unifyPolicies(jpfConf));
+      } catch (PolicyManagerException e) {
         logger.severe(e.getMessage());
         throw new RuntimeException(e);
       }
@@ -313,8 +314,6 @@ public abstract class PathListener extends PropertyListenerAdapter {
     }
     State currentState = this.stateBuilder.build(pcNew);
     WorstCasePath currentWcPath = this.worstCasePathBuilder.build(currentState, vm.getSystemState().getChoiceGenerator());
-//    if(currentWcPath.size() == 20)
-//      System.out.println(currentWcPath.toString());
     if(currentWcPath.compareTo(this.wcPath) > 0) {
       this.wcPath = currentWcPath;
     }
@@ -370,5 +369,6 @@ public abstract class PathListener extends PropertyListenerAdapter {
   public abstract boolean visualize(Config jpfConf);
   public abstract File getVisualizationDir(Config jpfConf);
   public abstract boolean serialize(Config jpfConf);
+  public abstract boolean unifyPolicies(Config jpfConf);
   public abstract File getPolicyBaseDir(Config jpfConf);
 }

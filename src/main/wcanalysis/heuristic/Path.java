@@ -57,7 +57,7 @@ public class Path extends ArrayList<Decision> {
   }
   
   public void addLast(Decision dec) {
-    this.add(this.size() - 1, dec);
+    this.add(this.size(), dec);
   }
   
   public Decision getFirst() {

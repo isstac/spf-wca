@@ -20,7 +20,6 @@ public abstract class Policy implements Serializable {
   
   private static final long serialVersionUID = -2247935610676857237L;
   
-  
   private final Set<String> measuredMethods;
     
   public Policy(Set<String> measuredMethods) {
@@ -32,6 +31,8 @@ public abstract class Policy implements Serializable {
   }
   
   public abstract Resolution resolve(ChoiceGenerator<?> cg, ContextManager ctxManager);
+
+  public abstract void unify(Policy otherPolicy) throws PolicyUnificationException;
   
   public void save(OutputStream out) {
     try {

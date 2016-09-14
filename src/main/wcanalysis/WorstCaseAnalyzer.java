@@ -1,14 +1,11 @@
 package wcanalysis;
 
+import com.google.common.base.Preconditions;
+
+import gov.nasa.jpf.JPFConfigException;
 import wcanalysis.charting.DataCollection;
 import wcanalysis.charting.WorstCaseChart;
-import wcanalysis.fitting.ExpTrendLine;
 import wcanalysis.fitting.FunctionFitter;
-import wcanalysis.fitting.LogTrendLine;
-import wcanalysis.fitting.NLogTrendLine;
-import wcanalysis.fitting.PolyTrendLine;
-import wcanalysis.fitting.PowerTrendLine;
-import wcanalysis.fitting.TrendLine;
 import wcanalysis.heuristic.HeuristicListener;
 import wcanalysis.heuristic.HeuristicResultsPublisher;
 import wcanalysis.heuristic.PolicyGeneratorListener;
@@ -20,16 +17,9 @@ import wcanalysis.heuristic.model.State;
 import wcanalysis.heuristic.util.Util;
 
 import java.io.File;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RefineryUtilities;
 
@@ -43,7 +33,7 @@ import gov.nasa.jpf.listener.CoverageAnalyzer;
  */
 public class WorstCaseAnalyzer implements JPFShell {
 
-  private static final String HEURISTIC_SIZE_CONF = "symbolic.worstcase.policy.inputsize";
+  private static final String POLICY_GEN_SIZE_CONF = "symbolic.worstcase.policy.inputsize";
   private static final String MAX_INPUT_CONF = "symbolic.worstcase.input.max";
   private static final String VERBOSE_CONF = "symbolic.worstcase.verbose";
   private static final String OUTPUT_DIR_CONF = "symbolic.worstcase.outputpath";
@@ -148,32 +138,60 @@ public class WorstCaseAnalyzer implements JPFShell {
   private void getPolicy(Config jpfConf) {
     if(jpfConf.getBoolean(REUSE_POLICY_CONF, false)) // just skip if we reuse the policy already computed
       return;
-      
-    int policyInputSize = jpfConf.getInt(HEURISTIC_SIZE_CONF);
-    if(verbose) {
-      //apparently have to set this guy before instantiating the jpf object
-      File coverageFile = new File(this.policyDir, "policy_coverage_input_size_" + policyInputSize + ".txt");
-      jpfConf.setProperty("report.console.file", coverageFile.getAbsolutePath());
+
+    //We get an *array* of input sizes. There are two cases:
+    //if there is only one value, then we just obtain the policy
+    //for that input size and proceed to the heuristic search.
+    //The other case is when there are two elements, denoting
+    //the integer range with which policies are to be obtained
+    //and *unified*
+    int[] policyInputSizes = jpfConf.getIntArray(POLICY_GEN_SIZE_CONF);
+    int inputSizeStart, inputSizeEnd;
+    if(policyInputSizes.length > 2) {
+      throw new JPFConfigException("Supply either one integer or two integers (format: a,b where " +
+          "a<b) denoting the range" +
+          " of the input sizes at which policies are computed (and unified). Set with config " +
+          POLICY_GEN_SIZE_CONF);
+    } else if(policyInputSizes.length == 2) {
+      assert policyInputSizes[0] <= policyInputSizes[1];
+      inputSizeStart = policyInputSizes[0];
+      inputSizeEnd = policyInputSizes[1];
+      logger.info("Unifying policies for input size " + inputSizeStart + "--" + inputSizeEnd);
+
+      //Tell PolicyGeneratorListener to unify policies over the range
+      jpfConf.setProperty(PolicyGeneratorListener.UNIFY_POLICIES_CONF, "true");
+      logger.warning("Using unification of policies. Remember to delete old policy");
+
+    } else { // must be policyInputSizes.length == 1
+      inputSizeStart = inputSizeEnd = policyInputSizes[0];
     }
-    jpfConf.setProperty("target.args", ""+policyInputSize);
-    JPF jpf = new JPF(jpfConf);
-    jpf.addListener(new PolicyGeneratorListener(jpfConf, jpf)); //weird instantiation...
-    
-    if(verbose) {
-      //We store (structural) coverage metrics for the exhaustive exploration when the policy was extracted
-      //We can use it for providing some confidence in how "good" the policy is --
-      //it does not account for infeasible paths however, so branch coverage might be a bit distorted      
-      jpfConf.setProperty("coverage.show_methods", "true");
-      jpfConf.setProperty("coverage.show_bodies", "false");
-      jpfConf.setProperty("coverage.exclude_handlers", "false");
-      jpfConf.setProperty("coverage.show_branches", "true");
-      jpfConf.setProperty("coverage.loaded_only", "true");
-      jpfConf.setProperty("coverage.show_requirements", "false");
-      
-      jpf.addListener(new CoverageAnalyzer(jpfConf, jpf));
+    for(int inputSize = inputSizeStart; inputSize <= inputSizeEnd; inputSize++) {
+      if (verbose) {
+        //apparently have to set this guy before instantiating the jpf object
+        File coverageFile = new File(this.policyDir, "policy_coverage_input_size_" + inputSize + ".txt");
+        jpfConf.setProperty("report.console.file", coverageFile.getAbsolutePath());
+      }
+      jpfConf.setProperty("target.args", "" + inputSize);
+      JPF jpf = new JPF(jpfConf);
+      jpf.addListener(new PolicyGeneratorListener(jpfConf, jpf)); //weird instantiation...
+
+      if (verbose) {
+        //We store (structural) coverage metrics for the exhaustive exploration when the policy was extracted
+        //We can use it for providing some confidence in how "good" the policy is --
+        //it does not account for infeasible paths however, so branch coverage might be a bit distorted
+        jpfConf.setProperty("coverage.show_methods", "true");
+        jpfConf.setProperty("coverage.show_bodies", "false");
+        jpfConf.setProperty("coverage.exclude_handlers", "false");
+        jpfConf.setProperty("coverage.show_branches", "true");
+        jpfConf.setProperty("coverage.loaded_only", "true");
+        jpfConf.setProperty("coverage.show_requirements", "false");
+
+        jpf.addListener(new CoverageAnalyzer(jpfConf, jpf));
+      }
+      logger.info("Running policy generation for input size " + inputSize);
+      //get policy
+      jpf.run();
     }
-    //get policy
-    jpf.run();
   }
 
   private DataCollection performAnalysis(Config jpfConf) {

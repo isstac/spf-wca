@@ -102,6 +102,10 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
     this.policy = historyPolicy;
   }
 
+  public Map<BranchInstruction, BranchPolicy> getBranchPolicies() {
+    return this.policy;
+  }
+
   @Override
   public Resolution resolve(ChoiceGenerator<?> cg, ContextManager ctxManager) {
     assert cg instanceof PCChoiceGenerator;
@@ -132,6 +136,34 @@ public class HistoryBasedPolicy extends Policy implements ChoiceListener {
   public void choiceMade(PCChoiceGenerator cg, int choiceMade) {
     if(this.invariantChecker != null) {
       this.invariantChecker.choiceMade(new BranchInstruction(cg.getInsn()), choiceMade);
+    }
+  }
+
+  @Override
+  public void unify(Policy otherPolicy) throws PolicyUnificationException {
+    if(!(otherPolicy instanceof HistoryBasedPolicy)) {
+      throw new PolicyUnificationException("Cannot unify this policy type (" +
+          HistoryBasedPolicy.class.getName() + ") with other policy type (" + otherPolicy
+          .getClass().getName() + ")");
+    }
+    HistoryBasedPolicy otherHistoryPolicy = (HistoryBasedPolicy)otherPolicy;
+    Map<BranchInstruction, BranchPolicy> otherBranchPolicies = otherHistoryPolicy
+        .getBranchPolicies();
+
+    for(Map.Entry<BranchInstruction, BranchPolicy> entry : otherBranchPolicies.entrySet()) {
+      if(this.policy.containsKey(entry.getKey())) {
+        if(!(entry.getValue() instanceof Unifiable) ||
+            !(this.policy.get(entry.getKey()) instanceof Unifiable)) {
+          throw new PolicyUnificationException("Only branch policies of type " +
+              HistoryBasedBranchPolicy.class.getName() + " can be unified");
+        }
+
+        Unifiable thisBranchPolicy = (Unifiable)this.policy.get(entry.getKey());
+        BranchPolicy otherBranchPolicy = entry.getValue();
+        thisBranchPolicy.unifyWith(otherBranchPolicy);
+      } else {
+        this.policy.put(entry.getKey(), entry.getValue());
+      }
     }
   }
   

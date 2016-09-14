@@ -71,7 +71,7 @@ public class Decision implements Serializable {
     sb.append("<")  
        .append(this.getInstruction().toString())
        .append(", ") 
-       .append(((this.getChoice() == 1) ? "T" : (this.getChoice() == 0) ? "F" : this.getChoice()))
+       .append(((this.getChoice() == 1) ? "T" : (this.getChoice() == 0) ? "F" : this.getChoice()+""))
        .append(">" /*+ cur.getContext() + "]"*/);
     
     return sb.toString();

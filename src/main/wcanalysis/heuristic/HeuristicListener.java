@@ -24,7 +24,10 @@ import gov.nasa.jpf.vm.VM;
 public class HeuristicListener extends PathListener {
   
   private Logger logger = JPF.getLogger(HeuristicListener.class.getName());
-  
+
+  public static final String UNIFY_POLICIES_CONF = "symbolic.wc.heuristic.unifypolicies";
+  public static final boolean UNIFY_POLICIES_CONF_DEF = false;
+
   public final static String VIS_OUTPUT_PATH_CONF = "symbolic.wc.heuristic.visualizer.outputpath";
   public final static String SER_OUTPUT_PATH = "symbolic.wc.heuristic.serializer.outputpath";
   
@@ -38,7 +41,7 @@ public class HeuristicListener extends PathListener {
   private long newChoices = 0;
   
   private boolean policiesEnabled;
-  private Policy policy;
+  private Policy heuristicPolicy;
   
   public HeuristicListener(Config jpfConf, JPF jpf) {
     super(jpfConf, jpf);
@@ -49,7 +52,7 @@ public class HeuristicListener extends PathListener {
       PolicyManager policyManager = new PolicyManager(new File(getSerializedInputDir(jpfConf)));
 
       try {
-        this.policy = policyManager.loadPolicy(measuredMethods, Policy.class);
+        this.heuristicPolicy = policyManager.loadPolicy(measuredMethods, Policy.class);
       } catch (IOException | PolicyManagerException e) {
         logger.severe(e.getMessage());
         throw new RuntimeException(e);
@@ -57,12 +60,12 @@ public class HeuristicListener extends PathListener {
     }
   }
 
-  public HeuristicListener(Config jpfConf, Policy policy) {
+  public HeuristicListener(Config jpfConf, Policy heuristicPolicy) {
     super(jpfConf, null);
 
     policiesEnabled = jpfConf.getBoolean(WorstCaseAnalyzer.ENABLE_POLICIES, WorstCaseAnalyzer.ENABLE_POLICIES_DEF);
     if(policiesEnabled) {
-      this.policy = policy;
+      this.heuristicPolicy = heuristicPolicy;
     }
   }
 
@@ -82,7 +85,7 @@ public class HeuristicListener extends PathListener {
     	
       Resolution res;
       if (policiesEnabled)
-    	  res = policy.resolve(cg, ctxManager);
+    	  res = heuristicPolicy.resolve(cg, ctxManager);
       else
     	  res = new Resolution(-1, ResolutionType.NEW_CHOICE);
       
@@ -117,9 +120,9 @@ public class HeuristicListener extends PathListener {
       }
       
       if(!ignoreState) {
-        if(policy instanceof ChoiceListener) {
+        if(heuristicPolicy instanceof ChoiceListener) {
           PCChoiceGenerator pccg = (PCChoiceGenerator)cg;
-          ((ChoiceListener)policy).choiceMade(pccg, pccg.getNextChoice());
+          ((ChoiceListener) heuristicPolicy).choiceMade(pccg, pccg.getNextChoice());
         }
       }
     }
@@ -168,8 +171,13 @@ public class HeuristicListener extends PathListener {
   }
 
   @Override
+  public boolean unifyPolicies(Config jpfConf) {
+    return jpfConf.getBoolean(UNIFY_POLICIES_CONF, UNIFY_POLICIES_CONF_DEF);
+  }
+
+  @Override
   public File getPolicyBaseDir(Config jpfConf) {
-    File out = Util.createDirIfNotExist(jpfConf.getString(SER_OUTPUT_PATH, "./ser/policy"));
+    File out = Util.createDirIfNotExist(jpfConf.getString(SER_OUTPUT_PATH, "./ser/heuristicPolicy"));
     return out;
   }
 }

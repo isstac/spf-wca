@@ -17,14 +17,14 @@ import wcanalysis.heuristic.Path;
  * @author Kasper Luckow
  * Actually not needed atm. Just a wrapper for the storage. lame
  */
-public class HistoryBasedBranchPolicy implements BranchPolicy {
+public class HistoryBasedBranchPolicy implements BranchPolicy, Unifiable {
 
   private static final long serialVersionUID = 4478984808375928385L;
 
   public static class Builder implements BranchPolicyBuilder<HistoryBasedBranchPolicy> {
     private TrieStorage.Builder trieBldr = new TrieStorage.Builder();
     public Builder() { }
-    
+
     @Override
     public void addPolicy(Path history, int policyChoice) {
       trieBldr.put(history, policyChoice);
@@ -39,7 +39,7 @@ public class HistoryBasedBranchPolicy implements BranchPolicy {
     }
   }
   
-  private final BranchPolicyStorage storage;
+  private BranchPolicyStorage storage;
   
   private HistoryBasedBranchPolicy(BranchPolicyStorage storage) {
     this.storage = storage;
@@ -68,5 +68,29 @@ public class HistoryBasedBranchPolicy implements BranchPolicy {
   @Override
   public int getMaxHistorySize() {
     return storage.getMaxHistoryLength();
+  }
+
+  //Exposing so much state....
+  public BranchPolicyStorage getStorage() {
+    return this.storage;
+  }
+
+  @Override
+  public void unifyWith(BranchPolicy other) throws PolicyUnificationException {
+    if(!(other instanceof HistoryBasedBranchPolicy)) {
+      throw new PolicyUnificationException("Cannot unify branch policy of type " + other.getClass
+          ().getName());
+    }
+
+    HistoryBasedBranchPolicy otherBranchPolicy = (HistoryBasedBranchPolicy)other;
+    BranchPolicyStorage otherStorage = otherBranchPolicy.getStorage();
+
+    //Merge the two storages---we assume they use a trie backing store
+    //This is incredibly ugly
+    TrieStorage.Builder trieBldr = new TrieStorage.Builder();
+    trieBldr.addStorage((TrieStorage)this.storage);
+    trieBldr.addStorage((TrieStorage)otherStorage);
+
+    this.storage = trieBldr.build();
   }
 }

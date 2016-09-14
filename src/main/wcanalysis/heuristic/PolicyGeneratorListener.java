@@ -13,11 +13,14 @@ import gov.nasa.jpf.vm.ChoiceGenerator;
  * @author Kasper Luckow
  */
 public class PolicyGeneratorListener extends PathListener {
-  
-  public final static String VIS_OUTPUT_PATH_CONF = "symbolic.wc.policy.visualizer.outputpath";
-  public final static String SER_OUTPUT_PATH_CONF = "symbolic.wc.policy.serializer.outputpath";
-  public final static String SERIALIZE_CONF = "symbolic.wc.policy.serialize";
-  public final static String SER_OUTPUT_PATH_DEF = "./ser/policy";
+
+  public static final String UNIFY_POLICIES_CONF = "symbolic.wc.policy.unifypolicies";
+  public static final boolean UNIFY_POLICIES_CONF_DEF = false;
+
+  public static final  String VIS_OUTPUT_PATH_CONF = "symbolic.wc.policy.visualizer.outputpath";
+  public static final String SER_OUTPUT_PATH_CONF = "symbolic.wc.policy.serializer.outputpath";
+  public static final String SERIALIZE_CONF = "symbolic.wc.policy.serialize";
+  public static final String SER_OUTPUT_PATH_DEF = "./ser/policy";
   
   //for statistics
   private long newChoices = 0;
@@ -54,6 +57,11 @@ public class PolicyGeneratorListener extends PathListener {
   public boolean serialize(Config jpfConf) {
     //Note: we serialize if this configuration is not provided
     return jpfConf.getBoolean(SERIALIZE_CONF, true); 
+  }
+
+  @Override
+  public boolean unifyPolicies(Config jpfConf) {
+    return jpfConf.getBoolean(UNIFY_POLICIES_CONF, UNIFY_POLICIES_CONF_DEF);
   }
 
   @Override

@@ -27,25 +27,42 @@ public class PolicyManager {
   public PolicyManager(File baseDir) {
     this.baseDir = baseDir;
   }
-  
-  public void savePolicy(Policy policy) throws FileNotFoundException, IOException {
+
+  public void savePolicy(Policy policy, boolean unifyExistingPolicies) throws PolicyManagerException {
     String policyFileName = "";
     for(String meas : policy.getMeasuredMethods()) {
       policyFileName += meas;
     }
-    
+
     // Prune to prevent FileNotFoundException (File name too long) (max 255 chars)
     if (policyFileName.length()>251)
-    	policyFileName = policyFileName.substring(0, 250);
-    
+      policyFileName = policyFileName.substring(0, 250);
+
     File policyFile = new File(this.baseDir, policyFileName + POLICY_EXTENSION);
+
+    if(policyFile.exists() && unifyExistingPolicies) {
+      logger.info("Unifying policy");
+      try {
+        Policy existingPolicy = this.loadPolicy(policy.getMeasuredMethods(), Policy.class);
+        policy.unify(existingPolicy);
+      } catch (IOException | PolicyUnificationException e) {
+        throw new PolicyManagerException(e);
+      }
+    }
+
     try(FileOutputStream fo = new FileOutputStream(policyFile)) {
       policy.save(fo);
+    } catch (IOException e) {
+      throw new PolicyManagerException(e);
     }
-    logger.info("Saved policy: " + policy.toString());
+    logger.info("Saved policy: " + policy.toString() + " to " + policyFileName);
+  }
+
+  public void savePolicy(Policy policy) throws PolicyManagerException {
+    savePolicy(policy, false);
   }
   
-  public <T extends Policy> T loadPolicy(Collection<String> measuredMethods, Class<T> type) throws FileNotFoundException, IOException, PolicyManagerException {
+  public <T extends Policy> T loadPolicy(Collection<String> measuredMethods, Class<T> type) throws IOException, PolicyManagerException {
     ArrayList<T> policies = new ArrayList<>();
     File[] baseDirFiles = this.baseDir.listFiles();
     if(baseDirFiles == null)
