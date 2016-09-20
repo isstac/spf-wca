@@ -23,7 +23,24 @@ public class PolicyManager {
   private final File baseDir;
   
   private static final String POLICY_EXTENSION = ".pol";
-  
+
+  public static void main(String[] args) throws IOException, PolicyUnificationException {
+    HistoryBasedPolicy unifyingPolicy = null;
+    for(int i = 0; i < args.length - 1; i++) {
+      try(InputStream in = new FileInputStream(new File(args[i]))) {
+        HistoryBasedPolicy pol = Policy.load(in, HistoryBasedPolicy.class);
+        if(unifyingPolicy == null) {
+          unifyingPolicy = pol;
+        } else {
+          unifyingPolicy.unify(pol);
+        }
+      }
+    }
+    //Last element in args denote outputpath
+    unifyingPolicy.save(new FileOutputStream(new File(args[args.length - 1])));
+  }
+
+
   public PolicyManager(File baseDir) {
     this.baseDir = baseDir;
   }

@@ -282,7 +282,7 @@ public class TrieStorage implements BranchPolicyStorage {
       pathsDecisions.add(new PathChoicesPair(completePath, node.choices));
     }
     for(Node child : node.getChildren()) {
-      getDecisions(child, currentPath, pathsDecisions);
+      getDecisions(child, new Path(currentPath), pathsDecisions);
     }
   }
   
