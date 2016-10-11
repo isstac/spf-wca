@@ -171,6 +171,8 @@ public class HeuristicListener extends PathListener {
 
   private void checkTermination(Search search) {
     if(terminationStrategy.terminateAnalysis(search, this.statistics)) {
+      logger.info("Termination strategy [" + terminationStrategy.getClass().getName() + "] " +
+          "terminated the heuristic search");
       search.terminate();
     }
   }
