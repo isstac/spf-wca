@@ -305,7 +305,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
 	  }
   }
 
-  private void checkExecutionPath(VM vm) {
+  protected void checkExecutionPath(VM vm) {
     PathCondition pc = PathCondition.getPC(vm);
     
     PathCondition pcNew = null;

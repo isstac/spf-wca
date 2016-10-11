@@ -32,13 +32,16 @@ public class HeuristicListener extends PathListener {
   public final static String SER_OUTPUT_PATH = "symbolic.wc.heuristic.serializer.outputpath";
   
   public static final String SER_INPUT_PATH = "symbolic.wc.heuristic.serializer.inputpath";
-  
+
+  // Termination
+  public static final String TERMINATION_STRATEGY_CONF = "symbolic.wc.heuristic.termination";
+  public static final String DEFAULT_TERMINATION_STRATEGY = NeverTerminate.class.getName();
+
+  private final TerminationStrategy terminationStrategy;
+
+
   //statistics
-  private long unresolvedChoices = 0;
-  private long resolvedPerfectChoices = 0;
-  private long resolvedHistoryChoices = 0;
-  private long resolvedInvariantChoices = 0;
-  private long newChoices = 0;
+  private HeuristicStatistics statistics = new HeuristicStatistics();
   
   private boolean policiesEnabled;
   private Policy heuristicPolicy;
@@ -58,6 +61,10 @@ public class HeuristicListener extends PathListener {
         throw new RuntimeException(e);
       }
     }
+
+    // Set termination strategy
+    this.terminationStrategy = jpfConf.getInstance(TERMINATION_STRATEGY_CONF,
+        TerminationStrategy.class, DEFAULT_TERMINATION_STRATEGY);
   }
 
   public HeuristicListener(Config jpfConf, Policy heuristicPolicy) {
@@ -67,6 +74,10 @@ public class HeuristicListener extends PathListener {
     if(policiesEnabled) {
       this.heuristicPolicy = heuristicPolicy;
     }
+
+    // Set termination strategy
+    this.terminationStrategy = jpfConf.getInstance(TERMINATION_STRATEGY_CONF,
+        TerminationStrategy.class, DEFAULT_TERMINATION_STRATEGY);
   }
 
   private String getSerializedInputDir(Config jpfConfig) {
@@ -98,22 +109,22 @@ public class HeuristicListener extends PathListener {
       
       switch(res.type) {
       case UNRESOLVED:
-        this.unresolvedChoices++;
+        statistics.unresolvedChoices++;
         break;
       case NEW_CHOICE:
-        this.newChoices++;
+        statistics.newChoices++;
         break;
       case PERFECT:
         if(ignoreState)
-          this.resolvedPerfectChoices++;
+          statistics.resolvedPerfectChoices++;
         break;
       case HISTORY:
         if(ignoreState)
-          this.resolvedHistoryChoices++;
+          statistics.resolvedHistoryChoices++;
         break;
       case INVARIANT:
         if(ignoreState)
-          this.resolvedInvariantChoices++;
+          statistics.resolvedInvariantChoices++;
         break;
        default:
          throw new IllegalStateException("Unhandled resolution type");
@@ -128,30 +139,18 @@ public class HeuristicListener extends PathListener {
     }
   }
   
-  public long getNumberOfUnresolvedChoices() {
-    return this.unresolvedChoices;
+  public HeuristicStatistics getStatistics() {
+    return this.statistics;
   }
 
-  public long getNumberOfInvariantResolvedChoices() {
-    return this.resolvedInvariantChoices;
-  }
-  
-  public long getNumberOfPerfectlyResolvedChoices() {
-    return this.resolvedPerfectChoices;
-  }
-  
-  public long getNumberOfHistoryResolvedChoices() {
-    return this.resolvedHistoryChoices;
-  }
-  
-  public long getTotalNumberOfResolvedChoices() {
-    return this.resolvedInvariantChoices +
-        this.resolvedHistoryChoices +
-        this.resolvedPerfectChoices;
-  }
 
-  public long getNumberOfNewChoices() {
-    return this.newChoices;
+  @Override
+  protected void checkExecutionPath(VM vm) {
+    super.checkExecutionPath(vm);
+
+    if(terminationStrategy.terminateAnalysis(vm.getSearch(), this.statistics)) {
+      vm.getSearch().terminate();
+    }
   }
 
   @Override

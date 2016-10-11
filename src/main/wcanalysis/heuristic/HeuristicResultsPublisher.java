@@ -27,12 +27,15 @@ public class HeuristicResultsPublisher extends ResultsPublisher {
     HeuristicListener listener = reporter.getVM().getNextListenerOfType(HeuristicListener.class, null);
     if(listener == null)
       return "";
-    String out = listener.getTotalNumberOfResolvedChoices() + "," +
-        listener.getNumberOfPerfectlyResolvedChoices() + "," +
-        listener.getNumberOfHistoryResolvedChoices() + "," +
-        listener.getNumberOfInvariantResolvedChoices() + "," +
-        listener.getNumberOfUnresolvedChoices() + "," +
-        listener.getNumberOfNewChoices();
+
+    HeuristicStatistics statistics = listener.getStatistics();
+    String out = (statistics.resolvedHistoryChoices + statistics.resolvedInvariantChoices +
+        statistics.resolvedPerfectChoices) + "," +
+        statistics.resolvedPerfectChoices + "," +
+        statistics.resolvedHistoryChoices + "," +
+        statistics.resolvedInvariantChoices + "," +
+        statistics.unresolvedChoices + "," +
+        statistics.newChoices;
     return out;
   }
   
