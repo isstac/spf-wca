@@ -1,5 +1,8 @@
 package wcanalysis.heuristic;
 
+import gov.nasa.jpf.search.Search;
+import gov.nasa.jpf.vm.ElementInfo;
+import gov.nasa.jpf.vm.ThreadInfo;
 import wcanalysis.WorstCaseAnalyzer;
 import wcanalysis.heuristic.Resolution.ResolutionType;
 import wcanalysis.heuristic.policy.ChoiceListener;
@@ -48,7 +51,6 @@ public class HeuristicListener extends PathListener {
   
   public HeuristicListener(Config jpfConf, JPF jpf) {
     super(jpfConf, jpf);
-
     policiesEnabled = jpfConf.getBoolean(WorstCaseAnalyzer.ENABLE_POLICIES, WorstCaseAnalyzer.ENABLE_POLICIES_DEF);
 
     if (policiesEnabled) {
@@ -69,7 +71,6 @@ public class HeuristicListener extends PathListener {
 
   public HeuristicListener(Config jpfConf, Policy heuristicPolicy) {
     super(jpfConf, null);
-
     policiesEnabled = jpfConf.getBoolean(WorstCaseAnalyzer.ENABLE_POLICIES, WorstCaseAnalyzer.ENABLE_POLICIES_DEF);
     if(policiesEnabled) {
       this.heuristicPolicy = heuristicPolicy;
@@ -144,12 +145,33 @@ public class HeuristicListener extends PathListener {
   }
 
 
-  @Override
-  protected void checkExecutionPath(VM vm) {
-    super.checkExecutionPath(vm);
 
-    if(terminationStrategy.terminateAnalysis(vm.getSearch(), this.statistics)) {
-      vm.getSearch().terminate();
+  //TODO: Do something about these three overridden methods---super ugly
+  @Override
+  public void exceptionThrown(VM vm, ThreadInfo currentThread, ElementInfo thrownException) {
+    super.exceptionThrown(vm, currentThread, thrownException);
+    checkTermination(vm.getSearch());
+  }
+
+  //TODO: Do something about these three overridden methods---super ugly
+  @Override
+  public void searchConstraintHit(Search search) {
+    super.searchConstraintHit(search);
+    checkTermination(search);
+  }
+
+  //TODO: Do something about these three overridden methods---super ugly
+  @Override
+  public void stateAdvanced(Search search) {
+    super.stateAdvanced(search);
+    if(search.isEndState()) {
+      checkTermination(search);
+    }
+  }
+
+  private void checkTermination(Search search) {
+    if(terminationStrategy.terminateAnalysis(search, this.statistics)) {
+      search.terminate();
     }
   }
 
