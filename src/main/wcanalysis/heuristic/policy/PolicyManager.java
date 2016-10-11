@@ -45,12 +45,17 @@ public class PolicyManager {
     this.baseDir = baseDir;
   }
 
-  public void savePolicy(Policy policy, boolean unifyExistingPolicies) throws PolicyManagerException {
+  public void savePolicy(Policy policy, boolean unifyExistingPolicies) throws
+      PolicyManagerException {
     String policyFileName = "";
     for(String meas : policy.getMeasuredMethods()) {
       policyFileName += meas;
     }
+    savePolicy(policy, unifyExistingPolicies, policyFileName);
+  }
 
+  public void savePolicy(Policy policy, boolean unifyExistingPolicies, String policyFileName) throws
+      PolicyManagerException {
     // Prune to prevent FileNotFoundException (File name too long) (max 255 chars)
     if (policyFileName.length()>251)
       policyFileName = policyFileName.substring(0, 250);
@@ -73,6 +78,10 @@ public class PolicyManager {
       throw new PolicyManagerException(e);
     }
     logger.info("Saved policy: " + policy.toString() + " to " + policyFileName);
+  }
+
+  public void savePolicy(Policy policy, String policyFileName) throws PolicyManagerException {
+    savePolicy(policy, false, policyFileName);
   }
 
   public void savePolicy(Policy policy) throws PolicyManagerException {
