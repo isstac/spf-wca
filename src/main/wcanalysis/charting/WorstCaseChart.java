@@ -48,23 +48,68 @@ public class WorstCaseChart extends ApplicationFrame implements ChartMouseListen
   private ChartPanel chartPanel;
   
   public static void main(String[] args) throws IOException {
-    if(args.length < 1) {
+    if(args.length < 1 || args.length > 2) {
       System.err.print("Accepts 2 args: path to csv file and optionally \"output\" which will output the data set of the models");
       System.exit(-1);
     }
     
     boolean output = false;
-    if(args.length == 2) {
-      if(args[1].equalsIgnoreCase("output")) {
-        output = true;
-      } else {
-        System.err.print("second arg should be \"output\"");
-        System.exit(-1);
+    if(args[args.length - 1].equalsIgnoreCase("output")) {
+      output = true;
+    }
+
+    if(args[0].equalsIgnoreCase("batch")) {
+      String csvFile = args[1];
+      processBatchResultsCSV(csvFile, output);
+    } else {
+      String csvFile = args[0];
+      processStandardResultsCSV(csvFile, output);
+    }
+  }
+
+  private static void processBatchResultsCSV(String csvFile, boolean output) throws IOException {
+    Reader in = new FileReader(csvFile);
+    Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(in);
+    boolean first = true;
+    for(CSVRecord rec : records) {
+      if(rec.toString().startsWith("#") && first) { //probably the most ridiculous csv library when
+        // you have to do
+        // this?
+        first = false;
+        continue;
+      }
+
+      DataCollection dataCollection = new DataCollection();
+      double inputSize = 1;
+      for(String element : rec) {
+        double y = Double.parseDouble(element);
+        dataCollection.addDatapoint(inputSize++, y);
+      }
+      visualizeDataCollection(dataCollection, output, new File(csvFile).getParentFile());
+    }
+
+  }
+
+  private static void visualizeDataCollection(DataCollection dataCollection, boolean output,
+                                              File baseDir) throws IOException {
+    XYSeriesCollection series = FunctionFitter.computeSeries(dataCollection, 10);
+    if(output) {
+      for(XYSeries ser : (List<XYSeries>)series.getSeries()) {
+        String fileName = ser.getDescription() + ".csv";
+        File f = new File(baseDir, fileName);
+        Writer w = new FileWriter(f);
+        FunctionFitter.seriesToCSV(ser, w);
       }
     }
-    
-    String csvFile = args[0];
-    
+    WorstCaseChart wcChart = new WorstCaseChart(series);
+
+    wcChart.pack();
+    RefineryUtilities.centerFrameOnScreen(wcChart);
+    wcChart.setVisible(true);
+  }
+
+  private static void processStandardResultsCSV(String csvFile, boolean output) throws IOException {
+
     Reader in = new FileReader(csvFile);
     DataCollection dataCollection = new DataCollection();
     Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(in);
@@ -78,22 +123,8 @@ public class WorstCaseChart extends ApplicationFrame implements ChartMouseListen
       int y = Integer.parseInt(rec.get(1));
       dataCollection.addDatapoint(x, y);
     }
-    
-    XYSeriesCollection series = FunctionFitter.computeSeries(dataCollection, 130);
-    if(output) {
-      File baseDir = new File(csvFile).getParentFile();
-      for(XYSeries ser : (List<XYSeries>)series.getSeries()) {
-        String fileName = ser.getDescription() + ".csv";
-        File f = new File(baseDir, fileName);
-        Writer w = new FileWriter(f);
-        FunctionFitter.seriesToCSV(ser, w);
-      }
-    }
-    WorstCaseChart wcChart = new WorstCaseChart(series);
-    
-    wcChart.pack();
-    RefineryUtilities.centerFrameOnScreen(wcChart);
-    wcChart.setVisible(true);
+
+    visualizeDataCollection(dataCollection, output, new File(csvFile).getParentFile());
   }
   
   public WorstCaseChart(XYSeriesCollection dataCollection) {
