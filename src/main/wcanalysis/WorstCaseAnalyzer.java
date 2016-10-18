@@ -173,6 +173,7 @@ public class WorstCaseAnalyzer implements JPFShell {
       }
       jpfConf.setProperty("target.args", "" + inputSize);
       JPF jpf = new JPF(jpfConf);
+      jpf.getReporter();
       jpf.addListener(new PolicyGeneratorListener(jpfConf, jpf)); //weird instantiation...
 
       if (verbose) {
