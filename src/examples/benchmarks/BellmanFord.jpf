@@ -1,0 +1,24 @@
+classpath=${spfwca}/examples/build/classes/main/
+sourcepath=${spfwca}/examples/src/main/java
+
+@using spfwca
+
+target=benchmarks.BellmanFord
+
+shell=wcanalysis.WorstCaseAnalyzer
+
+symbolic.min_int=-100
+symbolic.max_int=100
+symbolic.dp=z3
+
+symbolic.wc.policy.history.size=0
+
+symbolic.worstcase.policy.inputsize=2
+symbolic.worstcase.input.max=12
+
+symbolic.worstcase.verbose=true
+symbolic.worstcase.outputpath=${spfwca}/bellman_results
+
+symbolic.method=benchmarks.BellmanFord.runBellmanFord(con#con#con)
+
+symbolic.optimizechoices=false

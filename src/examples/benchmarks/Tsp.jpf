@@ -1,0 +1,22 @@
+classpath=${spfwca}/examples/build/classes/main/
+sourcepath=${spfwca}/examples/src/main/java
+
+@using spfwca
+
+target=benchmarks.Tsp
+
+shell=wcanalysis.WorstCaseAnalyzer
+
+#symbolic.min_int=-100
+#symbolic.max_int=100
+symbolic.dp=z3
+
+symbolic.wc.policy.history.size=0
+
+symbolic.worstcase.policy.inputsize=3
+symbolic.worstcase.input.max=8
+
+symbolic.worstcase.verbose=true
+symbolic.worstcase.outputpath=${spfwca}/tsp_results
+
+symbolic.method=benchmarks.Tsp$TspSolver.solve()

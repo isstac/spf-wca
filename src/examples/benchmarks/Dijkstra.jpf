@@ -1,0 +1,25 @@
+classpath=${spfwca}/examples/build/classes/main/
+sourcepath=${spfwca}/examples/src/main/java
+
+@using spfwca
+
+target=benchmarks.Dijkstra
+
+shell=wcanalysis.WorstCaseAnalyzer
+
+symbolic.min_int=-100
+symbolic.max_int=100
+symbolic.dp=z3
+
+# Set history size for the stateful decision policy
+symbolic.wc.policy.history.size=0
+
+symbolic.worstcase.policy.inputsize=3
+symbolic.worstcase.input.max=30
+
+symbolic.worstcase.verbose=true
+symbolic.worstcase.outputpath=${spfwca}/dijkstra_results
+
+symbolic.method=benchmarks.Dijkstra.runDijkstra(con#con#con)
+
+#symbolic.debug=true

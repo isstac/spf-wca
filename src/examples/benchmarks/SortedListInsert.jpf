@@ -1,0 +1,23 @@
+classpath=${spfwca}/examples/build/classes/main/
+sourcepath=${spfwca}/examples/src/main/java
+
+@using spfwca
+
+target=benchmarks.SortedListInsert
+
+shell=wcanalysis.WorstCaseAnalyzer
+
+symbolic.min_int=-100
+symbolic.max_int=100
+symbolic.dp=z3
+
+symbolic.wc.policy.history.size=0
+
+symbolic.worstcase.policy.inputsize=3
+symbolic.worstcase.input.max=20
+
+symbolic.worstcase.verbose=true
+symbolic.worstcase.outputpath=${spfwca}/sorted_list_insert_results
+
+symbolic.method=benchmarks.SortedListInsert$List.insert(con),benchmarks.SortedListInsert$List.insertMask(con)
+symbolic.heuristic.measuredmethods=benchmarks.SortedListInsert$List.insert(con)
