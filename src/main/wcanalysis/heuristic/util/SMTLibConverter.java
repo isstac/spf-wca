@@ -3,7 +3,7 @@ package wcanalysis.heuristic.util;
 import java.util.HashSet;
 
 import gov.nasa.jpf.symbc.numeric.PathCondition;
-import sidechannel.util.SymbolicVariableCollector;
+import wcanalysis.util.SymbolicVariableCollector;
 
 /**
  * @author Kasper Luckow

@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import gov.nasa.jpf.symbc.numeric.PathCondition;
-import sidechannel.util.SymbolicVariableCollector;
+import wcanalysis.util.SymbolicVariableCollector;
 
 /**
  * @author Kasper Luckow
