@@ -1,0 +1,19 @@
+@using spf-wca
+
+target=wise.MergeSortJDK15
+
+shell=wcanalysis.WorstCaseAnalyzer
+
+symbolic.min_int=-100
+symbolic.max_int=100
+symbolic.dp=z3
+
+symbolic.wc.policy.history.size=1
+symbolic.worstcase.policy.inputsize=8
+symbolic.worstcase.input.max=50
+
+symbolic.worstcase.verbose=true
+symbolic.worstcase.outputpath=${spf-wca}/merge_sort_results
+
+symbolic.method=wise.java15.util.Arrays.sort(con)
+

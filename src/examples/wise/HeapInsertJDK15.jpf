@@ -1,0 +1,20 @@
+@using spf-wca
+
+target=wise.HeapInsertJDK15
+
+symbolic.min_int=-100
+symbolic.max_int=100
+symbolic.dp=z3
+
+symbolic.wc.policy.history.size=0
+
+symbolic.worstcase.policy.inputsize=2
+symbolic.worstcase.input.max=100
+
+symbolic.optimizechoices=false
+
+symbolic.worstcase.verbose=true
+symbolic.worstcase.outputpath=${spf-wca}/sorted_list_insert_results
+
+symbolic.method=wise.java15.util.PriorityQueue.add(con),benchmarks.java15.util.PriorityQueue.addMask(con)
+symbolic.heuristic.measuredmethods=wise.java15.util.PriorityQueue.add(con)

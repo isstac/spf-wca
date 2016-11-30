@@ -1,0 +1,24 @@
+@using spf-wca
+
+target=wise.QuickSortJDK15
+
+shell=wcanalysis.WorstCaseAnalyzer
+
+symbolic.min_int=-100
+symbolic.max_int=100
+symbolic.dp=z3
+
+# Set history size for the stateful decision policy
+symbolic.wc.policy.history.size=0
+
+symbolic.worstcase.policy.inputsize=3
+symbolic.worstcase.input.max=20
+
+symbolic.wc.heuristic.termination=wcanalysis.heuristic.TimeBoundedTerminationStrategy
+
+symbolic.worstcase.verbose=true
+symbolic.worstcase.outputpath=${spf-wca}/quicksort_results
+
+symbolic.method=wise.java15.util.Arrays.sort(con)
+
+#symbolic.debug=true

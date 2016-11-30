@@ -1,0 +1,22 @@
+@using spf-wca
+
+target=wise.RedBlackTreeSearch
+
+shell=wcanalysis.WorstCaseAnalyzer
+
+symbolic.min_int=-100
+symbolic.max_int=100
+symbolic.dp=z3
+
+symbolic.wc.policy.history.size=0
+
+#symbolic.worstcase.reusepolicy=true
+
+symbolic.worstcase.policy.inputsize=8
+symbolic.worstcase.input.max=120
+
+symbolic.worstcase.verbose=true
+symbolic.worstcase.outputpath=${spf-wca}/rbts_results
+
+symbolic.method=wise.rbtree.RedBlackTree.treeSearch(con#sym);benchmarks.rbtree.RedBlackTree.treeInsert(con)
+symbolic.heuristic.measuredmethods=wise.rbtree.RedBlackTree.treeSearch(con#sym)

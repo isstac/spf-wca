@@ -1,0 +1,18 @@
+@using spf-wca
+
+target=wise.InsertionSort
+shell=wcanalysis.WorstCaseAnalyzer
+
+symbolic.min_int=-100
+symbolic.max_int=100
+symbolic.dp=z3
+
+symbolic.worstcase.policy.inputsize=2
+symbolic.worstcase.input.max=20
+
+symbolic.worstcase.verbose=true
+symbolic.worstcase.outputpath=${spf-wca}/insertion_sort_results
+
+symbolic.wc.policy.history.size=0
+
+symbolic.method=wise.InsertionSort.sort(con)
