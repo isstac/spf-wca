@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-    <name>bla</name>
+    <name>spf-wca</name>
     <comment></comment>
     <projects>
-       <project>jpf-core</project>
+       <project>spf-wca</project>
     </projects>
     <buildSpec>
         <buildCommand>
