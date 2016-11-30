@@ -1,5 +1,14 @@
 # SPF WCA
-This JPF module implements SPF WCA and SPF SCA.
+
+## Installation
+You should have `jpf-core` and `jpf-symbc` installed.
+
+To install `spf-wca`, update your `site.properties` file (usually `~/.jpf/site.properties`) with the path to your `spf-wca` directory. 
+```
+spf-wca=/path/to/spf-wca
+```
+
+**Don't** add `spf-wca` to the `extensions` variable.
 
 ## Usage 
 The Java PathFinder shell `wcanalysis.WorstCaseAnalyzer` can be used to set up Phase 1 (policy generation) and Phase 2 (guided search) of the analysis.
@@ -34,12 +43,11 @@ In addition, data points <inputSize, depth> (here depth is the notion of worst c
 The following must be supplied in jpf file (or imported from another jpf file using the `@include` directive):
 
 ```bash
-@using jpf-security
-@using jpf-symbc
+@using spf-wca
 
 shell=wcanalysis.WorstCaseAnalyzer
 
-classpath=${jpf-security}/build/examples
+classpath=${spf-wca}/build/examples
 target=fully.qualified.name.of.target.class
 
 symbolic.worstcase.policy.inputsize=XXX
