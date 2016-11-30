@@ -34,6 +34,14 @@
   <!-- get the dependent project properties -->
   <property file="${jpf-core}/jpf.properties"/>
 
+  <!-- if there is none, default to a 'jpf-core' peer dir -->
+  <property name="jpf-symbc" value = "../jpf-symbc"/>
+
+  <!-- get the jpf-symbc path properties -->
+  <property file="${jpf-symbc}/jpf.properties"/>
+
+  <fail unless="jpf-symbc">no jpf-symbc location set, check site.properties</fail>
+
   <!-- compiler settings -->
   <property name="src_level"     value="8"/>
   <property name="debug"         value="on"/>
@@ -55,6 +63,9 @@
     <!-- add projects we depend on -->
     <pathelement path="${jpf-core.native_classpath}"/>
 
+    <!-- add in what we need from the symbc -->
+    <pathelement path="${jpf-symbc.native_classpath}"/>
+    <pathelement path="${jpf-symbc}/build/jpf-symbc-classes.jar"/>
   </path>
 
   <!-- init: common initialization -->
