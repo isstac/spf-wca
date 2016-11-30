@@ -5,7 +5,7 @@
 
 package challenge.challenge2.app;
 
-import challenge2.util.HashTable;
+import challenge.challenge2.util.HashTable;
 import gov.nasa.jpf.symbc.Debug;
 
 public class TestApp {

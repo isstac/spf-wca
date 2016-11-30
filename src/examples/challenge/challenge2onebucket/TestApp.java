@@ -5,7 +5,7 @@
 
 package challenge.challenge2onebucket;
 
-import challenge2onebucket.util.HashTable;
+import challenge.challenge2onebucket.util.HashTable;
 import gov.nasa.jpf.symbc.Debug;
 
 public class TestApp {

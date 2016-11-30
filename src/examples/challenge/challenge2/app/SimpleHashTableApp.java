@@ -8,6 +8,8 @@ import java.io.Reader;
 import java.util.Arrays;
 import java.util.Map;
 
+import challenge.challenge2.util.HashTable;
+
 public class SimpleHashTableApp
 {
     private static final Command[] COMMANDS=null;;

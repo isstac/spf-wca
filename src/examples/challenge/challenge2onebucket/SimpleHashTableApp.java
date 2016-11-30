@@ -8,7 +8,7 @@ import java.io.Reader;
 import java.util.Arrays;
 import java.util.Map;
 
-import challenge2onebucket.util.HashTable;
+import challenge.challenge2onebucket.util.HashTable;
 
 public class SimpleHashTableApp
 {
