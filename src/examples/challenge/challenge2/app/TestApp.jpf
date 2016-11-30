@@ -1,0 +1,26 @@
+classpath=${spf-wca}/build/examples
+sourcepath=${spf-wca}/src/examples
+
+target=challenge.challenge2.app.TestApp
+
+@using spf-wca
+
+shell=wcanalysis.WorstCaseAnalyzer
+#symbolic.min_char=0
+symbolic.max_char=2
+symbolic.dp=z3bitvector
+symbolic.bvlength=64
+
+# Set history size for the stateful decision policy
+symbolic.wc.history.size=0
+
+symbolic.worstcase.policy.inputsize=4
+symbolic.worstcase.input.max=4
+
+symbolic.worstcase.verbose=true
+symbolic.worstcase.outputpath=${spf-wca}/challenge2_results
+
+symbolic.method=challenge.challenge2.util.HashTable.get(con),challenge2.util.HashTable.put(con#con)
+symbolic.heuristic.measuredmethods=challenge.challenge2.util.HashTable.get(con)
+
+#symbolic.debug=true

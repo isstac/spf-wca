@@ -1,0 +1,27 @@
+classpath=${spf-wca}/build/examples
+sourcepath=${spf-wca}/src/examples
+
+@using spf-wca
+
+target=challenge.challenge2onebucket.TestApp
+
+shell=wcanalysis.WorstCaseAnalyzer
+#symbolic.min_char=0
+symbolic.max_char=127
+symbolic.dp=z3
+#symbolic.worstcase.heuristic.nosolver=true
+symbolic.optimizechoices=false
+
+# Set history size for the stateful decision policy
+symbolic.wc.policy.history.size=3
+
+symbolic.worstcase.policy.inputsize=2
+symbolic.worstcase.input.max=10
+
+symbolic.worstcase.verbose=true
+symbolic.worstcase.outputpath=${spf-wca}/challenge2onebucket_results_nosolver_bla
+
+symbolic.method=challenge.challenge2onebucket.util.HashTable.get(con),challenge.challenge2onebucket.util.HashTable.put(con#con)
+symbolic.heuristic.measuredmethods=challenge.challenge2onebucket.util.HashTable.get(con)
+
+#symbolic.debug=true
