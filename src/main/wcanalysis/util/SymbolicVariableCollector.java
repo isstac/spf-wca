@@ -1,4 +1,4 @@
-package wcanalysis.heuristic.util;
+package wcanalysis.util;
 
 import java.util.HashSet;
 import java.util.Set;
