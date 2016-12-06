@@ -10,6 +10,17 @@ spf-wca=/path/to/spf-wca
 
 **Don't** add `spf-wca` to the `extensions` variable.
 
+Make sure you have `Ivy` installed on your system. Then, obtain all the dependencies by running :
+```
+$ ant resolve
+```
+The dependencies will be downloaded to `lib/`.
+
+Now `spf-wca` can be built by simply running:
+```
+$ ant build
+```
+
 ## Usage 
 The Java PathFinder shell `wcanalysis.WorstCaseAnalyzer` can be used to set up Phase 1 (policy generation) and Phase 2 (guided search) of the analysis.
 The analysis can be performed by executing the JPF config file that specifies the parameters of the analysis, the constraint solver, the entry point of the system under analysis etc:
