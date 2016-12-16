@@ -3,7 +3,11 @@ package wcanalysis;
 import com.google.common.base.Preconditions;
 
 import gov.nasa.jpf.JPFConfigException;
+
+import org.knowm.xchart.XChartPanel;
+import org.knowm.xchart.XYChart;
 import wcanalysis.charting.DataCollection;
+import wcanalysis.charting.DataSeries;
 import wcanalysis.charting.WorstCaseChart;
 import wcanalysis.fitting.FunctionFitter;
 import wcanalysis.heuristic.HeuristicListener;
@@ -16,12 +20,15 @@ import wcanalysis.heuristic.WorstCasePath;
 import wcanalysis.heuristic.model.State;
 import wcanalysis.heuristic.util.Util;
 
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.ui.RefineryUtilities;
+import javax.swing.*;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
@@ -119,20 +126,53 @@ public class WorstCaseAnalyzer implements JPFShell {
     logger.info("step 2 done");
 
     int predictionModelSize = config.getInt(PREDICT_MODEL_SIZE_CONF, (int)(dataCollection.size()*1.5));
-    XYSeriesCollection dataset = FunctionFitter.computeSeries(dataCollection, predictionModelSize);
+    Collection<DataSeries> series = FunctionFitter.computeSeries(dataCollection,
+        predictionModelSize);
     logger.info("Computing prediction models done");
 
-    WorstCaseChart chart;
+    final XYChart chartPanel;
     if(config.hasValue(MAX_RES_REQ_CONF)) //We have a defined "budget" requirement
-      chart = new WorstCaseChart(dataset, config.getDouble(MAX_INPUT_REQ_CONF), config.getDouble(MAX_RES_REQ_CONF));
+      chartPanel = WorstCaseChart.createChartPanel(series);//new WorstCaseChart(dataset, config.getDouble
+      // (MAX_INPUT_REQ_CONF),
+      // config
+      // .getDouble(MAX_RES_REQ_CONF));
     else
-      chart = new WorstCaseChart(dataset);
+      chartPanel = WorstCaseChart.createChartPanel(series);
+
+    JPanel panel = new XChartPanel<>(chartPanel);
+
     logger.info("Creating chart done");
 
     //Let's show the panel
-    chart.pack();
-    RefineryUtilities.centerFrameOnScreen(chart);
-    chart.setVisible(true);
+    javax.swing.SwingUtilities.invokeLater(new Runnable() {
+      @Override
+      public void run() {
+        // Create and set up the window.
+        JFrame frame = new JFrame("Advanced Example");
+        frame.setLayout(new BorderLayout());
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // chart
+        frame.add(panel, BorderLayout.CENTER);
+
+        // label
+        JButton button = new JButton("click");
+        button.addActionListener(new ActionListener() {
+          @Override
+          public void actionPerformed(ActionEvent e) {
+            chartPanel.removeSeries("Raw");
+            panel.revalidate();
+            panel.repaint();
+          }
+        });
+        //JLabel label = new JLabel("Blah blah blah.", SwingConstants.CENTER);
+        frame.add(button, BorderLayout.SOUTH);
+
+        // Display the window.
+        frame.pack();
+        frame.setVisible(true);
+      }
+    });
   }
 
   private void getPolicy(Config jpfConf) {
