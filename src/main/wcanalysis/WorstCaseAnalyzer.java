@@ -130,16 +130,13 @@ public class WorstCaseAnalyzer implements JPFShell {
         predictionModelSize);
     logger.info("Computing prediction models done");
 
-    final XYChart chartPanel;
+    final JFrame chartFrame;
     if(config.hasValue(MAX_RES_REQ_CONF)) //We have a defined "budget" requirement
-      chartPanel = WorstCaseChart.createChartPanel(series);//new WorstCaseChart(dataset, config.getDouble
-      // (MAX_INPUT_REQ_CONF),
-      // config
-      // .getDouble(MAX_RES_REQ_CONF));
+      chartFrame = WorstCaseChart.createChartPanel(series, config.getDouble(MAX_INPUT_REQ_CONF),
+          config.getDouble(MAX_RES_REQ_CONF));
     else
-      chartPanel = WorstCaseChart.createChartPanel(series);
+      chartFrame = WorstCaseChart.createChartPanel(series);
 
-    JPanel panel = new XChartPanel<>(chartPanel);
 
     logger.info("Creating chart done");
 
@@ -147,30 +144,10 @@ public class WorstCaseAnalyzer implements JPFShell {
     javax.swing.SwingUtilities.invokeLater(new Runnable() {
       @Override
       public void run() {
-        // Create and set up the window.
-        JFrame frame = new JFrame("Advanced Example");
-        frame.setLayout(new BorderLayout());
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        // chart
-        frame.add(panel, BorderLayout.CENTER);
-
-        // label
-        JButton button = new JButton("click");
-        button.addActionListener(new ActionListener() {
-          @Override
-          public void actionPerformed(ActionEvent e) {
-            chartPanel.removeSeries("Raw");
-            panel.revalidate();
-            panel.repaint();
-          }
-        });
-        //JLabel label = new JLabel("Blah blah blah.", SwingConstants.CENTER);
-        frame.add(button, BorderLayout.SOUTH);
 
         // Display the window.
-        frame.pack();
-        frame.setVisible(true);
+        chartFrame.pack();
+        chartFrame.setVisible(true);
       }
     });
   }

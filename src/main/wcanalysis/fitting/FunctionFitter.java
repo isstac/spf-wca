@@ -58,8 +58,12 @@ public class FunctionFitter {
       TrendModelData trendData = tmIter.next();
       try {
         trendData.trendLine.setValues(rawData.getY(), rawData.getX());
-        String func = trendData.trendLine.getFunction() + " (r^2="+df.format(trendData.trendLine.getRSquared()) + ")";
-        DataSeries s = new DataSeries(trendData.desc + ": "  + func);
+        //String func = trendData.trendLine.getFunction() + " (r^2="+df.format(trendData.trendLine
+            //.getRSquared()) + ")";
+        DataSeries s = new DataSeries(trendData.desc);
+        s.setFunction(trendData.trendLine.getFunction());
+        s.setR2(df.format(trendData.trendLine.getRSquared()));
+
         trend2series.put(trendData, s);
       } catch(MathIllegalArgumentException e) {
         logger.severe(e.getMessage());

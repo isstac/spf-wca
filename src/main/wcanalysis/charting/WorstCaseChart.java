@@ -1,7 +1,12 @@
 package wcanalysis.charting;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
+import com.google.common.base.Preconditions;
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -11,7 +16,9 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
@@ -27,7 +34,33 @@ import wcanalysis.fitting.FunctionFitter;
  * @author Kasper Luckow
  */
 public class WorstCaseChart {
-  public static XYChart createChartPanel(Collection<DataSeries> series) {
+  public static JFrame createChartPanel(Collection<DataSeries> series) {
+
+    final XYChart chart = new XYChartBuilder()
+        .width(800)
+        .height(600)
+        .title("Worst Case Prediction Model")
+        .xAxisTitle("Input Size")
+        .yAxisTitle("Cost")
+        .build();
+
+    // Customize Chart
+    chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
+    chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
+
+    // Add Series
+    for(DataSeries s : series) {
+      chart.addSeries(s.getSeriesName(), s.getX(), s.getY());
+    }
+    return createFrame(chart, series);
+  }
+
+  public static JFrame createChartPanel(Collection<DataSeries> series, double inputReq,
+                                         double resReq) {
+    Preconditions.checkNotNull(series);
+    Preconditions.checkArgument(!series.isEmpty());
+
+
     final XYChart chart = new XYChartBuilder()
         .width(800)
         .height(600)
@@ -45,210 +78,66 @@ public class WorstCaseChart {
       chart.addSeries(s.getSeriesName(), s.getX(), s.getY());
     }
 
+    //We can take any series to get max X---supposedly
+    DataSeries fst = series.iterator().next();
+    double[] xs = fst.getX();
+    double maxX = xs[xs.length-1];
 
-    return chart;
+    double maxY = -1;
+    for(DataSeries o : series) {
+      double[] ys = fst.getY();
+      if(ys[ys.length - 1] > maxY) {
+        maxY = ys[ys.length - 1];
+      }
+    }
+
+    //add input req line:
+    chart.addSeries("Input Requirement", new double[] {inputReq, inputReq}, new double[] {0, maxY});
+
+    //add resource req line:
+    chart.addSeries("Resource Requirement",
+        new double[] {0, maxX}, new double[] {0, resReq});
+    return createFrame(chart, series);
   }
 
+  private static JFrame createFrame(XYChart chart, Collection<DataSeries> series) {
 
-//
-//  private static final long serialVersionUID = 7777887151534005094L;
-//
-//  private Crosshair xCrosshair;
-//  private Crosshair yCrosshair;
-//  private ChartPanel chartPanel;
-//
-//  public static void main(String[] args) throws IOException {
-//    if(args.length < 1 || args.length > 2) {
-//      System.err.print("Accepts 2 args: path to csv file and optionally \"output\" which will output the data set of the models");
-//      System.exit(-1);
-//    }
-//
-//    boolean output = false;
-//    if(args[args.length - 1].equalsIgnoreCase("output")) {
-//      output = true;
-//    }
-//
-//    if(args[0].equalsIgnoreCase("batch")) {
-//      String csvFile = args[1];
-//      processBatchResultsCSV(csvFile, output);
-//    } else {
-//      String csvFile = args[0];
-//      processStandardResultsCSV(csvFile, output);
-//    }
-//  }
-//
-//  private static void processBatchResultsCSV(String csvFile, boolean output) throws IOException {
-//    Reader in = new FileReader(csvFile);
-//    Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(in);
-//    boolean first = true;
-//    for(CSVRecord rec : records) {
-//      if(rec.toString().startsWith("#") && first) { //probably the most ridiculous csv library when
-//        // you have to do
-//        // this?
-//        first = false;
-//        continue;
-//      }
-//
-//      DataCollection dataCollection = new DataCollection();
-//      double inputSize = 1;
-//      for(String element : rec) {
-//        double y = Double.parseDouble(element);
-//        dataCollection.addDatapoint(inputSize++, y);
-//      }
-//      visualizeDataCollection(dataCollection, output, new File(csvFile).getParentFile());
-//    }
-//
-//  }
-//
-//  private static void visualizeDataCollection(DataCollection dataCollection, boolean output,
-//                                              File baseDir) throws IOException {
-//    XYSeriesCollection series = FunctionFitter.computeSeries(dataCollection, 10);
-//    if(output) {
-//      for(XYSeries ser : (List<XYSeries>)series.getSeries()) {
-//        String fileName = ser.getDescription() + ".csv";
-//        File f = new File(baseDir, fileName);
-//        Writer w = new FileWriter(f);
-//        FunctionFitter.seriesToCSV(ser, w);
-//      }
-//    }
-//    WorstCaseChart wcChart = new WorstCaseChart(series);
-//
-//    wcChart.pack();
-//    RefineryUtilities.centerFrameOnScreen(wcChart);
-//    wcChart.setVisible(true);
-//  }
-//
-//  private static void processStandardResultsCSV(String csvFile, boolean output) throws IOException {
-//
-//    Reader in = new FileReader(csvFile);
-//    DataCollection dataCollection = new DataCollection();
-//    Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(in);
-//    boolean first = true;
-//    for(CSVRecord rec : records) {
-//      if(first) { //probably the most ridiculous csv library when you have to do this?
-//        first = false;
-//        continue;
-//      }
-//      int x = Integer.parseInt(rec.get(0));
-//      int y = Integer.parseInt(rec.get(1));
-//      dataCollection.addDatapoint(x, y);
-//    }
-//
-//    visualizeDataCollection(dataCollection, output, new File(csvFile).getParentFile());
-//  }
-//
-//  public WorstCaseChart(XYSeriesCollection dataCollection) {
-//    super("Worst case");
-//    JFreeChart chart = createChart(dataCollection);
-//    createChartPanel(chart);
-//  }
-//
-//  public WorstCaseChart(XYSeriesCollection dataCollection, double maxInputReq, double maxResReq) {
-//    super("Worst case");
-//
-//
-//
-//
-//    chart.setBackgroundPaint(Color.white);
-//
-//    XYPlot plot = chart.getXYPlot();
-//    plot.setBackgroundPaint(Color.lightGray);
-//    plot.setDomainGridlinePaint(Color.white);
-//    plot.setRangeGridlinePaint(Color.white);
-//
-//    XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-//    plot.setRenderer(renderer);
-//
-//    // change the auto tick unit selection to integer units only...
-//    final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
-//    rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-//
-//
-//
-//
-//
-//    JFreeChart chart = createChart(dataCollection);
-//    XYPlot plot = chart.getXYPlot();
-//    ValueMarker vertMarker = new ValueMarker(maxInputReq);
-//    vertMarker.setPaint(Color.red);
-//    plot.addDomainMarker(vertMarker); // vertical line
-//
-//    ValueMarker horizMarker = new ValueMarker(maxResReq);
-//    horizMarker.setPaint(Color.red);
-//    plot.addRangeMarker(horizMarker); // horizontal line
-//
-//    createChartPanel(chart);
-//  }
-//
-//  private void createChartPanel(JFreeChart chart) {
-//    chartPanel = new ChartPanel(chart);
-//
-//    chartPanel.addChartMouseListener(this);
-//
-//    CrosshairOverlay crosshairOverlay = new CrosshairOverlay();
-//    xCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0f));
-//    xCrosshair.setLabelVisible(true);
-//    yCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0f));
-//    yCrosshair.setLabelVisible(true);
-//    crosshairOverlay.addDomainCrosshair(xCrosshair);
-//    crosshairOverlay.addRangeCrosshair(yCrosshair);
-//    chartPanel.addOverlay(crosshairOverlay);
-//
-//    chartPanel.setPreferredSize(new java.awt.Dimension(800, 600));
-//    setContentPane(chartPanel);
-//  }
-//
-//  private JFreeChart createChart(XYDataset dataset) {
-//    //Create the chart
-//    final JFreeChart chart = ChartFactory.createXYLineChart(
-//        "Worst Case Prediction Model",
-//        "Input Size",
-//        "Depth",
-//        dataset,
-//        PlotOrientation.VERTICAL,
-//        true,
-//        true,
-//        false
-//        );
-//
-//    chart.setBackgroundPaint(Color.white);
-//
-//    XYPlot plot = chart.getXYPlot();
-//    plot.setBackgroundPaint(Color.lightGray);
-//    plot.setDomainGridlinePaint(Color.white);
-//    plot.setRangeGridlinePaint(Color.white);
-//
-//    XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-//    plot.setRenderer(renderer);
-//
-//    // change the auto tick unit selection to integer units only...
-//    final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
-//    rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-//    return chart;
-//  }
-//
-//
-//  @Override
-//  public void chartMouseClicked(ChartMouseEvent arg0) {
-//    //ignore
-//  }
-//
-//  @Override
-//  public void chartMouseMoved(ChartMouseEvent event) {
-//    Rectangle2D dataArea = this.chartPanel.getScreenDataArea();
-//    JFreeChart chart = event.getChart();
-//    XYPlot plot = (XYPlot) chart.getPlot();
-//    ValueAxis xAxis = plot.getDomainAxis();
-//    double x = xAxis.java2DToValue(event.getTrigger().getX(), dataArea,
-//        RectangleEdge.BOTTOM);
-//    ValueAxis yAxis = plot.getRangeAxis();
-//    double y = yAxis.java2DToValue(event.getTrigger().getY(), dataArea,
-//        RectangleEdge.LEFT);
-//
-//    //Alternatively, obtain y for one of the subplots, which would be very neat.
-//    //We should find the "nearest" subplot to the cursor -- this is easy
-//    //double y = DatasetUtilities.findYValue(plot.getDataset(), 0, x);
-//    this.xCrosshair.setValue(x);
-//    this.yCrosshair.setValue(y);
-//  }
+    JPanel panel = new XChartPanel<>(chart);
+
+    final Map<JCheckBox, DataSeries> box2series = new HashMap<>();
+
+    ItemListener listener = e -> {
+      if(e.getItem() instanceof JCheckBox) {
+        JCheckBox checkbox = (JCheckBox)e.getItem();
+        if(!checkbox.isSelected()) {
+          String series1 = box2series.get(checkbox).getSeriesName();
+          chart.removeSeries(series1);
+        } else {
+          DataSeries series1 = box2series.get(checkbox);
+          chart.addSeries(series1.getSeriesName(), series1.getX(), series1.getY());
+        }
+        panel.revalidate();
+        panel.repaint();
+      }
+    };
+
+    // Create and set up the window.
+    JFrame frame = new JFrame("Worst Case Prediction Model");
+    frame.setLayout(new BorderLayout());
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    JPanel checkPanel = new JPanel(new GridLayout(0, 1));
+    for(DataSeries ser : series) {
+      JCheckBox checkbox = new JCheckBox(ser.getSeriesName());
+      checkbox.setSelected(true);
+      checkbox.addItemListener(listener);
+      checkPanel.add(checkbox);
+      box2series.put(checkbox, ser);
+    }
+
+    frame.add(checkPanel, BorderLayout.LINE_START);
+    frame.add(panel, BorderLayout.CENTER);
+
+    return frame;
+  }
 }

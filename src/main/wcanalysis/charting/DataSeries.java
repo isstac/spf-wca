@@ -1,15 +1,13 @@
 package wcanalysis.charting;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author Kasper Luckow
  */
 public class DataSeries {
-  private ArrayList<Double> X = new ArrayList<>();
-  private ArrayList<Double> Y = new ArrayList<>();
+  private DataCollection data = new DataCollection();
   private final String seriesName;
+  private String r2;
+  private String function;
 
   public DataSeries(String seriesName) {
     this.seriesName = seriesName;
@@ -21,23 +19,34 @@ public class DataSeries {
   }
 
   public void add(double x, double y) {
-    X.add(x);
-    Y.add(y);
+    this.data.addDatapoint(x, y);
   }
 
   public double[] getY() {
-    return toArray(Y);
+    return this.data.getY();
   }
 
   public double[] getX() {
-    return toArray(X);
+    return this.data.getX();
   }
 
-  private double[] toArray(ArrayList<Double> data) {
-    double[] arr = new double[data.size()];
-    for(int i = 0; i < data.size(); i++) {
-      arr[i] = data.get(i);
-    }
-    return arr;
+  public int size() {
+    return this.data.size();
+  }
+
+  public String getR2() {
+    return r2;
+  }
+
+  public void setR2(String r2) {
+    this.r2 = r2;
+  }
+
+  public String getFunction() {
+    return function;
+  }
+
+  public void setFunction(String function) {
+    this.function = function;
   }
 }
