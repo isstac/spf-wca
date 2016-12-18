@@ -22,11 +22,11 @@ public class FactorialTrendline extends OLSTrendLine {
   @Override
   public String getFunction() {
     StringBuilder functionSb = new StringBuilder();
-    DecimalFormat df = new DecimalFormat("#.0000000000000000");
+    DecimalFormat df = new DecimalFormat("#.00");
     
     double b = super.coef.getColumn(0)[1];
-    functionSb.append(super.coef.getColumn(0)[0])
-              .append(" + ").append(b + "*x!");
+    functionSb.append(df.format(super.coef.getColumn(0)[0]))
+              .append(" + ").append(df.format(b) + "*x!");
     return functionSb.toString();
   }
   

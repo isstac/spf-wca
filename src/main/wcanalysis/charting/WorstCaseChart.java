@@ -15,7 +15,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +30,7 @@ import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.Styler;
 
 import javax.swing.*;
+import javax.swing.border.EtchedBorder;
 
 import wcanalysis.fitting.FunctionFitter;
 
@@ -35,48 +39,15 @@ import wcanalysis.fitting.FunctionFitter;
  */
 public class WorstCaseChart {
   public static JFrame createChartPanel(Collection<DataSeries> series) {
-
-    final XYChart chart = new XYChartBuilder()
-        .width(800)
-        .height(600)
-        .title("Worst Case Prediction Model")
-        .xAxisTitle("Input Size")
-        .yAxisTitle("Cost")
-        .build();
-
-    // Customize Chart
-    chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
-    chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
-
-    // Add Series
-    for(DataSeries s : series) {
-      chart.addSeries(s.getSeriesName(), s.getX(), s.getY());
-    }
-    return createFrame(chart, series);
+    return createFrame(buildBasicChart(series), series);
   }
 
   public static JFrame createChartPanel(Collection<DataSeries> series, double inputReq,
                                          double resReq) {
-    Preconditions.checkNotNull(series);
-    Preconditions.checkArgument(!series.isEmpty());
+    final XYChart chart = buildBasicChart(series);
 
 
-    final XYChart chart = new XYChartBuilder()
-        .width(800)
-        .height(600)
-        .title("Worst Case Prediction Model")
-        .xAxisTitle("Input Size")
-        .yAxisTitle("Cost")
-        .build();
-
-    // Customize Chart
-    chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
-    chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
-
-    // Add Series
-    for(DataSeries s : series) {
-      chart.addSeries(s.getSeriesName(), s.getX(), s.getY());
-    }
+    // Add lines to the chart for resource and input requirements
 
     //We can take any series to get max X---supposedly
     DataSeries fst = series.iterator().next();
@@ -100,12 +71,36 @@ public class WorstCaseChart {
     return createFrame(chart, series);
   }
 
+  private static XYChart buildBasicChart(Collection<DataSeries> series) {
+    Preconditions.checkNotNull(series);
+    Preconditions.checkArgument(!series.isEmpty());
+
+    final XYChart chart = new XYChartBuilder()
+        .width(800)
+        .height(600)
+        .title("Worst Case Prediction Model")
+        .xAxisTitle("Input Size")
+        .yAxisTitle("Cost")
+        .build();
+
+    // Customize Chart
+    chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNW);
+    chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
+
+    // Add Series
+    for(DataSeries s : series) {
+      chart.addSeries(s.getSeriesName(), s.getX(), s.getY());
+    }
+    return chart;
+  }
+
   private static JFrame createFrame(XYChart chart, Collection<DataSeries> series) {
 
     JPanel panel = new XChartPanel<>(chart);
 
     final Map<JCheckBox, DataSeries> box2series = new HashMap<>();
 
+    // Item listener enabling toggling of plots
     ItemListener listener = e -> {
       if(e.getItem() instanceof JCheckBox) {
         JCheckBox checkbox = (JCheckBox)e.getItem();
@@ -127,11 +122,43 @@ public class WorstCaseChart {
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     JPanel checkPanel = new JPanel(new GridLayout(0, 1));
-    for(DataSeries ser : series) {
-      JCheckBox checkbox = new JCheckBox(ser.getSeriesName());
+    List<DataSeries> sortedSeries = new ArrayList<>();
+    DataSeries rawSeries = null;
+    for(DataSeries ds : series) {
+      if(ds.getSeriesName().equalsIgnoreCase("raw")) {
+        rawSeries = ds;
+      } else {
+        sortedSeries.add(ds);
+      }
+    }
+
+    assert rawSeries != null;
+
+    sortedSeries.sort((o1, o2) -> o1.getSeriesName().compareTo(o2.getSeriesName()));
+
+    JPanel rawPanel = new JPanel(new GridLayout(0, 1));
+    rawPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(Color
+            .BLUE, Color.BLACK),
+        rawSeries.getSeriesName()));
+    JCheckBox rawCheckbox = new JCheckBox("Toggle");
+    rawCheckbox.setSelected(true);
+    rawPanel.add(rawCheckbox);
+    rawCheckbox.addItemListener(listener);
+
+    box2series.put(rawCheckbox, rawSeries);
+    checkPanel.add(rawPanel);
+
+    for(DataSeries ser : sortedSeries) {
+      JPanel boxPanel = new JPanel(new GridLayout(0, 1));
+      boxPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+          ser.getSeriesName()));
+      JCheckBox checkbox = new JCheckBox("Toggle");
       checkbox.setSelected(true);
       checkbox.addItemListener(listener);
-      checkPanel.add(checkbox);
+      boxPanel.add(checkbox);
+      boxPanel.add(new JLabel("Function: " + ser.getFunction()));
+      boxPanel.add(new JLabel("r^2: " + ser.getR2()));
+      checkPanel.add(boxPanel);
       box2series.put(checkbox, ser);
     }
 
