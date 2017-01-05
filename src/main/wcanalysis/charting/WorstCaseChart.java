@@ -30,9 +30,6 @@ import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.Styler;
 
 import javax.swing.*;
-import javax.swing.border.EtchedBorder;
-
-import wcanalysis.fitting.FunctionFitter;
 
 /**
  * @author Kasper Luckow
@@ -67,7 +64,7 @@ public class WorstCaseChart {
 
     //add resource req line:
     chart.addSeries("Resource Requirement",
-        new double[] {0, maxX}, new double[] {0, resReq});
+        new double[] {0, maxX}, new double[] {resReq, resReq});
     return createFrame(chart, series);
   }
 
@@ -96,7 +93,7 @@ public class WorstCaseChart {
 
   private static JFrame createFrame(XYChart chart, Collection<DataSeries> series) {
 
-    JPanel panel = new XChartPanel<>(chart);
+    XChartPanel chartPanel = new XChartPanel<>(chart);
 
     final Map<JCheckBox, DataSeries> box2series = new HashMap<>();
 
@@ -111,8 +108,8 @@ public class WorstCaseChart {
           DataSeries series1 = box2series.get(checkbox);
           chart.addSeries(series1.getSeriesName(), series1.getX(), series1.getY());
         }
-        panel.revalidate();
-        panel.repaint();
+        chartPanel.revalidate();
+        chartPanel.repaint();
       }
     };
 
@@ -136,11 +133,11 @@ public class WorstCaseChart {
 
     sortedSeries.sort((o1, o2) -> o1.getSeriesName().compareTo(o2.getSeriesName()));
 
-    JPanel rawPanel = new JPanel(new GridLayout(0, 1));
+    JPanel rawPanel = new JPanel(new BorderLayout());
     rawPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(Color
             .BLUE, Color.BLACK),
         rawSeries.getSeriesName()));
-    JCheckBox rawCheckbox = new JCheckBox("Toggle");
+    JCheckBox rawCheckbox = new JCheckBox("Toggle Plot");
     rawCheckbox.setSelected(true);
     rawPanel.add(rawCheckbox);
     rawCheckbox.addItemListener(listener);
@@ -152,7 +149,7 @@ public class WorstCaseChart {
       JPanel boxPanel = new JPanel(new GridLayout(0, 1));
       boxPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
           ser.getSeriesName()));
-      JCheckBox checkbox = new JCheckBox("Toggle");
+      JCheckBox checkbox = new JCheckBox("Toggle Plot");
       checkbox.setSelected(true);
       checkbox.addItemListener(listener);
       boxPanel.add(checkbox);
@@ -162,8 +159,16 @@ public class WorstCaseChart {
       box2series.put(checkbox, ser);
     }
 
-    frame.add(checkPanel, BorderLayout.LINE_START);
-    frame.add(panel, BorderLayout.CENTER);
+    JPanel controls = new JPanel(new GridLayout(0, 1));
+    controls.add(new JTextField("test"));
+
+    JPanel mainPanel = new JPanel(new GridLayout(0,2));
+
+    mainPanel.add(checkPanel, BorderLayout.LINE_START);
+    mainPanel.add(chartPanel, BorderLayout.CENTER);
+    frame.add(mainPanel);
+    frame.add(controls);
+
 
     return frame;
   }
