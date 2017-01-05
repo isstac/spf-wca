@@ -1,33 +1,13 @@
 package wcanalysis.heuristic;
 
-import isstac.structure.cfg.CFG;
-import isstac.structure.cfg.CFGGenerator;
-import isstac.structure.cfg.CachingCFGGenerator;
-import isstac.structure.cfg.util.CFGToDOT;
-import wcanalysis.heuristic.ContextManager.CGContext;
-import wcanalysis.heuristic.model.DepthState;
-import wcanalysis.heuristic.model.State;
-import wcanalysis.heuristic.model.StateBuilder;
-import wcanalysis.heuristic.policy.HistoryBasedPolicy;
-import wcanalysis.heuristic.policy.Policy;
-import wcanalysis.heuristic.policy.PolicyGenerator;
-import wcanalysis.heuristic.policy.PolicyManager;
-import wcanalysis.heuristic.policy.PolicyManagerException;
-import wcanalysis.heuristic.util.PathVisualizer;
-import wcanalysis.heuristic.util.Util;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Collection;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.ArrayUtils;
-
-import att.grappa.Graph;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.PropertyListenerAdapter;
@@ -41,6 +21,16 @@ import gov.nasa.jpf.vm.MethodInfo;
 import gov.nasa.jpf.vm.StackFrame;
 import gov.nasa.jpf.vm.ThreadInfo;
 import gov.nasa.jpf.vm.VM;
+import wcanalysis.heuristic.ContextManager.CGContext;
+import wcanalysis.heuristic.model.DepthState;
+import wcanalysis.heuristic.model.State;
+import wcanalysis.heuristic.model.StateBuilder;
+import wcanalysis.heuristic.policy.HistoryBasedPolicy;
+import wcanalysis.heuristic.policy.Policy;
+import wcanalysis.heuristic.policy.PolicyGenerator;
+import wcanalysis.heuristic.policy.PolicyManager;
+import wcanalysis.heuristic.policy.PolicyManagerException;
+import wcanalysis.heuristic.util.Util;
 
 /**
  * @author Kasper Luckow
@@ -215,17 +205,7 @@ public abstract class PathListener extends PropertyListenerAdapter {
       String pathSeparator = System.getProperties().getProperty("path.separator");
       String[] javaCl = System.getProperties().getProperty("java.class.path").split(pathSeparator);
       String[] bootCl = System.getProperties().getProperty("sun.boot.class.path").split(pathSeparator);
-      String[] stdLibCl = (String[])ArrayUtils.addAll(javaCl, bootCl);
-      String[] completeCl = (String[])ArrayUtils.addAll(classpaths, stdLibCl);
-      
-      CFGGenerator cfgGen = new CachingCFGGenerator(completeCl);
-      PathProjector sequenceVisualizer = new PathVisualizer(cfgGen);
-      Collection<CFG> transformedCFGs = sequenceVisualizer.projectPath(wcPath);
-      if(transformedCFGs != null) {
-        for(CFG cfg : transformedCFGs) {
-          visualize(cfg, this.showInstrs, new File(this.visDir, getBaseFileName(cfg) + ".pdf"));
-        }
-      }
+      String[] stdLibCl = ArrayUtils.addAll(javaCl, bootCl);
       
       //output the path to text file
       String tgtOutputfileName = "";
@@ -323,13 +303,6 @@ public abstract class PathListener extends PropertyListenerAdapter {
     return wcPath;
   }
   
-  protected String getBaseFileName(CFG cfg) {
-    String baseFileName = cfg.getFqMethodName().replaceAll("[^\\p{Alpha}]+","");
-    if(jpfConf.hasValue("target.args")) //we assume that the single parameter denotes the input size
-      baseFileName += "_inputsize_" + jpfConf.getString("target.args");
-    return baseFileName;
-  }
-  
   protected void visualize(Policy pol, File polFile) {
     logger.info("writing policy to file: " + polFile.getAbsolutePath());
     try(PrintWriter out = new PrintWriter(polFile)) {
@@ -346,24 +319,6 @@ public abstract class PathListener extends PropertyListenerAdapter {
     } catch (FileNotFoundException e) {
       logger.warning(e.getMessage());
     }    
-  }
-  
-  protected void visualize(CFG cfg, boolean showInstrs, File outputFile) {
-    CFGToDOT dotVis = new CFGToDOT();
-    //Write dot file
-    Graph dotGraph = dotVis.build(cfg, showInstrs);
-    try {
-      dotGraph.printGraph(new FileOutputStream(outputFile));
-      logger.info("writing dot file to: " + outputFile.getAbsolutePath());
-      try {
-        //this will fail on windows -- we just catch the exception and continue
-        CFGToDOT.dot2pdf(outputFile);
-      } catch(Exception e) {
-        logger.warning(e.getMessage());
-      }
-    } catch (FileNotFoundException e) {
-      logger.warning(e.getMessage());
-    }
   }
   
   public abstract boolean visualize(Config jpfConf);
