@@ -89,3 +89,6 @@ In addition, the user can optionally use the following for the `WorstCaseAnalyze
 * **```symbolic.worstcase.predictionmodel.size=<Number>```** The maximum plotted domain of the fitting functions.
 
 * **```symbolic.worstcase.reusepolicy=<true | false>```** By setting this to true, a computed policy will be reused if it has been previously computed.
+
+# License
+`spf-wca` is licensed under the Apache License V2. For the license text, see the `LICENSE` file in the root of this repository.

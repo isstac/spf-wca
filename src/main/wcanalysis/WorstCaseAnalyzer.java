@@ -1,28 +1,21 @@
+/*
+ * Copyright 2017 Carnegie Mellon University Silicon Valley
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package wcanalysis;
 
-import com.google.common.base.Preconditions;
-
-import gov.nasa.jpf.JPFConfigException;
-
-import org.knowm.xchart.XChartPanel;
-import org.knowm.xchart.XYChart;
-import wcanalysis.charting.DataCollection;
-import wcanalysis.charting.DataSeries;
-import wcanalysis.charting.WorstCaseChart;
-import wcanalysis.fitting.FunctionFitter;
-import wcanalysis.heuristic.HeuristicListener;
-import wcanalysis.heuristic.HeuristicResultsPublisher;
-import wcanalysis.heuristic.PolicyGeneratorListener;
-import wcanalysis.heuristic.PathListener;
-import wcanalysis.heuristic.PolicyResultsPublisher;
-import wcanalysis.heuristic.ResultsPublisher;
-import wcanalysis.heuristic.WorstCasePath;
-import wcanalysis.heuristic.model.State;
-import wcanalysis.heuristic.util.Util;
-
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -32,8 +25,22 @@ import javax.swing.*;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
+import gov.nasa.jpf.JPFConfigException;
 import gov.nasa.jpf.JPFShell;
 import gov.nasa.jpf.listener.CoverageAnalyzer;
+import wcanalysis.charting.DataCollection;
+import wcanalysis.charting.DataSeries;
+import wcanalysis.charting.WorstCaseChart;
+import wcanalysis.fitting.FunctionFitter;
+import wcanalysis.heuristic.HeuristicListener;
+import wcanalysis.heuristic.HeuristicResultsPublisher;
+import wcanalysis.heuristic.PathListener;
+import wcanalysis.heuristic.PolicyGeneratorListener;
+import wcanalysis.heuristic.PolicyResultsPublisher;
+import wcanalysis.heuristic.ResultsPublisher;
+import wcanalysis.heuristic.WorstCasePath;
+import wcanalysis.heuristic.model.State;
+import wcanalysis.heuristic.util.Util;
 
 /**
  * @author Kasper Luckow
@@ -48,14 +55,14 @@ public class WorstCaseAnalyzer implements JPFShell {
   private static final String PREDICT_MODEL_SIZE_CONF = "symbolic.worstcase.predictionmodel.size";
   private static final String MAX_INPUT_REQ_CONF = "symbolic.worstcase.req.maxinputsize";
   private static final String MAX_RES_REQ_CONF = "symbolic.worstcase.req.maxres";
-  
+
   private static final String NO_SOLVER_HEURISTIC_CONF = "symbolic.worstcase.heuristic.nosolver";
-  
+
   private static final String REUSE_POLICY_CONF = "symbolic.worstcase.reusepolicy";
-  
+
   private static final String INCR_CONF = "symbolic.worstcase.increment";
   private static final String START_AT_CONF = "symbolic.worstcase.startat";
-  
+
   public static final String ENABLE_POLICIES = "symbolic.wc.heuristic.enablepolicies";
   public static final boolean ENABLE_POLICIES_DEF = true;
 
@@ -63,7 +70,7 @@ public class WorstCaseAnalyzer implements JPFShell {
   static {
     logger.setLevel(Level.ALL);
   }
-  
+
   private final Config config;
   private final boolean verbose;
 
@@ -74,7 +81,7 @@ public class WorstCaseAnalyzer implements JPFShell {
   private File heuristicDir;
   private int incr;
   private int startAt;
-  
+
   public WorstCaseAnalyzer(Config config) {
     this.config = config;
     this.verbose = config.getBoolean(VERBOSE_CONF, true);
@@ -93,26 +100,26 @@ public class WorstCaseAnalyzer implements JPFShell {
   public void start(String[] args) {
     config.setProperty(PolicyGeneratorListener.SER_OUTPUT_PATH_CONF, serializedDir.getAbsolutePath());
     config.setProperty(HeuristicListener.SER_INPUT_PATH, serializedDir.getAbsolutePath());
-    
+
     //Setting this config will ouput the policy obtained from the worst case path of the HEURISTIC search (phase 2) 
     //-- here it will overwrite the previous policy
     //config.setProperty(HeuristicListener.SER_OUTPUT_PATH, serializedDir.getAbsolutePath());
-    
+
     if(verbose) {
       config.setProperty(ResultsPublisher.SMTLIB_CONF, "true");
       config.setProperty(ResultsPublisher.OMEGA_CONF, "true");
       config.setProperty(PolicyResultsPublisher.RESULTS_DIR_CONF, policyDir.getAbsolutePath());
       config.setProperty(HeuristicResultsPublisher.RESULTS_DIR_CONF, heuristicDir.getAbsolutePath());
-      
+
       config.setProperty(PathListener.SHOW_INSTRS_CONF, "false");
-      
+
       File visDirHeurstic = Util.createDirIfNotExist(heuristicDir, "visualizations");
       config.setProperty(HeuristicListener.VIS_OUTPUT_PATH_CONF, visDirHeurstic.getAbsolutePath());
-      
+
       File visDirPolicy = Util.createDirIfNotExist(policyDir, "visualizations");
       config.setProperty(PolicyGeneratorListener.VIS_OUTPUT_PATH_CONF, visDirPolicy.getAbsolutePath());
     }
-    
+
 
     //Step 1: get the policy to guide the search. We will get this at the inputsize
     //corresponding to symbolic.worstcase.policy.inputsize
@@ -219,7 +226,7 @@ public class WorstCaseAnalyzer implements JPFShell {
     }
     int maxInput = jpfConf.getInt(MAX_INPUT_CONF);
     jpfConf.setProperty("report.console.class", HeuristicResultsPublisher.class.getName());
-    
+
     DataCollection dataCollection = new DataCollection();
 
     for(int inputSize = this.startAt; inputSize <= maxInput; inputSize += this.incr) {//TODO: should maxInput be included?
@@ -233,9 +240,9 @@ public class WorstCaseAnalyzer implements JPFShell {
       long start = System.currentTimeMillis();
       jpf.run();
       long end = System.currentTimeMillis();
-      
+
       logger.info("Heuristic exploration at input size " + inputSize + " done. Took " + ((end-start)/1000) + "s");
-      
+
       WorstCasePath wcPath = heuristic.getWcPath();
 
       if(wcPath == null) {

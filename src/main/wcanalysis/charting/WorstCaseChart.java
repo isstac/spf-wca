@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017 Carnegie Mellon University Silicon Valley
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package wcanalysis.charting;
 
 import com.google.common.base.Preconditions;
@@ -40,7 +56,7 @@ public class WorstCaseChart {
   }
 
   public static JFrame createChartPanel(Collection<DataSeries> series, double inputReq,
-                                         double resReq) {
+                                        double resReq) {
     final XYChart chart = buildBasicChart(series);
 
 
@@ -49,22 +65,22 @@ public class WorstCaseChart {
     //We can take any series to get max X---supposedly
     DataSeries fst = series.iterator().next();
     double[] xs = fst.getX();
-    double maxX = xs[xs.length-1];
+    double maxX = xs[xs.length - 1];
 
     double maxY = -1;
-    for(DataSeries o : series) {
+    for (DataSeries o : series) {
       double[] ys = fst.getY();
-      if(ys[ys.length - 1] > maxY) {
+      if (ys[ys.length - 1] > maxY) {
         maxY = ys[ys.length - 1];
       }
     }
 
     //add input req line:
-    chart.addSeries("Input Requirement", new double[] {inputReq, inputReq}, new double[] {0, maxY});
+    chart.addSeries("Input Requirement", new double[]{inputReq, inputReq}, new double[]{0, maxY});
 
     //add resource req line:
     chart.addSeries("Resource Requirement",
-        new double[] {0, maxX}, new double[] {resReq, resReq});
+        new double[]{0, maxX}, new double[]{resReq, resReq});
     return createFrame(chart, series);
   }
 
@@ -85,7 +101,7 @@ public class WorstCaseChart {
     chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
 
     // Add Series
-    for(DataSeries s : series) {
+    for (DataSeries s : series) {
       chart.addSeries(s.getSeriesName(), s.getX(), s.getY());
     }
     return chart;
@@ -99,9 +115,9 @@ public class WorstCaseChart {
 
     // Item listener enabling toggling of plots
     ItemListener listener = e -> {
-      if(e.getItem() instanceof JCheckBox) {
-        JCheckBox checkbox = (JCheckBox)e.getItem();
-        if(!checkbox.isSelected()) {
+      if (e.getItem() instanceof JCheckBox) {
+        JCheckBox checkbox = (JCheckBox) e.getItem();
+        if (!checkbox.isSelected()) {
           String series1 = box2series.get(checkbox).getSeriesName();
           chart.removeSeries(series1);
         } else {
@@ -121,8 +137,8 @@ public class WorstCaseChart {
     JPanel checkPanel = new JPanel(new GridLayout(0, 1));
     List<DataSeries> sortedSeries = new ArrayList<>();
     DataSeries rawSeries = null;
-    for(DataSeries ds : series) {
-      if(ds.getSeriesName().equalsIgnoreCase("raw")) {
+    for (DataSeries ds : series) {
+      if (ds.getSeriesName().equalsIgnoreCase("raw")) {
         rawSeries = ds;
       } else {
         sortedSeries.add(ds);
@@ -145,7 +161,7 @@ public class WorstCaseChart {
     box2series.put(rawCheckbox, rawSeries);
     checkPanel.add(rawPanel);
 
-    for(DataSeries ser : sortedSeries) {
+    for (DataSeries ser : sortedSeries) {
       JPanel boxPanel = new JPanel(new GridLayout(0, 1));
       boxPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
           ser.getSeriesName()));
@@ -162,7 +178,7 @@ public class WorstCaseChart {
     JPanel controls = new JPanel(new GridLayout(0, 1));
     controls.add(new JTextField("test"));
 
-    JPanel mainPanel = new JPanel(new GridLayout(0,2));
+    JPanel mainPanel = new JPanel(new GridLayout(0, 2));
 
     mainPanel.add(checkPanel, BorderLayout.LINE_START);
     mainPanel.add(chartPanel, BorderLayout.CENTER);

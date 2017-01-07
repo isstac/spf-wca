@@ -37,10 +37,6 @@ import gov.nasa.jpf.symbc.Debug;
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//package edu.berkeley.cs.wise.benchmarks;
-
-//import edu.berkeley.cs.wise.concolic.Concolic;
-
 /**
  * @author Sudeep Juvekar <sjuvekar@cs.berkeley.edu>
  * @author Jacob Burnim <jburnim@cs.berkeley.edu>

@@ -8,8 +8,9 @@ symbolic.max_int=100
 symbolic.dp=z3
 
 symbolic.worstcase.policy.inputsize=2
-symbolic.worstcase.input.max=20
-
+symbolic.worstcase.input.max=6
+symbolic.worstcase.req.maxres=20
+symbolic.worstcase.req.maxinputsize=5
 symbolic.worstcase.verbose=true
 symbolic.worstcase.outputpath=${spf-wca}/insertion_sort_results
 
