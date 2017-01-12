@@ -175,15 +175,11 @@ public class WorstCaseChart {
       box2series.put(checkbox, ser);
     }
 
-    JPanel controls = new JPanel(new GridLayout(0, 1));
-    controls.add(new JTextField("test"));
-
-    JPanel mainPanel = new JPanel(new GridLayout(0, 2));
+    JPanel mainPanel = new JPanel(new BorderLayout());
 
     mainPanel.add(checkPanel, BorderLayout.LINE_START);
     mainPanel.add(chartPanel, BorderLayout.CENTER);
     frame.add(mainPanel);
-    frame.add(controls);
 
 
     return frame;
