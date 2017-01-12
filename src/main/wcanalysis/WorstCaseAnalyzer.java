@@ -101,6 +101,9 @@ public class WorstCaseAnalyzer implements JPFShell {
     config.setProperty(PolicyGeneratorListener.SER_OUTPUT_PATH_CONF, serializedDir.getAbsolutePath());
     config.setProperty(HeuristicListener.SER_INPUT_PATH, serializedDir.getAbsolutePath());
 
+    //Let's always show SEVERE log entries
+    config.setProperty("log.level", "severe");
+
     //Setting this config will ouput the policy obtained from the worst case path of the HEURISTIC search (phase 2) 
     //-- here it will overwrite the previous policy
     //config.setProperty(HeuristicListener.SER_OUTPUT_PATH, serializedDir.getAbsolutePath());
@@ -197,7 +200,6 @@ public class WorstCaseAnalyzer implements JPFShell {
       }
       jpfConf.setProperty("target.args", "" + inputSize);
       JPF jpf = new JPF(jpfConf);
-      jpf.getReporter();
       jpf.addListener(new PolicyGeneratorListener(jpfConf, jpf)); //weird instantiation...
 
       if (verbose) {
@@ -215,7 +217,7 @@ public class WorstCaseAnalyzer implements JPFShell {
       }
       logger.info("Running policy generation for input size " + inputSize);
       //get policy
-      jpf.run();
+      runJPF(jpf);
     }
   }
 
@@ -238,7 +240,7 @@ public class WorstCaseAnalyzer implements JPFShell {
 
       //explore guided by policy
       long start = System.currentTimeMillis();
-      jpf.run();
+      runJPF(jpf);
       long end = System.currentTimeMillis();
 
       logger.info("Heuristic exploration at input size " + inputSize + " done. Took " + ((end-start)/1000) + "s");
@@ -253,5 +255,22 @@ public class WorstCaseAnalyzer implements JPFShell {
       }
     }
     return dataCollection;
+  }
+
+  private void runJPF(JPF jpf) {
+    try {
+      jpf.run();
+
+      //Seriously, jpf-core is broken here. If the application class cannot be found, then the
+      // classloader throws an exception. However, in singleprocessvm, this exception is
+      // SUPPRESSED when the application (i.e. target) class is loaded. The only way of
+      // determining that this happened seems to be if the following was set :S
+      if(jpf.error != null && !jpf.error.equals("")) {
+        throw new WCAException("jpf-core initialization failed with error: " + jpf.error);
+      }
+
+    } catch(Exception e) {
+      throw new WCAException("jpf-core threw exception", e);
+    }
   }
 }
