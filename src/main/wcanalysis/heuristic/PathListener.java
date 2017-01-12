@@ -258,15 +258,15 @@ public abstract class PathListener extends PropertyListenerAdapter {
   @Override
   public void exceptionThrown(VM vm, ThreadInfo currentThread, ElementInfo thrownException) {
     if(thrownException.instanceOf("Ljava/lang/ClassNotFoundException;")) {
-      String exception = "JPF threw " + vm.getPendingException().getDetails();
-      logger.severe("JPF threw " + vm.getPendingException().getDetails());
+      String exceptionStr = "JPF threw " + vm.getPendingException().getDetails();
+      logger.severe(exceptionStr);
       // This is the most insane way of reporting errors. I don't think there is any way around it
       // unless we want to throw a runtime exception here which would kill
       //vm.getJPF().error = exception;
       //vm.getSearch().terminate();
 
       // Okay, so we just kill it here :/
-      throw new JPFErrorException(exception);
+      throw new JPFErrorException(exceptionStr);
     }
     checkExecutionPath(vm);
   }
