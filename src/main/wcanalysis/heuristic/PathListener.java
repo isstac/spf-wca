@@ -26,6 +26,8 @@ import java.util.logging.Logger;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
+import gov.nasa.jpf.JPFErrorException;
+import gov.nasa.jpf.JPFException;
 import gov.nasa.jpf.PropertyListenerAdapter;
 import gov.nasa.jpf.search.Search;
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
@@ -255,6 +257,17 @@ public abstract class PathListener extends PropertyListenerAdapter {
 
   @Override
   public void exceptionThrown(VM vm, ThreadInfo currentThread, ElementInfo thrownException) {
+    if(thrownException.instanceOf("Ljava/lang/ClassNotFoundException;")) {
+      String exception = "JPF threw " + vm.getPendingException().getDetails();
+      logger.severe("JPF threw " + vm.getPendingException().getDetails());
+      // This is the most insane way of reporting errors. I don't think there is any way around it
+      // unless we want to throw a runtime exception here which would kill
+      //vm.getJPF().error = exception;
+      //vm.getSearch().terminate();
+
+      // Okay, so we just kill it here :/
+      throw new JPFErrorException(exception);
+    }
     checkExecutionPath(vm);
   }
 
