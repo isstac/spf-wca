@@ -10,7 +10,12 @@ spf-wca=/path/to/spf-wca
 
 **Don't** add `spf-wca` to the `extensions` variable.
 
-Make sure you have `Ivy` installed on your system. Then, obtain all the dependencies by running :
+Make sure you have `Ivy` installed on your system. To bootstrap the Ivy ant task, you can run:
+```
+$ ant bootstrap
+```
+
+Then, obtain all the dependencies by running:
 ```
 $ ant resolve
 ```
