@@ -90,5 +90,63 @@ In addition, the user can optionally use the following for the `WorstCaseAnalyze
 
 * **```symbolic.worstcase.reusepolicy=<true | false>```** By setting this to true, a computed policy will be reused if it has been previously computed.
 
-# License
-`spf-wca` is licensed under the Apache License V2. For the license text, see the `LICENSE` file in the root of this repository.
+# LICENSE
+`spf-wca` is Copyright (c) 2017, The ISSTAC Authors and is released under the MIT License. See 
+the `LICENSE` file in the root of this project and the headers of the individual files in the 
+`src/` folder for the details.
+
+`spf-wca` uses benchmarks from the WISE project by Jacob Burnim, Sudeep Juvekar, Koushik Sen. 
+The benchmarks are available here [WISE-1.0.tar.gz](https://www.burn.im/pubs/WISE-1.0.tar.gz).
+
+WISE is Copyright (c) 2011, Regents of the University of California,
+and is released under an open-source BSD-style license.  See the
+individual source files under `src/examples/wise` for details. A copy of the `README` file of 
+WISE that includes license details can be found in the file `licenses/README.WISE`.
+
+Benchmark code in `src/examples/wise`/*/*.java` is based on the code obtained from the WISE 
+project. It is
+Copyright (c) 2011, Regents of the University of California, and is
+released under an open-source BSD-style license.
+
+We repeat here the license details from the `README` file (with file paths adjusted) in the WISE 
+distribution from above:
+
+>The code in 'src/examples/wise/rbtree/` for
+>red-black trees is by Tuomo Saarni, obtained from:
+>
+>    http://users.utu.fi/~tuiisa/Java/index.html
+>
+>
+>under the following license:
+>
+>    Here's some java sources I've made. Most codes are free to
+>    download. If you use some of my sources just remember give me the
+>    credits.
+>
+>The code in src/examples/wise/java15/{util,lang}/ is
+>originally from the Oracle Java (TM) 2 Platform Standard Edition
+>Development Kit 5.0 Update 22, obtained and redistributed under the
+>Java Research License v1.5 -- please see `licenses/JavaResearchLicense.txt` for
+>details. Use and distribution of this technology is subject to the
+>Java Research License included herein.
+
+In addition, `spf-wca` relies on several other libraries:
+
+* Google Guava: Copyright (c) The Guava Authors and is distributed under the Apache License, 
+Version 2.0. The license for Google Guava can be found in the file `licenses/COPYING.GUAVA`.
+* XChart:  Copyright (c) Knowm Inc. (http://knowm.org) and contributors and Xeiam LLC 
+(http://xeiam.com) and contributors. XChart is distributed under the Apache License, Version 2.0.
+ A copy of the license can be found in the file `licenses/LICENSE.XCHART`. The `NOTICE` file of 
+ XChart can be found in the file `licenses/NOTICE.XCHART`.
+* Apache Commons Math3, which is distributed under the Apache License, Version 2.0. A copy of the
+ license can be found in the file `licenses/LICENSE.COMMONS_MATH3`. The `NOTICE` file of Apache Commons 
+ Math3 can be found in the file `licenses/NOTICE.COMMONS_MATH3`.
+* Apache Commons CSV, which is distributed under the Apache License, Version 2.0. A copy of the
+  license can be found in the file `licenses/LICENSE.COMMONS_CSV`. The `NOTICE` file of Apache Commons 
+  CSV can be found in the file `licenses/NOTICE.COMMONS_CSV`.
+* Apache Commons CLI, which is distributed under the Apache License, Version 2.0. A copy of the
+  license can be found in the file `licenses/LICENSE.COMMONS_CLI`. The `NOTICE` file of Apache 
+  Commons CLI can be found in the file `licenses/NOTICE.COMMONS_CLI`. 
+* Apache Commons Lang, which is distributed under the Apache License, Version 2.0. A copy of the
+  license can be found in the file `licenses/LICENSE.COMMONS_LANG`. The `NOTICE` file of Apache 
+  Commons LANG can be found in the file `licenses/NOTICE.COMMONS_LANG`.

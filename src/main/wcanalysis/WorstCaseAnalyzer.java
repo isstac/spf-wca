@@ -1,17 +1,25 @@
 /*
- * Copyright 2017 Carnegie Mellon University Silicon Valley
+ * MIT License
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Copyright (c) 2017 The ISSTAC Authors
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package wcanalysis;
@@ -67,6 +75,7 @@ public class WorstCaseAnalyzer implements JPFShell {
   public static final boolean ENABLE_POLICIES_DEF = true;
 
   private static final Logger logger = JPF.getLogger(WorstCaseAnalyzer.class.getName());
+
   static {
     logger.setLevel(Level.ALL);
   }
@@ -87,9 +96,9 @@ public class WorstCaseAnalyzer implements JPFShell {
     this.verbose = config.getBoolean(VERBOSE_CONF, true);
     this.rootDir = Util.createDirIfNotExist(config.getString(OUTPUT_DIR_CONF, ""));
     this.serializedDir = Util.createDirIfNotExist(rootDir, "serialized");
-    this.startAt= config.getInt(START_AT_CONF,1);
-    this.incr = config.getInt(INCR_CONF,1);
-    if(verbose) {
+    this.startAt = config.getInt(START_AT_CONF, 1);
+    this.incr = config.getInt(INCR_CONF, 1);
+    if (verbose) {
       this.auxDir = Util.createDirIfNotExist(rootDir, "verbose");
       this.policyDir = Util.createDirIfNotExist(auxDir, "policy");
       this.heuristicDir = Util.createDirIfNotExist(auxDir, "heuristic");
@@ -108,7 +117,7 @@ public class WorstCaseAnalyzer implements JPFShell {
     //-- here it will overwrite the previous policy
     //config.setProperty(HeuristicListener.SER_OUTPUT_PATH, serializedDir.getAbsolutePath());
 
-    if(verbose) {
+    if (verbose) {
       config.setProperty(ResultsPublisher.SMTLIB_CONF, "true");
       config.setProperty(ResultsPublisher.OMEGA_CONF, "true");
       config.setProperty(PolicyResultsPublisher.RESULTS_DIR_CONF, policyDir.getAbsolutePath());
@@ -127,7 +136,7 @@ public class WorstCaseAnalyzer implements JPFShell {
     //Step 1: get the policy to guide the search. We will get this at the inputsize
     //corresponding to symbolic.worstcase.policy.inputsize
     if (config.getBoolean(WorstCaseAnalyzer.ENABLE_POLICIES, WorstCaseAnalyzer.ENABLE_POLICIES_DEF))
-    	getPolicy(config);
+      getPolicy(config);
     logger.info("step 1 done");
 
     //Step 2: get "results" with exploration guided by policy obtained from step 1.
@@ -135,13 +144,13 @@ public class WorstCaseAnalyzer implements JPFShell {
     DataCollection dataCollection = performAnalysis(config);
     logger.info("step 2 done");
 
-    int predictionModelSize = config.getInt(PREDICT_MODEL_SIZE_CONF, (int)(dataCollection.size()*1.5));
+    int predictionModelSize = config.getInt(PREDICT_MODEL_SIZE_CONF, (int) (dataCollection.size() * 1.5));
     Collection<DataSeries> series = FunctionFitter.computeSeries(dataCollection,
         predictionModelSize);
     logger.info("Computing prediction models done");
 
     final JFrame chartFrame;
-    if(config.hasValue(MAX_RES_REQ_CONF)) //We have a defined "budget" requirement
+    if (config.hasValue(MAX_RES_REQ_CONF)) //We have a defined "budget" requirement
       chartFrame = WorstCaseChart.createChartPanel(series, config.getDouble(MAX_INPUT_REQ_CONF),
           config.getDouble(MAX_RES_REQ_CONF));
     else
@@ -163,7 +172,7 @@ public class WorstCaseAnalyzer implements JPFShell {
   }
 
   private void getPolicy(Config jpfConf) {
-    if(jpfConf.getBoolean(REUSE_POLICY_CONF, false)) // just skip if we reuse the policy already computed
+    if (jpfConf.getBoolean(REUSE_POLICY_CONF, false)) // just skip if we reuse the policy already computed
       return;
 
     //We get an *array* of input sizes. There are two cases:
@@ -174,12 +183,12 @@ public class WorstCaseAnalyzer implements JPFShell {
     //and *unified*
     int[] policyInputSizes = jpfConf.getIntArray(POLICY_GEN_SIZE_CONF);
     int inputSizeStart, inputSizeEnd;
-    if(policyInputSizes.length > 2) {
+    if (policyInputSizes.length > 2) {
       throw new JPFConfigException("Supply either one integer or two integers (format: a,b where " +
           "a<b) denoting the range" +
           " of the input sizes at which policies are computed (and unified). Set with config " +
           POLICY_GEN_SIZE_CONF);
-    } else if(policyInputSizes.length == 2) {
+    } else if (policyInputSizes.length == 2) {
       assert policyInputSizes[0] <= policyInputSizes[1];
       inputSizeStart = policyInputSizes[0];
       inputSizeEnd = policyInputSizes[1];
@@ -192,7 +201,7 @@ public class WorstCaseAnalyzer implements JPFShell {
     } else { // must be policyInputSizes.length == 1
       inputSizeStart = inputSizeEnd = policyInputSizes[0];
     }
-    for(int inputSize = inputSizeStart; inputSize <= inputSizeEnd; inputSize++) {
+    for (int inputSize = inputSizeStart; inputSize <= inputSizeEnd; inputSize++) {
       if (verbose) {
         //apparently have to set this guy before instantiating the jpf object
         File coverageFile = new File(this.policyDir, "policy_coverage_input_size_" + inputSize + ".txt");
@@ -223,7 +232,7 @@ public class WorstCaseAnalyzer implements JPFShell {
 
   private DataCollection performAnalysis(Config jpfConf) {
     boolean noSolver = jpfConf.getBoolean(NO_SOLVER_HEURISTIC_CONF, false);
-    if(noSolver) {
+    if (noSolver) {
       jpfConf.setProperty("symbolic.dp", "no_solver");
     }
     int maxInput = jpfConf.getInt(MAX_INPUT_CONF);
@@ -231,9 +240,9 @@ public class WorstCaseAnalyzer implements JPFShell {
 
     DataCollection dataCollection = new DataCollection();
 
-    for(int inputSize = this.startAt; inputSize <= maxInput; inputSize += this.incr) {//TODO: should maxInput be included?
+    for (int inputSize = this.startAt; inputSize <= maxInput; inputSize += this.incr) {//TODO: should maxInput be included?
       logger.info("Exploring with heuristic input size " + inputSize + "...");
-      jpfConf.setProperty("target.args", ""+inputSize);
+      jpfConf.setProperty("target.args", "" + inputSize);
       JPF jpf = new JPF(jpfConf);
       HeuristicListener heuristic = new HeuristicListener(jpfConf, jpf);
       jpf.addListener(heuristic); //weird instantiation...
@@ -243,11 +252,11 @@ public class WorstCaseAnalyzer implements JPFShell {
       runJPF(jpf);
       long end = System.currentTimeMillis();
 
-      logger.info("Heuristic exploration at input size " + inputSize + " done. Took " + ((end-start)/1000) + "s");
+      logger.info("Heuristic exploration at input size " + inputSize + " done. Took " + ((end - start) / 1000) + "s");
 
       WorstCasePath wcPath = heuristic.getWcPath();
 
-      if(wcPath == null) {
+      if (wcPath == null) {
         logger.severe("No worst case path found for input size " + inputSize);
       } else {
         State wcState = wcPath.getWCState();
@@ -265,11 +274,11 @@ public class WorstCaseAnalyzer implements JPFShell {
       // classloader throws an exception. However, in singleprocessvm, this exception is
       // SUPPRESSED when the application (i.e. target) class is loaded. The only way of
       // determining that this happened seems to be if the following was set :S
-      if(jpf.error != null && !jpf.error.equals("")) {
+      if (jpf.error != null && !jpf.error.equals("")) {
         throw new WCAException("jpf-core initialization failed with error: " + jpf.error);
       }
 
-    } catch(Exception e) {
+    } catch (Exception e) {
       throw new WCAException("jpf-core threw exception", e);
     }
   }
