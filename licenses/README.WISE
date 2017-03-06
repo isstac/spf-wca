@@ -1,0 +1,111 @@
+
+This package contains the source code and benchmarks for the paper:
+
+    Burnim, Juvekar, Sen, "WISE: Automated Test Generation for
+    Worst-Case Complexity", ICSE 2009.
+
+WISE's implementation is in src/edu/berkeley/cs/wise/ and the
+benchmarks are in benchmarks/edu/berkeley/cs/wise/benchmarks/ .
+
+Note that the experiments in the above ICSE 2009 paper were done using
+three combined constraint solvers: a custom difference solver,
+lp_solve, and the Yices SMT solver.  This package uses only Yices for
+constraint solving.  Thus, running times will be slower than reported
+in the ICSE 2009 paper (up to 20X slower for some benchmarks).
+
+
+
+SETTING UP WISE --
+
+(1) Download and install Yices from http://yices.csl.sri.com/ .
+
+(2) Set YICES_CMD in wise-run-icse-experiments.sh to point to the
+    Yices solver binary.
+
+
+
+RUNNING WISE --
+
+To run the experiments from the WISE paper:
+
+(1) Compile WISE and the benchmarks:
+
+    ant build
+
+(2) Instrument the WISE benchmarks for symbolic execution:
+
+    ant instrument-benchmarks
+
+(3) Run the experiments script:
+
+    ./wise-run-icse-experiments.sh
+
+
+
+LICENSE (WISE) --
+
+WISE is Copyright (c) 2011, Regents of the University of California,
+and is released under an open-source BSD-style license.  See the
+individual source files under src/ for details.
+
+WISE incorporates the WeakIdentityHashMap data structure from JBoss
+Inc. (http://www.jboss.org/), which is released under the GNU Lesser
+General Public License (Version 2.1).  A copy of this license can be
+found in file lglp-2.1.txt.  For additional details, see file
+src/edu/berkeley/cs/wise/utils/WeakIdentityHashMap.java .
+
+WISE includes several libraries:
+
+ - ASM 3.1 (lib/asm-3.1.jar), originally from http://asm.ow2.org/ .
+   ASM is Copyright (c) 2000-2005 INRIA, France Telecom, and is
+   distributed under an open-source BSD-style license.  The license
+   for ASM 3.1 can be found in file LICENSE.ASM-3.1 .
+
+ - Soot 2.2.4 (lib/sootclasses-2.2.4.jar), originally from
+   http://www.sable.mcgill.ca/soot/ and distributed under the GNU
+   Lesser General Public License (Version 2.1).  The Soot 2.2.4
+   release includes several other LGPL-licensed libraries, including
+   Jasmin 2.2.4 (lib/jasminclasses-2.2.4.jar) and Polyglot 1.3.5
+   (polyglotclasses-1.3.5.jar).  For details, see the Soot project
+   (http://www.sable.mcgill.ca/soot/). A copy of the GNU Lesser
+   General Public License can be found in file lglp-2.1.txt.
+
+This package also includes the Java2HTML 1.5 tool (lib/j2h-1.5.jar),
+from http://www.java2html.com and distributed under the GNU General
+Public License (Version 2).  A copy of this license can be found in
+file gpl-2.0.txt.
+
+
+
+LICENSE (WISE Benchmarks) --
+
+Benchmark code in benchmarks/edu/berkeley/cs/wise/benchmarks/*.java is
+Copyright (c) 2011, Regents of the University of California, and is
+released under an open-source BSD-style license.  See the individual
+source files under src/ for details.
+
+
+The code in benchmarks/edu/berkeley/cs/wise/benchmarks/rbtree/ for
+red-black trees is by Tuomo Saarni, obtained from:
+
+    http://users.utu.fi/~tuiisa/Java/index.html
+
+under the following license:
+
+    Here's some java sources I've made. Most codes are free to
+    download. If you use some of my sources just remember give me the
+    credits.
+
+
+The code in edu/berkeley/cs/wise/benchmarks/java15/{util,lang}/ is
+originally from the Oracle Java (TM) 2 Platform Standard Edition
+Development Kit 5.0 Update 22, obtained and redistributed under the
+Java Research License v1.5 -- please see JavaResearchLicense.txt for
+details.  Use and distribution of this technology is subject to the
+Java Research License included herein.
+
+
+
+RELEASE HISTORY --
+
+Version 1.0: Initial release on March 30, 2011.

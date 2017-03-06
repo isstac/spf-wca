@@ -1,7 +1,3 @@
-package wise;
-
-import gov.nasa.jpf.symbc.Debug;
-
 /**
  * Copyright (c) 2011, Regents of the University of California
  * All rights reserved.
@@ -36,6 +32,10 @@ import gov.nasa.jpf.symbc.Debug;
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+package wise;
+
+import gov.nasa.jpf.symbc.Debug;
 
 //package edu.berkeley.cs.wise.benchmarks;
 

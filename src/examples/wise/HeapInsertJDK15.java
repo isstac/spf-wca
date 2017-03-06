@@ -1,5 +1,3 @@
-package wise;
-
 /**
  * Copyright (c) 2011, Regents of the University of California
  * All rights reserved.
@@ -35,6 +33,7 @@ package wise;
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+package wise;
 
 //package edu.berkeley.cs.wise.benchmarks;
 

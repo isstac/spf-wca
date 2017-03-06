@@ -1,4 +1,4 @@
-package wise; /**
+/**
  * Copyright (c) 2011, Regents of the University of California
  * All rights reserved.
  * <p/>
@@ -33,7 +33,7 @@ package wise; /**
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//package edu.berkeley.cs.wise.benchmarks;
+package wise; //package edu.berkeley.cs.wise.benchmarks;
 
 import wise.java15.util.Arrays;
 import gov.nasa.jpf.symbc.Debug;
