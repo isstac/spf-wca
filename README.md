@@ -85,19 +85,19 @@ Replace `XXX` with the input size at which the policy should be obtained. This c
 ## Optional Configuration
 In addition, the user can optionally use the following for the `WorstCaseAnalyzer` shell:
 
-* symbolic.heuristic.measuredmethods=<method desc(s)>  A list (separated by semicolons) that specifies from which method(s), the value for the worst case path should start counting. Default is the value of ```symbolic.method``` i.e. the "symbolic target method".
+* `symbolic.heuristic.measuredmethods=<method desc(s)>`  A list (separated by semicolons) that specifies from which method(s), the value for the worst case path should start counting. Default is the value of `symbolic.method` i.e. the "symbolic target method".
 
-* symbolic.worstcase.verbose=<true | false> This will generate verbose output e.g. analysis statistics. 
+* `symbolic.worstcase.verbose=<true | false>` This will generate verbose output e.g. analysis statistics. 
 
-* symbolic.worstcase.outputpath=<path> This will output the contraints for each worst case path and in addition summarize analysis statistics in a csv file. See above.
+* `symbolic.worstcase.outputpath=<path>` This will output the contraints for each worst case path and in addition summarize analysis statistics in a csv file. See above.
 
-* symbolic.worstcase.req.maxinputsize=<Number> Plot the budget input size from the requirement
+* `symbolic.worstcase.req.maxinputsize=<Number>` Plot the budget input size from the requirement
 
-* symbolic.worstcase.req.maxres=<Number> Plot the budget max resource size from the requirement
+* `symbolic.worstcase.req.maxres=<Number>` Plot the budget max resource size from the requirement
 
-* symbolic.worstcase.predictionmodel.size=<Number> The maximum plotted domain of the fitting functions.
+* `symbolic.worstcase.predictionmodel.size=<Number>` The maximum plotted domain of the fitting functions.
 
-* symbolic.worstcase.reusepolicy=<true | false> By setting this to true, a computed policy will be reused if it has been previously computed.
+* `symbolic.worstcase.reusepolicy=<true | false>` By setting this to true, a computed policy will be reused if it has been previously computed.
 
 # LICENSE
 SPF-WCA is Copyright (c) 2017, The ISSTAC Authors and is released under the MIT License. See 
@@ -112,7 +112,7 @@ and is released under an open-source BSD-style license.  See the
 individual source files under `src/examples/wise` for details. A copy of the `README` file of 
 WISE that includes license details can be found in the file `licenses/README.WISE`.
 
-Benchmark code in `src/examples/wise`/*/*.java` is based on the code obtained from the WISE 
+Benchmark code in `src/examples/wise/*/*.java` is based on the code obtained from the WISE 
 project. It is
 Copyright (c) 2011, Regents of the University of California, and is
 released under an open-source BSD-style license.
@@ -120,7 +120,7 @@ released under an open-source BSD-style license.
 We repeat here the license details from the `README` file (with file paths adjusted) in the WISE 
 distribution from above:
 
->The code in 'src/examples/wise/rbtree/` for
+>The code in `src/examples/wise/rbtree/` for
 >red-black trees is by Tuomo Saarni, obtained from:
 >
 >    http://users.utu.fi/~tuiisa/Java/index.html
