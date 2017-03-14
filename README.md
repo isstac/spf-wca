@@ -1,13 +1,13 @@
 # SPF WCA
-`SPF-WCA` is a tool for algorithmic complexity analysis based on symbolic execution. It uses history-based guidance policies that enable exploration at large input sizes (e.g., number og elements to be sorted) of the target program.
+SPF-WCA is a tool for algorithmic complexity analysis based on symbolic execution. It uses history-based guidance policies that enable exploration at large input sizes (e.g., number og elements to be sorted) of the target program.
 
-To cite `SPF-WCA`, please use the most recent paper that was accepted at ICST 2017:
+To cite SPF-WCA, please use the most recent paper that was accepted at ICST 2017:
 > Kasper Luckow, Rody Kersten, Corina Pasareanu, **Symbolic Complexity Analysis using Context-preserving Histories**, Proceedings of the 10th IEEE International Conference on Software Testing, Verification and Validation (ICST 2017), \[pdf\] \[bibtex\].
 
 ## Installation
 Before continuing, make sure that `jpf-core` and `jpf-symbc` are installed.
 
-To install `SPF-WCA`, update your `site.properties` file (usually `~/.jpf/site.properties`) with the path to your `SPF-WCA` directory. 
+To install SPF-WCA, update your `site.properties` file (usually `~/.jpf/site.properties`) with the path to your SPF-WCA directory. 
 ```
 spf-wca=/path/to/spf-wca
 ```
@@ -25,7 +25,7 @@ $ ant resolve
 ```
 The dependencies will be downloaded to `lib/`.
 
-Now `SPF-WCA` can be built by simply running:
+Now SPF-WCA can be built by simply running:
 ```
 $ ant build
 ```
@@ -85,26 +85,26 @@ Replace `XXX` with the input size at which the policy should be obtained. This c
 ## Optional Configuration
 In addition, the user can optionally use the following for the `WorstCaseAnalyzer` shell:
 
-* symbolic.heuristic.measuredmethods=<method desc(s)>  A list (separated by semicolons) that specifies from which method(s), the value for the worst case path should start counting. Default is the value of ```symbolic.method``` i.e. the "symbolic target method".
+* `symbolic.heuristic.measuredmethods=<method desc(s)>`  A list (separated by semicolons) that specifies from which method(s), the value for the worst case path should start counting. Default is the value of `symbolic.method` i.e. the "symbolic target method".
 
-* symbolic.worstcase.verbose=<true | false> This will generate verbose output e.g. analysis statistics. 
+* `symbolic.worstcase.verbose=<true | false>` This will generate verbose output e.g. analysis statistics. 
 
-* symbolic.worstcase.outputpath=<path> This will output the contraints for each worst case path and in addition summarize analysis statistics in a csv file. See above.
+* `symbolic.worstcase.outputpath=<path>` This will output the contraints for each worst case path and in addition summarize analysis statistics in a csv file. See above.
 
-* symbolic.worstcase.req.maxinputsize=<Number> Plot the budget input size from the requirement
+* `symbolic.worstcase.req.maxinputsize=<Number>` Plot the budget input size from the requirement
 
-* symbolic.worstcase.req.maxres=<Number> Plot the budget max resource size from the requirement
+* `symbolic.worstcase.req.maxres=<Number>` Plot the budget max resource size from the requirement
 
-* symbolic.worstcase.predictionmodel.size=<Number> The maximum plotted domain of the fitting functions.
+* `symbolic.worstcase.predictionmodel.size=<Number>` The maximum plotted domain of the fitting functions.
 
-* symbolic.worstcase.reusepolicy=<true | false> By setting this to true, a computed policy will be reused if it has been previously computed.
+* `symbolic.worstcase.reusepolicy=<true | false>` By setting this to true, a computed policy will be reused if it has been previously computed.
 
 # LICENSE
-`SPF-WCA` is Copyright (c) 2017, The ISSTAC Authors and is released under the MIT License. See 
+SPF-WCA is Copyright (c) 2017, The ISSTAC Authors and is released under the MIT License. See 
 the `LICENSE` file in the root of this project and the headers of the individual files in the 
 `src/` folder for the details.
 
-`SPF-WCA` uses benchmarks from the WISE project by Jacob Burnim, Sudeep Juvekar, Koushik Sen. 
+SPF-WCA uses benchmarks from the WISE project by Jacob Burnim, Sudeep Juvekar, Koushik Sen. 
 The benchmarks are available here [WISE-1.0.tar.gz](https://www.burn.im/pubs/WISE-1.0.tar.gz).
 
 WISE is Copyright (c) 2011, Regents of the University of California,
@@ -112,7 +112,7 @@ and is released under an open-source BSD-style license.  See the
 individual source files under `src/examples/wise` for details. A copy of the `README` file of 
 WISE that includes license details can be found in the file `licenses/README.WISE`.
 
-Benchmark code in `src/examples/wise`/*/*.java` is based on the code obtained from the WISE 
+Benchmark code in `src/examples/wise/*/*.java` is based on the code obtained from the WISE 
 project. It is
 Copyright (c) 2011, Regents of the University of California, and is
 released under an open-source BSD-style license.
@@ -120,7 +120,7 @@ released under an open-source BSD-style license.
 We repeat here the license details from the `README` file (with file paths adjusted) in the WISE 
 distribution from above:
 
->The code in 'src/examples/wise/rbtree/` for
+>The code in `src/examples/wise/rbtree/` for
 >red-black trees is by Tuomo Saarni, obtained from:
 >
 >    http://users.utu.fi/~tuiisa/Java/index.html
@@ -139,7 +139,7 @@ distribution from above:
 >details. Use and distribution of this technology is subject to the
 >Java Research License included herein.
 
-In addition, `SPF-WCA` relies on several other libraries:
+In addition, SPF-WCA relies on several other libraries:
 
 * Google Guava: Copyright (c) The Guava Authors and is distributed under the Apache License, 
 Version 2.0. The license for Google Guava can be found in the file `licenses/COPYING.GUAVA`.
