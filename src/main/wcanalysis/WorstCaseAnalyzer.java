@@ -269,15 +269,6 @@ public class WorstCaseAnalyzer implements JPFShell {
   private void runJPF(JPF jpf) {
     try {
       jpf.run();
-
-      //Seriously, jpf-core is broken here. If the application class cannot be found, then the
-      // classloader throws an exception. However, in singleprocessvm, this exception is
-      // SUPPRESSED when the application (i.e. target) class is loaded. The only way of
-      // determining that this happened seems to be if the following was set :S
-      if (jpf.error != null && !jpf.error.equals("")) {
-        throw new WCAException("jpf-core initialization failed with error: " + jpf.error);
-      }
-
     } catch (Exception e) {
       throw new WCAException("jpf-core threw exception", e);
     }
