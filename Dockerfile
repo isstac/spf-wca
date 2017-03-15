@@ -35,18 +35,6 @@ WORKDIR /
 RUN mkdir tools
 ENV TOOLS_ROOT /tools
 
-#############################################################################
-# Install Dependencies 
-#############################################################################
-
-# Install Z3
-WORKDIR ${TOOLS_ROOT}
-# Note that we specify a specific *release* of Z3
-RUN wget https://github.com/Z3Prover/z3/releases/download/z3-4.4.1/z3-4.4.1-x64-ubuntu-14.04.zip 
-RUN unzip z3-4.4.1-x64-ubuntu-14.04.zip && \
-        rm z3-4.4.1-x64-ubuntu-14.04.zip
-RUN ln -s z3-4.4.1-x64-ubuntu-14.04 z3
-
 
 #############################################################################
 # Install and configure jpf-related tools 
@@ -85,13 +73,18 @@ RUN ant resolve
 # Build spf-wca
 RUN ant
 
-# This is messed up. For some weird reason
-# setting LD_LIBRARY_PATH to the Z3 installation
-# does not work---we have to symlink libz3java to jpf-symbc/lib *sigh*
-#RUN rm ${TOOLS_ROOT}/jpf-symbc/lib/libz3java.so
-#RUN ln -s ${TOOLS_ROOT}/z3/bin/libz3java.so ${TOOLS_ROOT}/jpf-symbc/lib/
- ENV LD_LIBRARY_PATH ${TOOLS_ROOT}/z3/bin
-#ENV LD_LIBRARY_PATH ${TOOLS_ROOT}/jpf-symbc/lib
+# Update to new version of z3. Probably not strictly necessary
+WORKDIR ${TOOLS_ROOT}
+
+# Note that we specify a specific *release* of Z3
+RUN wget https://github.com/Z3Prover/z3/releases/download/z3-4.4.1/z3-4.4.1-x64-ubuntu-14.04.zip 
+RUN unzip z3-4.4.1-x64-ubuntu-14.04.zip && \
+        rm z3-4.4.1-x64-ubuntu-14.04.zip
+RUN ln -s z3-4.4.1-x64-ubuntu-14.04 z3
+
+# Update LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH ${TOOLS_ROOT}/z3/bin
+
 # Copy z3 java bindings
 RUN rm ${TOOLS_ROOT}/jpf-symbc/lib/com.microsoft.z3.jar
 RUN cp ${TOOLS_ROOT}/z3/bin/com.microsoft.z3.jar ${TOOLS_ROOT}/jpf-symbc/lib/
