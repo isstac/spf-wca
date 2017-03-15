@@ -52,18 +52,33 @@ RUN echo "extensions=\${jpf-core},\${jpf-symbc}" >> /root/.jpf/site.properties
 # Install jpf-core
 WORKDIR ${TOOLS_ROOT}
 RUN hg clone http://babelfish.arc.nasa.gov/hg/jpf/jpf-core
+
+# Update to version known to work
+RUN hg update -r32
+
+# build
 WORKDIR ${TOOLS_ROOT}/jpf-core
 RUN ant
 
 # Install jpf-symbc
 WORKDIR ${TOOLS_ROOT}
 RUN hg clone http://babelfish.arc.nasa.gov/hg/jpf/jpf-symbc
+
+# Update to version known to work
+RUN hg update -r613
+
+# build
 WORKDIR ${TOOLS_ROOT}/jpf-symbc
 RUN ant
 
 # Finally, get SPF-WCA
 WORKDIR ${TOOLS_ROOT}
 RUN git clone https://github.com/isstac/spf-wca
+
+# Update to version known to work
+RUN git checkout 1.0.0
+
+# build
 WORKDIR ${TOOLS_ROOT}/spf-wca
 
 # Get spf-wca deps
