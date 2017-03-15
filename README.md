@@ -5,6 +5,12 @@ To cite SPF-WCA, please use the most recent paper that was accepted at ICST 2017
 > Kasper Luckow, Rody Kersten, Corina Pasareanu, **Symbolic Complexity Analysis using Context-preserving Histories**, Proceedings of the 10th IEEE International Conference on Software Testing, Verification and Validation (ICST 2017), \[pdf\] \[bibtex\].
 
 ## Installation
+We provide two ways of installing SPF-WCA:
+* Installation on local machine
+* Virtual machine with Docker 
+
+### Local Machine
+
 Before continuing, make sure that `jpf-core` and `jpf-symbc` are installed.
 
 To install SPF-WCA, update your `site.properties` file (usually `~/.jpf/site.properties`) with the path to your SPF-WCA directory. 
@@ -28,6 +34,22 @@ The dependencies will be downloaded to `lib/`.
 Now SPF-WCA can be built by simply running:
 ```
 $ ant build
+```
+
+### Docker
+Assuming you have [Docker](https://www.docker.com/) installed, simply run:
+
+```bash
+$ docker build -t spf-wca .
+# Will take some time to build the image...
+$ docker run -it spf-wca
+```
+
+**Note** that, because there is no X11 available, the the fitting functions cannot be displayed. However, the results can be checked in the CSV file under `verbose/heuristics` in the results folder set by JPF option `symbolic.worstcase.outputpath` (see below for more details). To copy the results to the host machine from the Docker container, use:
+```bash
+# Note the container id (CID) from the following command (column CONTAINER ID)
+$ docker ps
+$ docker cp <CID>:/path/to/csv/file/in/container /destination/on/hostmachine
 ```
 
 ## Usage 
