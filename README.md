@@ -45,6 +45,13 @@ $ docker build -t spf-wca .
 $ docker run -it spf-wca
 ```
 
+**Note** that, because there is no X11 available, the the fitting functions cannot be displayed. However, the results can be checked in the CSV file under `verbose/heuristics` in the results folder set by JPF option `symbolic.worstcase.outputpath` (see below for more details). To copy the results to the host machine from the Docker container, use:
+```bash
+# Note the container id (CID) from the following command (column CONTAINER ID)
+$ docker ps
+$ docker cp <CID>:/path/to/csv/file/in/container /destination/on/hostmachine
+```
+
 ## Usage 
 The Java PathFinder shell `wcanalysis.WorstCaseAnalyzer` can be used to set up Phase 1 (policy generation) and Phase 2 (guided search) of the analysis.
 The analysis can be performed by executing the JPF config file that specifies the parameters of the analysis, the constraint solver, the entry point of the system under analysis etc:
