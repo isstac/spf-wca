@@ -1,8 +1,8 @@
 # SPF WCA
-SPF-WCA is a tool for algorithmic complexity analysis based on symbolic execution. It uses history-based guidance policies that enable exploration at large input sizes (e.g., number og elements to be sorted) of the target program.
+SPF-WCA is a tool for algorithmic complexity analysis based on symbolic execution. It uses history-based guidance policies that enable exploration at large input sizes (e.g., number of elements to be sorted) of the target program.
 
 To cite SPF-WCA, please use the most recent paper that was accepted at ICST 2017:
-> Kasper Luckow, Rody Kersten, Corina Pasareanu, **Symbolic Complexity Analysis using Context-preserving Histories**, Proceedings of the 10th IEEE International Conference on Software Testing, Verification and Validation (ICST 2017), \[pdf\] \[bibtex\].
+> Kasper Luckow, Rody Kersten, Corina Pasareanu, **Symbolic Complexity Analysis using Context-preserving Histories**, Proceedings of the 10th IEEE International Conference on Software Testing, Verification and Validation (ICST 2017), [pdf](http://www.andrew.cmu.edu/user/kluckow/papers/icst2017/icst2017.pdf) [bibtex](http://www.andrew.cmu.edu/user/kluckow/papers/icst2017/icst2017.bib).
 
 ## Installation
 We provide two ways of installing SPF-WCA:
@@ -13,7 +13,7 @@ We provide two ways of installing SPF-WCA:
 
 Before continuing, make sure that `jpf-core` and `jpf-symbc` are installed.
 
-To install SPF-WCA, update your `site.properties` file (usually `~/.jpf/site.properties`) with the path to your SPF-WCA directory. 
+To install SPF-WCA, update your `site.properties` file (usually `~/.jpf/site.properties`) and set the `spf-wca` variable to point to the directory of your SPF-WCA installation. 
 ```
 spf-wca=/path/to/spf-wca
 ```
@@ -45,7 +45,7 @@ $ docker build -t spf-wca .
 $ docker run -it spf-wca
 ```
 
-**Note** that, because there is no X11 available, the the fitting functions cannot be displayed. However, the results can be checked in the CSV file under `verbose/heuristics` in the results folder set by JPF option `symbolic.worstcase.outputpath` (see below for more details). To copy the results to the host machine from the Docker container, use:
+**Note** that, because there is no X11 available, the fitting functions cannot be displayed. However, the results can be checked in the CSV file under `verbose/heuristics` in the results folder set by JPF option `symbolic.worstcase.outputpath` (see below for more details). To copy the results to the host machine from the Docker container, use:
 ```bash
 # Note the container id (CID) from the following command (column CONTAINER ID)
 $ docker ps
@@ -79,7 +79,7 @@ The csv file includes various statistics:
 * **newChoicesNum** New decisions encountered during exploration for which the heuristic has no information
 * **wcConstraint** The constraint recorded for the worst case path. Any solution to this provides test inputs that are guaranteed to exercise worst case behavior of the SUT
 
-In addition, data points <inputSize, depth> (here depth is the notion of worst case for a path) are generated, and the shell will automatically generate a plot showing the raw data, and the various fitted functions based on regression analysis. The user can zoon in on the graph by highlighting a region.
+In addition, data points <inputSize, depth> (here depth is the notion of worst case for a path) are generated, and the shell will automatically generate a plot showing the raw data, and the various fitted functions based on regression analysis. The user can zoom in on the graph by highlighting a region.
 
 ## Configuration
 The following must be supplied in jpf file (or imported from another jpf file using the `@include` directive):
@@ -100,7 +100,7 @@ symbolic.wc.policy.history.size=ZZZ
 ```
 The `classpath` variable should be updated according to the system under test. `target` denotes the entry point of the system under test.
 
-Replace `XXX` with the input size at which the policy should be obtained. This corrsponds to phase 1. Replace `YYY` with the maximum input size at which the heuristic search (phase 2) should be run. The heuristic search will run from input size 1-`YYY`.
+Replace `XXX` with the input size at which the policy should be obtained. This corresponds to phase 1. Replace `YYY` with the maximum input size at which the heuristic search (phase 2) should be run. The heuristic search will run from input size 1-`YYY`.
 
 `symbolic.wc.policy.history.size` is important because it controls whether the guidance policy produced in phase 1 is memoryless or history-based. By setting this variable to 0, a memoryless policy is used; otherwise, a history with the specified size `ZZZ` will be used.
 
@@ -111,7 +111,7 @@ In addition, the user can optionally use the following for the `WorstCaseAnalyze
 
 * `symbolic.worstcase.verbose=<true | false>` This will generate verbose output e.g. analysis statistics. 
 
-* `symbolic.worstcase.outputpath=<path>` This will output the contraints for each worst case path and in addition summarize analysis statistics in a csv file. See above.
+* `symbolic.worstcase.outputpath=<path>` This will output the constraints for each worst case path and in addition summarize analysis statistics in a csv file. See above.
 
 * `symbolic.worstcase.req.maxinputsize=<Number>` Plot the budget input size from the requirement
 
