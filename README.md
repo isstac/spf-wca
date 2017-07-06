@@ -1,7 +1,7 @@
 # SPF WCA
 SPF-WCA is a tool for algorithmic complexity analysis based on symbolic execution. It uses history-based guidance policies that enable exploration at large input sizes (e.g., number of elements to be sorted) of the target program.
 
-To cite SPF-WCA, please use the most recent paper that was accepted at ICST 2017:
+To cite SPF-WCA, please use the most recent paper that was accepted at ICST 2017 (**won the Best Paper Award**):
 > Kasper Luckow, Rody Kersten, Corina Pasareanu, **Symbolic Complexity Analysis using Context-preserving Histories**, Proceedings of the 10th IEEE International Conference on Software Testing, Verification and Validation (ICST 2017), \[[pdf](http://www.andrew.cmu.edu/user/kluckow/papers/icst2017/icst2017.pdf)\] \[[bibtex](http://www.andrew.cmu.edu/user/kluckow/papers/icst2017/icst2017.bib)\].
 
 ## Installation
