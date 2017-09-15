@@ -24,6 +24,7 @@
 
 package wcanalysis;
 
+import java.awt.*;
 import java.io.File;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -145,30 +146,32 @@ public class WorstCaseAnalyzer implements JPFShell {
     logger.info("step 2 done");
 
     int predictionModelSize = config.getInt(PREDICT_MODEL_SIZE_CONF, (int) (dataCollection.size() * 1.5));
-    Collection<DataSeries> series = FunctionFitter.computeSeries(dataCollection,
+
+
+    double xs[] = dataCollection.getX();
+    double ys[] = dataCollection.getY();
+
+    // Generate chart
+    WorstCaseChart.ChartBuilder chartBuilder = new WorstCaseChart.ChartBuilder("Costs per input size",
+        "Input Size",
+        "Cost");
+    Collection<DataSeries> predictionSeries = FunctionFitter.computePredictionSeries(xs, ys,
         predictionModelSize);
-    logger.info("Computing prediction models done");
 
-    final JFrame chartFrame;
-    if (config.hasValue(MAX_RES_REQ_CONF)) //We have a defined "budget" requirement
-      chartFrame = WorstCaseChart.createChartPanel(series, config.getDouble(MAX_INPUT_REQ_CONF),
-          config.getDouble(MAX_RES_REQ_CONF));
-    else
-      chartFrame = WorstCaseChart.createChartPanel(series);
+    for(DataSeries series : predictionSeries) {
+      chartBuilder.addSeries(series);
+    }
 
+    DataSeries rawSeries = new DataSeries("Raw", xs.length);
+    for(int i = 0; i < xs.length; i++) {
+      rawSeries.add(xs[i], ys[i]);
+    }
+    chartBuilder.setRawSeries(rawSeries);
 
-    logger.info("Creating chart done");
-
-    //Let's show the panel
-    javax.swing.SwingUtilities.invokeLater(new Runnable() {
-      @Override
-      public void run() {
-
-        // Display the window.
-        chartFrame.pack();
-        chartFrame.setVisible(true);
-      }
-    });
+    WorstCaseChart chart = chartBuilder.build();
+    chart.setPreferredSize(new Dimension(1024, 768));
+    chart.pack();
+    chart.setVisible(true);
   }
 
   private void getPolicy(Config jpfConf) {
