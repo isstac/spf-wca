@@ -28,13 +28,18 @@ package wcanalysis.charting;
  * @author Kasper Luckow
  */
 public class DataSeries {
-  private DataCollection data = new DataCollection();
+  private final double[] xs;
+  private final double[] ys;
+  int idx = 0;
+
   private final String seriesName;
   private String r2;
   private String function;
 
-  public DataSeries(String seriesName) {
+  public DataSeries(String seriesName, int size) {
     this.seriesName = seriesName;
+    this.xs = new double[size];
+    this.ys = new double[size];
   }
 
 
@@ -43,19 +48,21 @@ public class DataSeries {
   }
 
   public void add(double x, double y) {
-    this.data.addDatapoint(x, y);
+    xs[idx] = x;
+    ys[idx] = y;
+    idx++;
   }
 
   public double[] getY() {
-    return this.data.getY();
+    return this.ys;
   }
 
   public double[] getX() {
-    return this.data.getX();
+    return this.xs;
   }
 
   public int size() {
-    return this.data.size();
+    return this.xs.length;
   }
 
   public String getR2() {

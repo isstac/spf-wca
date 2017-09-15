@@ -165,10 +165,6 @@ In addition, SPF-WCA relies on several other libraries:
 
 * Google Guava: Copyright (c) The Guava Authors and is distributed under the Apache License, 
 Version 2.0. The license for Google Guava can be found in the file `licenses/COPYING.GUAVA`.
-* XChart:  Copyright (c) Knowm Inc. (http://knowm.org) and contributors and Xeiam LLC 
-(http://xeiam.com) and contributors. XChart is distributed under the Apache License, Version 2.0.
- A copy of the license can be found in the file `licenses/LICENSE.XCHART`. The `NOTICE` file of 
- XChart can be found in the file `licenses/NOTICE.XCHART`.
 * Apache Commons Math3, which is distributed under the Apache License, Version 2.0. A copy of the
  license can be found in the file `licenses/LICENSE.COMMONS_MATH3`. The `NOTICE` file of Apache Commons 
  Math3 can be found in the file `licenses/NOTICE.COMMONS_MATH3`.
@@ -181,3 +177,5 @@ Version 2.0. The license for Google Guava can be found in the file `licenses/COP
 * Apache Commons Lang, which is distributed under the Apache License, Version 2.0. A copy of the
   license can be found in the file `licenses/LICENSE.COMMONS_LANG`. The `NOTICE` file of Apache 
   Commons LANG can be found in the file `licenses/NOTICE.COMMONS_LANG`.
+* JFreeChart, which is distributed under the GNU Lesser General Public License (LGPL) Version 2.1. 
+  A copy of the license can be found in the file `licenses/LICENSE.JFREECHART`.
