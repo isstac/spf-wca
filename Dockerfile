@@ -16,7 +16,6 @@ RUN  apt-get install -y \
                         unzip \
                         ant \
                         build-essential \
-                        mercurial \
                         git \
                         vim && \
   rm -rf /var/lib/apt/lists/* && \
@@ -51,20 +50,20 @@ RUN echo "extensions=\${jpf-core},\${jpf-symbc}" >> /root/.jpf/site.properties
 
 # Install jpf-core
 WORKDIR ${TOOLS_ROOT}
-RUN hg clone http://babelfish.arc.nasa.gov/hg/jpf/jpf-core
+RUN git clone https://github.com/javapathfinder/jpf-core.git
 
 WORKDIR ${TOOLS_ROOT}/jpf-core
 # Update to version known to work
-RUN hg update -r32
+RUN git checkout JPF-8.0
 RUN ant
 
 # Install jpf-symbc
 WORKDIR ${TOOLS_ROOT}
-RUN hg clone http://babelfish.arc.nasa.gov/hg/jpf/jpf-symbc
+RUN git clone https://github.com/SymbolicPathFinder/jpf-symbc.git
 
 WORKDIR ${TOOLS_ROOT}/jpf-symbc
 # Update to version known to work
-RUN hg update -r613
+RUN git checkout f2a2212
 RUN ant
 
 # Finally, get SPF-WCA
